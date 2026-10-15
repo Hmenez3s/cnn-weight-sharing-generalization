@@ -1,0 +1,55 @@
+{
+  "inspected_utc_date": "2026-10-15",
+  "dependencies": [
+    {
+      "name": "PyTorch",
+      "license": "BSD-3-Clause",
+      "url": "https://raw.githubusercontent.com/pytorch/pytorch/v2.9.1/LICENSE",
+      "sha256": "a8a2c6b67cf8a597ffaa5c82380a6bd1b82629c0417e00673d8013d662eb500a",
+      "verified": true
+    },
+    {
+      "name": "TorchVision",
+      "license": "BSD-3-Clause",
+      "url": "https://raw.githubusercontent.com/pytorch/vision/v0.24.1/LICENSE",
+      "sha256": "6502f676851cfe25f8af75531dfb32375b7325b73c37e7b43741fa422893e71d",
+      "verified": true
+    },
+    {
+      "name": "NumPy",
+      "license": "BSD-3-Clause",
+      "url": "https://raw.githubusercontent.com/numpy/numpy/main/LICENSE.txt",
+      "sha256": "1be1df33863f97a7bc1c4d67980bd6c69c9a6fef0a5ee76e6ad6cb91e56e8491",
+      "verified": true
+    },
+    {
+      "name": "SciPy",
+      "license": "BSD-3-Clause",
+      "url": "https://raw.githubusercontent.com/scipy/scipy/main/LICENSE.txt",
+      "sha256": "221e59f5e910fd7f94e44f0dac77436a11338c285c6346232e4a850a50da0e94",
+      "verified": true
+    },
+    {
+      "name": "Matplotlib",
+      "license": "PSF-based Matplotlib license",
+      "url": "https://raw.githubusercontent.com/matplotlib/matplotlib/main/LICENSE/LICENSE",
+      "sha256": "5a1a81ea301728c8bba2933da832c0cd62229daf20893a024ab3d53244468dbc",
+      "verified": true
+    },
+    {
+      "name": "PyYAML",
+      "license": "MIT",
+      "url": "https://raw.githubusercontent.com/yaml/pyyaml/main/LICENSE",
+      "sha256": "8d3928f9dc4490fd635707cb88eb26bd764102a7282954307d3e5167a577e8a4",
+      "verified": true
+    },
+    {
+      "name": "pytest",
+      "license": "MIT",
+      "url": "https://raw.githubusercontent.com/pytest-dev/pytest/main/LICENSE",
+      "sha256": "ca836a5f9ecca3b2f350230faa20a48fb8b145653b5568d784862df864706b9b",
+      "verified": true
+    }
+  ],
+  "scope": "Direct dependencies declared by pyproject.toml; no redistribution of dataset, checkpoints or dependency binaries."
+}
