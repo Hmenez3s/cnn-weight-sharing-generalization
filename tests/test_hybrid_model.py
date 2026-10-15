@@ -47,8 +47,8 @@ def test_h_topology_routes_positions_and_registers_three_distinct_blocks():
 
 def test_h_matches_explicit_untied_oracle_and_shared_s_gradient_sums_six_steps():
     torch.manual_seed(10)
-    hybrid = build_model(ModelSpec("H", 8, width=3, num_classes=2), seed=33)
-    untied = build_model(ModelSpec("B", 8, width=3, num_classes=2), seed=33)
+    hybrid = build_model(ModelSpec("H", 8, width=32, num_classes=100), seed=33)
+    untied = build_model(ModelSpec("B", 8, width=32, num_classes=100), seed=33)
     untied.stem.load_state_dict(copy.deepcopy(hybrid.stem.state_dict()))
     untied.head.load_state_dict(copy.deepcopy(hybrid.head.state_dict()))
     for index, source_index in enumerate((0, 1, 1, 1, 1, 1, 1, 2)):
@@ -151,7 +151,7 @@ def test_h_tiny_interrupted_resume_and_checkpoint_logits(tmp_path):
     arrays = CifarArrays(rng.integers(0, 256, (6, 32, 32, 3), dtype=np.uint8),
                          np.array([0, 1, 0, 1, 0, 1]), "synthetic")
     train, validation = np.arange(4), np.array([4, 5])
-    config = TrainConfig("H", 8, width=2, num_classes=2, total_updates=2, batch_size=2,
+    config = TrainConfig("H", 8, width=32, num_classes=100, total_updates=2, batch_size=2,
                          validation_cadence=1, learning_rate=0.03, selection_identity="amended_v2")
     uninterrupted, resumed = tmp_path / "full", tmp_path / "resume"
     train_run(config, arrays, train, validation, uninterrupted)
