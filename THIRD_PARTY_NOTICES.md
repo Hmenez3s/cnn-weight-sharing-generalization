@@ -26,4 +26,4 @@ No trained checkpoint is included in this repository or promised as a public dow
 
 The implementation uses dependency APIs and credits related scientific work in the README. It does not claim a new invention, a state-of-the-art result, or a published paper. No author, affiliation or DOI is asserted. Repository citation guidance uses the repository URL and a verified release or commit; a formal authorship record has not been established.
 
-Private operational records and agent configuration are excluded from the public export. Original scientific source and measurements are retained verbatim where archived; presentation and packaging changes are separate from those frozen artifacts.
+Private operational records are excluded from the public export. Original scientific source and measurements are retained verbatim where archived; presentation and packaging changes are separate from those frozen artifacts.
