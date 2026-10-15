@@ -1,0 +1,16 @@
+{
+  "schema": "hybrid-pretest-independent-review-v1",
+  "status": "PASS",
+  "level": "CORE",
+  "head": "949fb168d5f4f6b78ca46297cfdb0c3de0873f6d",
+  "source_head": "ccded58694a9983f6b5f0eb014407c79f403e73a",
+  "freeze_sha256": "611282d3df12b6ae553dec9b7bb2febd7611704250a603fd063ac2fe1a45d335",
+  "agent_id": "e582f3c3-d6b7-41e",
+  "completed_utc": "2026-10-15T23:09:19.058Z",
+  "scope": "H8 pre-official-test freeze/model gate only; five sealed checkpoints, all 50,000 updates, 100,000 paired update comparisons, exact source/control/protocol identities, observed CPU 1/6/1 topology and MACs",
+  "official_test_evaluated_by_reviewer": false,
+  "protected_files_unchanged": 119,
+  "workers": 1,
+  "controller_wall_seconds": 3.9919775,
+  "failures": []
+}
