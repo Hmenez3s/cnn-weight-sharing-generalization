@@ -42,13 +42,13 @@ class TrainConfig:
     progressive_weight: float | None = None
 
     def __post_init__(self) -> None:
-        if self.family not in ("A", "B", "C", "D", "E", "F"):
-            raise ValueError("family must be A, B, C, D, E, or F")
+        if self.family not in ("A", "B", "C", "D", "E", "F", "H"):
+            raise ValueError("family must be A, B, C, D, E, F, or H")
         for key in ("depth", "width", "paired_seed", "total_updates", "batch_size", "validation_cadence", "num_classes", "split_seed"):
             value = getattr(self, key)
             if type(value) is not int:
                 raise ValueError(f"{key} must be an integer")
-        if self.depth not in (1, 2, 4, 8) or (self.family == "A" and self.depth != 1):
+        if self.depth not in (1, 2, 4, 8) or (self.family == "A" and self.depth != 1) or (self.family == "H" and self.depth != 8):
             raise ValueError("invalid family/depth combination")
         if self.width < 1 or self.num_classes < 1 or self.batch_size < 1 or self.total_updates < 1:
             raise ValueError("width, classes, batch_size and total_updates must be positive")
@@ -56,12 +56,12 @@ class TrainConfig:
             raise ValueError("validation cadence must be positive and seeds nonnegative")
         if isinstance(self.alpha, bool) or not isinstance(self.alpha, (int, float)) or not math.isfinite(self.alpha):
             raise ValueError("alpha must be finite")
-        if self.family in ("A", "B", "C", "D") and self.alpha != 0.1:
-            raise ValueError("families A-D fix alpha at 0.1")
+        if self.family in ("A", "B", "C", "D", "H") and self.alpha != 0.1:
+            raise ValueError("families A-D and H fix alpha at 0.1")
         if self.family in ("E", "F") and self.alpha <= 0:
             raise ValueError("families E-F require positive alpha")
         mechanisms = ("recall", "variable_depth", "progressive_loss")
-        if self.family in ("A", "B", "C", "D") and any(getattr(self, name) is not None for name in mechanisms):
+        if self.family in ("A", "B", "C", "D", "H") and any(getattr(self, name) is not None for name in mechanisms):
             raise ValueError("training mechanisms are only configurable for E/F")
         if any(getattr(self, name) is not None and type(getattr(self, name)) is not bool for name in mechanisms):
             raise ValueError("training mechanism flags must be booleans when specified")

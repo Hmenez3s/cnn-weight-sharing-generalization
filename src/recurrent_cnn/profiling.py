@@ -74,18 +74,21 @@ def _arithmetic_policy(device: torch.device) -> dict[str, bool] | None:
 
 
 def _default_grid(spec: ModelSpec) -> tuple[int, ...]:
+    if spec.family == "H":
+        return (8,)
     return (*_BASE_GRID, 64, 128) if spec.family in ("C", "E", "F") else tuple(k for k in _BASE_GRID if k <= spec.depth)
 
 
 def _validate_profile_grid(spec: ModelSpec, grid: Sequence[int]) -> None:
-    del spec
     if (not grid or any(type(k) is not int or k < 1 for k in grid)
             or tuple(sorted(set(grid))) != tuple(grid)):
         raise ValueError("inference_grid must contain unique increasing positive integers")
+    if spec.family == "H" and tuple(grid) != (8,):
+        raise ValueError("family H supports inference_grid=(8,) only")
 
 
 def _effective_grid(spec: ModelSpec, grid: Sequence[int]) -> tuple[int, ...]:
-    return tuple(k for k in grid if spec.family in ("C", "E", "F") or k <= spec.depth)
+    return tuple(grid) if spec.family == "H" else tuple(k for k in grid if spec.family in ("C", "E", "F") or k <= spec.depth)
 
 
 def _normalized_spec(spec: ModelSpec) -> dict[str, Any]:

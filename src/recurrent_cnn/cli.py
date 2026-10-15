@@ -467,7 +467,7 @@ def _parser() -> argparse.ArgumentParser:
 
     profile = commands.add_parser("profile", help="measure the actual CPU/GPU model objective on generated tensors")
     profile.add_argument("--config", help="strict profile request YAML; output remains an explicit CLI path")
-    profile.add_argument("--family", choices=tuple("ABCDEF"))
+    profile.add_argument("--family", choices=tuple("ABCDEFH"))
     profile.add_argument("--depth", type=int)
     profile.add_argument("--width", type=int)
     profile.add_argument("--alpha", type=float)

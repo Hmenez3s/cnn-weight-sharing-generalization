@@ -10,7 +10,7 @@ import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
 
-Family = Literal["A", "B", "C", "D", "E", "F"]
+Family = Literal["A", "B", "C", "D", "E", "F", "H"]
 _SUPPORTED_DEPTHS = (1, 2, 4, 8)
 _RECURRENT_FAMILIES = ("C", "E", "F")
 
@@ -27,21 +27,23 @@ class ModelSpec:
     progressive_loss: bool | None = None
 
     def __post_init__(self) -> None:
-        if self.family not in ("A", "B", "C", "D", "E", "F"):
+        if self.family not in ("A", "B", "C", "D", "E", "F", "H"):
             raise ValueError(f"unsupported model family: {self.family!r}")
         for name, value in (("depth", self.depth), ("width", self.width), ("num_classes", self.num_classes)):
             if type(value) is not int:
                 raise ValueError(f"{name} must be an integer (booleans are not accepted)")
         if self.depth not in _SUPPORTED_DEPTHS:
             raise ValueError(f"depth must be one of {_SUPPORTED_DEPTHS}")
+        if self.family == "H" and self.depth != 8:
+            raise ValueError("family H requires depth=8")
         if self.family == "A" and self.depth != 1:
             raise ValueError("family A is the single-step baseline and requires depth=1")
         if self.width < 1 or self.num_classes < 1:
             raise ValueError("width and num_classes must be positive")
         if not isinstance(self.alpha, (int, float)) or isinstance(self.alpha, bool):
             raise ValueError("alpha must be a finite positive number")
-        if self.family in ("A", "B", "C", "D") and self.alpha != 0.1:
-            raise ValueError("families A-D fix residual alpha at 0.1")
+        if self.family in ("A", "B", "C", "D", "H") and self.alpha != 0.1:
+            raise ValueError("families A-D and H fix residual alpha at 0.1")
         if self.family in ("E", "F") and (not isfinite(float(self.alpha)) or self.alpha <= 0):
             raise ValueError("families E-F require finite positive alpha")
         for name in ("recall", "variable_depth", "progressive_loss"):
@@ -77,8 +79,9 @@ class RecurrentCNN(nn.Module):
             self.stem = nn.Conv2d(3, spec.width, kernel_size=3, stride=2, padding=1, bias=False)
             groups = gcd(8, spec.width)
             tied = spec.family in _RECURRENT_FAMILIES
+            branch_count = 3 if spec.family == "H" else (1 if tied else spec.depth)
             self.branches = nn.ModuleList(
-                [RecurrentBranch(spec.width, groups) for _ in range(1 if tied else spec.depth)]
+                [RecurrentBranch(spec.width, groups) for _ in range(branch_count)]
             )
             # Register the projection after the common C body: same-seed common
             # tensors retain their historical initialization stream.
@@ -115,6 +118,11 @@ class RecurrentCNN(nn.Module):
         self, h: Tensor, encoded: Tensor | None = None, *, iteration: int | None = None
     ) -> Tensor:
         """Apply one model-owned update; untied families require a zero-based block index."""
+        if self.spec.family == "H":
+            if iteration is None or type(iteration) is not int or not 0 <= iteration < 8:
+                raise ValueError("family H step requires iteration in 0..7")
+            branch_index = 0 if iteration == 0 else (2 if iteration == 7 else 1)
+            return h + self.spec.alpha * self.branches[branch_index](h)
         if self.spec.family not in _RECURRENT_FAMILIES:
             if iteration is None or type(iteration) is not int or not 0 <= iteration < self.spec.depth:
                 raise ValueError("untied step requires iteration in the trained depth")
@@ -139,6 +147,8 @@ class RecurrentCNN(nn.Module):
         k = self.spec.depth if inference_k is None else inference_k
         if type(k) is not int or k < 1:
             raise ValueError("inference_k must be a positive integer")
+        if self.spec.family == "H" and k != 8:
+            raise ValueError("family H supports inference_k=8 only")
         if self.spec.family not in _RECURRENT_FAMILIES and k > self.spec.depth:
             raise ValueError("inference_k cannot exceed the fixed model depth")
         encoded = self.encode(x)

@@ -24,7 +24,7 @@ def _component_counts(width: int, num_classes: int, recall: bool = False) -> dic
 
 def _count_for(family: str, depth: int, width: int, num_classes: int = 100, recall: bool = False) -> int:
     counts = _component_counts(width, num_classes, recall)
-    branch_copies = 1 if family in ("C", "E", "F") else depth
+    branch_copies = 3 if family == "H" else (1 if family in ("C", "E", "F") else depth)
     return counts["stem"] + counts["head"] + branch_copies * counts["branch"] + counts.get("recall_projection", 0)
 
 
@@ -87,6 +87,8 @@ def mac_breakdown(
     k = spec.depth if inference_k is None else inference_k
     if type(k) is not int or k < 1:
         raise ValueError("inference_k must be a positive integer")
+    if spec.family == "H" and k != 8:
+        raise ValueError("family H supports inference_k=8 only")
     if spec.family in ("A", "B", "D") and k > spec.depth:
         raise ValueError("inference_k cannot exceed the fixed model depth")
     width = spec.width
@@ -102,7 +104,7 @@ def mac_breakdown(
     recall_projection = batch * stem_h * stem_w * 2 * width * width if recall else 0
     executed_recall = k * recall_projection
     counts = _component_counts(width, spec.num_classes, recall)
-    copies = 1 if spec.family in ("C", "E", "F") else spec.depth
+    copies = 3 if spec.family == "H" else (1 if spec.family in ("C", "E", "F") else spec.depth)
     unique_parameters = counts["stem"] + counts["head"] + copies * counts["branch"] + counts.get("recall_projection", 0)
     result: dict[str, Any] = {
         "family": spec.family,

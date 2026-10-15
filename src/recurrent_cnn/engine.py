@@ -245,12 +245,16 @@ def evaluate_checkpoint_sweep(
     checkpoint_identity = _checkpoint_identity(payload, path)
     spec = ModelSpec(**spec_data)
     grid = tuple(inference_grid) if inference_grid is not None else (
-        _BASE_INFERENCE_GRID if spec.family in ("C", "E", "F")
-        else tuple(k for k in _BASE_INFERENCE_GRID if k <= spec.depth)
+        (8,) if spec.family == "H" else (
+            _BASE_INFERENCE_GRID if spec.family in ("C", "E", "F")
+            else tuple(k for k in _BASE_INFERENCE_GRID if k <= spec.depth)
+        )
     )
     if (not grid or any(type(k) is not int or k < 1 for k in grid)
             or tuple(sorted(set(grid))) != grid):
         raise ValueError("inference_grid must contain unique increasing positive integers")
+    if spec.family == "H" and grid != (8,):
+        raise ValueError("family H supports inference_grid=(8,) only")
     if spec.family in ("A", "B", "D") and grid[-1] > spec.depth:
         raise ValueError("inference_k cannot exceed the fixed model depth")
     source_metadata = dict(arrays.metadata or {})
