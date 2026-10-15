@@ -149,3 +149,12 @@ Full replication is not a one-line command. The preserved training operator was 
 ## Citation
 
 No paper, DOI or formal release accompanies this repository. If you use it, cite the repository URL, <https://github.com/Hmenez3s/cnn-weight-sharing-generalization>, together with the exact commit hash you used. No author list is asserted here.
+
+## Exploratory H8 follow-up
+
+A separate follow-up adds **H8**, `[A,S,S,S,S,S,S,Z]`: independent endpoint blocks around a shared center, for three unique blocks and eight applications at width 32. The five H seeds use the original paired recipe and frozen B8/C8 controls; no controls were retrained.
+
+H8 has higher mean test accuracy than both controls, but its paired interval against C8 includes zero: an advantage over C8 remains unresolved despite H8's larger parameter count. This follow-up was proposed after the original test outcomes were known and is exploratory, not a fresh confirmatory three-model replication. The original results above remain unchanged.
+
+[Generated H8 results, figures and regeneration commands](docs/HYBRID_GENERALIZATION.md) ·
+[H8 protocol, native evidence and isolated operator](benchmarks/hybrid-generalization-20261015/README.md).
