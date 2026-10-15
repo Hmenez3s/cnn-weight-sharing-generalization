@@ -1,0 +1,60 @@
+{
+  "schema": "hybrid-generalization-protocol-v1",
+  "experiment_id": "hybrid-generalization-20261015",
+  "study_name": "H8 hybrid follow-up",
+  "provenance": {
+    "status": "prospective exploratory follow-up for H only; original B/C/E official-test results were already known before this protocol was authored",
+    "original_freeze_sha256": "64da1d811fb71a1913042d50efc62fdda49d240b70e2f54c375ebbe328810bd0",
+    "original_protocol_sha256": "5f97e38b0ac7ab5d3e004c85ae1b24029d133fa64a22e3a08c4e7880b2d0ff68",
+    "original_preregistration_sha256": "cdaea8ae86a41783fedad58709486877f8cb9e76f0e782bba2a749ddf6ada7ab",
+    "original_validation_sha256": "5d5325b3893e84c8cabc5e1c8da387c91e86e46ea5588f8bbdaa363ead2e46d7",
+    "original_test_metrics_sha256": "16c6f5dc258d76c2a9d15eb5ac09a62c87e2288cab0736d63f801b2d85b13e76",
+    "original_control_families": ["B", "C"],
+    "original_control_manifest": "source_hashes.json includes historical protocol, preregistration, validation, test_metrics, freeze, and compressed B/C metrics.jsonl.gz"
+  },
+  "roster": {"family": "H", "paired_seeds": [11, 23, 37, 53, 71], "run_order": "seed order as listed"},
+  "recipe": {
+    "depth": 8,
+    "width": 32,
+    "alpha": 0.1,
+    "fraction": 0.1,
+    "split_seed": 1729,
+    "train_examples_per_run": 4500,
+    "validation_examples": 5000,
+    "official_test_examples": 10000,
+    "batch_size": 128,
+    "num_classes": 100,
+    "total_updates": 10000,
+    "cosine_horizon": 10000,
+    "validation_cadence": 200,
+    "optimizer": {"name": "SGD", "momentum": 0.9, "weight_decay": 0.0005},
+    "learning_rate": 0.03,
+    "device": "cuda",
+    "amp": false,
+    "model_topology": {"branches": ["A", "S", "Z"], "executed_blocks": [0, 1, 1, 1, 1, 1, 1, 2]},
+    "prohibited_mechanisms": ["recall", "variable_depth", "progressive_loss", "progressive_weight"]
+  },
+  "selection": {"source": "validation", "inference_k": 8, "order": ["highest_validation_accuracy", "lowest_validation_cross_entropy", "earliest_update"], "native_selection_identity": "amended_v2"},
+  "synthetic_probe": {"default_device": "cpu", "allowed_devices": ["cpu", "cuda"], "examples_per_class": 3, "updates": 2, "cosine_horizon": 2, "validation_cadence": 1, "expected_parameters": 59844, "expected_macs": 37973120, "official_data_reads": false},
+  "analysis": {
+    "contrasts": ["H8-B8", "H8-C8"],
+    "unit": "paired_seed",
+    "n": 5,
+    "seeds": [11, 23, 37, 53, 71],
+    "units": "percentage_points",
+    "mean": "arithmetic",
+    "standard_deviation": "sample_ddof1",
+    "confidence_interval": "two-sided Student t 95%, df4",
+    "inference": "both exploratory and nominal unadjusted; no new confirmatory claim because original test results were already known",
+    "post_h_test_tuning_authorized": false
+  },
+  "freeze_gate": {"selected_checkpoints_frozen_before_any_official_test_read": true, "freeze_verification_requires_gpu": false, "repeat_test_allowed": false},
+  "evaluation": {"validation_grid": [8], "official_test_grid": [8], "batch_size": 256, "training_after_test_opens": false, "tuning_after_test_opens": false},
+  "results_contract": {
+    "schema": "hybrid-generalization-results-v1",
+    "top_level": ["schema", "split", "freeze_sha256", "preregistration_sha256", "original_control_freeze_sha256", "provenance", "rows"],
+    "row_fields": ["run_id", "family", "paired_seed", "config", "data_hash", "split_hash", "subset_hash", "checkpoint_sha256", "selected_update", "sweep"],
+    "splits": ["validation", "official-test"]
+  },
+  "limits": {"no_k32": true, "no_control_retraining": true, "no_post_test_tuning": true, "no_cifar100c": true, "no_additional_architectures_or_seeds": true}
+}
