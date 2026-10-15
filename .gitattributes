@@ -1,4 +1,6 @@
 benchmarks/minimal-generalization-20261015/*.json -text
 benchmarks/minimal-generalization-20261015/runs/** -text
+benchmarks/hybrid-generalization-20261015/*.json -text
+benchmarks/hybrid-generalization-20261015/runs/** -text
 *.gz binary
 *.zip binary
