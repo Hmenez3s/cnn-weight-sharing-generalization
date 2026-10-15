@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360" role="img" aria-labelledby="banner-title banner-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="banner-title">Convolutional Weight Sharing and Generalization</title>
+  <desc id="banner-desc">Eight distinct squares above eight identical squares joined by a single bracket, representing eight distinct convolutional blocks versus one block applied eight times.</desc>
+  <rect width="1280" height="360" rx="20" fill="#0f172a"/>
+  <rect x="0" y="0" width="12" height="360" fill="#2dd4bf"/>
+  <g fill="#f8fafc">
+    <text x="72" y="118" font-size="50" font-weight="700">Convolutional</text>
+    <text x="72" y="176" font-size="50" font-weight="700">Weight Sharing</text>
+    <text x="72" y="234" font-size="50" font-weight="700">and Generalization</text>
+  </g>
+  <rect x="72" y="258" width="88" height="5" rx="2.5" fill="#2dd4bf"/>
+  <text x="72" y="299" font-size="20" fill="#cbd5e1">Eight distinct blocks versus one block applied eight times</text>
+  <text x="72" y="327" font-size="20" fill="#94a3b8">Paired seeds · CIFAR-100 · matched executed depth and MACs</text>
+
+  <text x="796" y="92" font-size="17" font-weight="600" fill="#cbd5e1">B8 · eight distinct weight sets</text>
+  <rect x="796" y="110" width="40" height="40" rx="6" fill="#475569"/>
+  <rect x="848" y="110" width="40" height="40" rx="6" fill="#64748b"/>
+  <rect x="900" y="110" width="40" height="40" rx="6" fill="#94a3b8"/>
+  <rect x="952" y="110" width="40" height="40" rx="6" fill="#cbd5e1"/>
+  <rect x="1004" y="110" width="40" height="40" rx="6" fill="#e2e8f0"/>
+  <rect x="1056" y="110" width="40" height="40" rx="6" fill="#94a3b8"/>
+  <rect x="1108" y="110" width="40" height="40" rx="6" fill="#64748b"/>
+  <rect x="1160" y="110" width="40" height="40" rx="6" fill="#475569"/>
+  <text x="796" y="232" font-size="17" font-weight="600" fill="#5eead4">C8 · one weight set, applied eight times</text>
+  <rect x="796" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="848" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="900" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="952" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="1004" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="1056" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="1108" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <rect x="1160" y="250" width="40" height="40" rx="6" fill="#2dd4bf"/>
+  <path d="M796 308L796 318L1200 318L1200 308" fill="none" stroke="#5eead4" stroke-width="3"/>
+</svg>

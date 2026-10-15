@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 770" width="1200" height="770" role="img" aria-labelledby="arch-title arch-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="arch-title">Untied B8 versus weight-shared C8: same executed depth, different parameter sharing</title>
+  <desc id="arch-desc">Two matched pipelines. Both encode a 3 by 32 by 32 image with a stride-2 convolution to a 32-channel state, apply eight residual convolutional updates, and read out 100 class logits. B8 uses eight distinct weight sets W1 to W8; C8 reuses a single weight set W at all eight updates. Both execute 37,973,120 multiply-accumulates; B8 has 152,644 parameters and C8 has 22,724.</desc>
+  <rect x="1" y="1" width="1198" height="768" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="40" y="52" font-size="28" font-weight="700" fill="#0f172a">Equal executed depth, different parameter sharing</text>
+  <text x="40" y="82" font-size="16" fill="#334155">Width 32 · eight residual updates, each adding 0.1 · F(h) to the state h · F = (GroupNorm, ReLU, 3×3 conv) applied twice, 8 groups</text>
+
+  <rect x="24" y="104" width="1152" height="200" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="44" y="138" font-size="20" font-weight="700" fill="#0f172a">B8 · untied</text>
+  <text x="168" y="138" font-size="16" fill="#334155">eight successive blocks, each with its own weights</text>
+  <rect x="44" y="170" width="86" height="64" rx="9" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="87.0" y="197.4" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Input</text>
+  <text x="87.0" y="216.4" text-anchor="middle" font-size="14" fill="#0f172a">3×32×32</text>
+  <path d="M132 202L160 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M166 202L158 197L158 207Z" fill="#475569"/>
+  <rect x="168" y="166" width="112" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="224.0" y="187.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Stem</text>
+  <text x="224.0" y="206.9" text-anchor="middle" font-size="14" fill="#0f172a">3×3 conv, s2</text>
+  <text x="224.0" y="225.9" text-anchor="middle" font-size="14" fill="#0f172a">3 to 32 channels</text>
+  <path d="M282 202L312 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M318 202L310 197L310 207Z" fill="#475569"/>
+  <rect x="322" y="168" width="62" height="68" rx="9" fill="#fde68a" stroke="#475569" stroke-width="2"/>
+  <text x="353.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W1</text>
+  <text x="353.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M385 202L391 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M397 202L389 197L389 207Z" fill="#475569"/>
+  <rect x="398" y="168" width="62" height="68" rx="9" fill="#fdba74" stroke="#475569" stroke-width="2"/>
+  <text x="429.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W2</text>
+  <text x="429.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M461 202L467 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M473 202L465 197L465 207Z" fill="#475569"/>
+  <rect x="474" y="168" width="62" height="68" rx="9" fill="#fca5a5" stroke="#475569" stroke-width="2"/>
+  <text x="505.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W3</text>
+  <text x="505.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M537 202L543 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M549 202L541 197L541 207Z" fill="#475569"/>
+  <rect x="550" y="168" width="62" height="68" rx="9" fill="#f9a8d4" stroke="#475569" stroke-width="2"/>
+  <text x="581.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W4</text>
+  <text x="581.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M613 202L619 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M625 202L617 197L617 207Z" fill="#475569"/>
+  <rect x="626" y="168" width="62" height="68" rx="9" fill="#d8b4fe" stroke="#475569" stroke-width="2"/>
+  <text x="657.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W5</text>
+  <text x="657.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M689 202L695 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M701 202L693 197L693 207Z" fill="#475569"/>
+  <rect x="702" y="168" width="62" height="68" rx="9" fill="#a5b4fc" stroke="#475569" stroke-width="2"/>
+  <text x="733.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W6</text>
+  <text x="733.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M765 202L771 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M777 202L769 197L769 207Z" fill="#475569"/>
+  <rect x="778" y="168" width="62" height="68" rx="9" fill="#93c5fd" stroke="#475569" stroke-width="2"/>
+  <text x="809.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W7</text>
+  <text x="809.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M841 202L847 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M853 202L845 197L845 207Z" fill="#475569"/>
+  <rect x="854" y="168" width="62" height="68" rx="9" fill="#7dd3fc" stroke="#475569" stroke-width="2"/>
+  <text x="885.0" y="196.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W8</text>
+  <text x="885.0" y="219.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M918 202L944 202" stroke="#475569" stroke-width="2.5"/>
+  <path d="M950 202L942 197L942 207Z" fill="#475569"/>
+  <rect x="952" y="166" width="122" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="1013.0" y="187.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Readout</text>
+  <text x="1013.0" y="206.9" text-anchor="middle" font-size="14" fill="#0f172a">avg-pool + linear</text>
+  <text x="1013.0" y="225.9" text-anchor="middle" font-size="14" fill="#0f172a">100 logits</text>
+  <text x="619.0" y="282" text-anchor="middle" font-size="16" font-weight="600" fill="#0f172a">8 distinct weight sets · 8 × 18,560 branch parameters · 4,718,592 MACs per update</text>
+  <rect x="24" y="324" width="1152" height="200" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="44" y="358" font-size="20" font-weight="700" fill="#0f766e">C8 · weight-shared</text>
+  <text x="262" y="358" font-size="16" fill="#334155">one block, applied at all eight updates</text>
+  <rect x="44" y="390" width="86" height="64" rx="9" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="87.0" y="417.4" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Input</text>
+  <text x="87.0" y="436.4" text-anchor="middle" font-size="14" fill="#0f172a">3×32×32</text>
+  <path d="M132 422L160 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M166 422L158 417L158 427Z" fill="#475569"/>
+  <rect x="168" y="386" width="112" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="224.0" y="407.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Stem</text>
+  <text x="224.0" y="426.9" text-anchor="middle" font-size="14" fill="#0f172a">3×3 conv, s2</text>
+  <text x="224.0" y="445.9" text-anchor="middle" font-size="14" fill="#0f172a">3 to 32 channels</text>
+  <path d="M282 422L312 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M318 422L310 417L310 427Z" fill="#475569"/>
+  <rect x="322" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="353.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="353.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M385 422L391 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M397 422L389 417L389 427Z" fill="#475569"/>
+  <rect x="398" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="429.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="429.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M461 422L467 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M473 422L465 417L465 427Z" fill="#475569"/>
+  <rect x="474" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="505.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="505.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M537 422L543 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M549 422L541 417L541 427Z" fill="#475569"/>
+  <rect x="550" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="581.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="581.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M613 422L619 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M625 422L617 417L617 427Z" fill="#475569"/>
+  <rect x="626" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="657.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="657.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M689 422L695 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M701 422L693 417L693 427Z" fill="#475569"/>
+  <rect x="702" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="733.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="733.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M765 422L771 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M777 422L769 417L769 427Z" fill="#475569"/>
+  <rect x="778" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="809.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="809.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M841 422L847 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M853 422L845 417L845 427Z" fill="#475569"/>
+  <rect x="854" y="388" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="885.0" y="416.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">W</text>
+  <text x="885.0" y="439.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M918 422L944 422" stroke="#475569" stroke-width="2.5"/>
+  <path d="M950 422L942 417L942 427Z" fill="#475569"/>
+  <rect x="952" y="386" width="122" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="1013.0" y="407.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Readout</text>
+  <text x="1013.0" y="426.9" text-anchor="middle" font-size="14" fill="#0f172a">avg-pool + linear</text>
+  <text x="1013.0" y="445.9" text-anchor="middle" font-size="14" fill="#0f172a">100 logits</text>
+  <path d="M322 466L322 476L916 476L916 466" fill="none" stroke="#0f766e" stroke-width="3"/>
+  <text x="619.0" y="502" text-anchor="middle" font-size="16" font-weight="600" fill="#0f766e">same tensor W reused 8× · 18,560 branch parameters · 4,718,592 MACs per update</text>
+  <rect x="24" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="24" y="548" width="8" height="176" rx="4" fill="#0f766e"/>
+  <text x="50" y="582" font-size="18" font-weight="700" fill="#0f766e">Sharing differs</text>
+  <text x="50" y="614" font-size="15" font-weight="700" fill="#0f172a">B8: 152,644 parameters</text>
+  <text x="50" y="638" font-size="15" font-weight="700" fill="#0f172a">C8: 22,724 parameters</text>
+  <text x="50" y="662" font-size="15" fill="#0f172a">C8 stores ≈ 6.7× fewer parameters;</text>
+  <text x="50" y="686" font-size="15" fill="#0f172a">stem (864) and head (3,300) are identical.</text>
+  <rect x="416" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="416" y="548" width="8" height="176" rx="4" fill="#0f172a"/>
+  <text x="442" y="582" font-size="18" font-weight="700" fill="#0f172a">Executed compute matches</text>
+  <text x="442" y="614" font-size="15" font-weight="700" fill="#0f172a">8 branch applications in both models</text>
+  <text x="442" y="638" font-size="15" font-weight="700" fill="#0f172a">37,973,120 MACs per image</text>
+  <text x="442" y="662" font-size="15" fill="#0f172a">Counts convolutions and head only; GroupNorm,</text>
+  <text x="442" y="686" font-size="15" fill="#0f172a">ReLU, residual add, pooling and memory traffic</text>
+  <text x="442" y="710" font-size="15" fill="#0f172a">are omitted. No latency claim is made.</text>
+  <rect x="808" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="808" y="548" width="8" height="176" rx="4" fill="#475569"/>
+  <text x="834" y="582" font-size="18" font-weight="700" fill="#475569">E8 reference (not the main pair)</text>
+  <text x="834" y="614" font-size="15" fill="#0f172a">Shared block + recall of the stem state</text>
+  <text x="834" y="638" font-size="15" fill="#0f172a">(1×1 projection), variable depth, progressive</text>
+  <text x="834" y="662" font-size="15" fill="#0f172a">loss, α = 0.05. 24,772 parameters;</text>
+  <text x="834" y="686" font-size="15" fill="#0f172a">42,167,424 MACs. Official test:</text>
+  <text x="834" y="710" font-size="15" font-weight="700" fill="#0f172a">E8 − B8 = −2.71 pp (negative).</text>
+  <text x="40" y="748" font-size="14" fill="#475569">Counts come from recorded run metadata (seed 11, executed depth 8, width 32). Both main models share the same stem, readout and depth.</text>
+</svg>
