@@ -1,0 +1,111 @@
+{
+  "completed_runs": 5,
+  "counters": {
+    "cifar100c": 0,
+    "forbidden_stage": 0,
+    "network": 0,
+    "official_test_before_freeze": 0,
+    "official_test_reads": 0,
+    "outside_write": 0
+  },
+  "duration_seconds": 1887.9700347000035,
+  "environment": {
+    "amp": false,
+    "cpu_threads": 12,
+    "device": "NVIDIA GeForce RTX 5090",
+    "python": "3.13.13 (tags/v3.13.13:01104ce, Apr  7 2026, 19:25:48) [MSC v.1944 64 bit (AMD64)]",
+    "torch": "2.9.1+cu128"
+  },
+  "freeze_sha256": "611282d3df12b6ae553dec9b7bb2febd7611704250a603fd063ac2fe1a45d335",
+  "logical_updates": 50000,
+  "physical_update_executions": 50000,
+  "runs": [
+    {
+      "actual_examples": 1280000,
+      "parameter_count": 59844,
+      "run_id": "H-s11",
+      "status": "complete",
+      "updates": 10000,
+      "wall_seconds": 384.5936451000016
+    },
+    {
+      "actual_examples": 1280000,
+      "parameter_count": 59844,
+      "run_id": "H-s23",
+      "status": "complete",
+      "updates": 10000,
+      "wall_seconds": 375.6860572000005
+    },
+    {
+      "actual_examples": 1280000,
+      "parameter_count": 59844,
+      "run_id": "H-s37",
+      "status": "complete",
+      "updates": 10000,
+      "wall_seconds": 374.91090659999463
+    },
+    {
+      "actual_examples": 1280000,
+      "parameter_count": 59844,
+      "run_id": "H-s53",
+      "status": "complete",
+      "updates": 10000,
+      "wall_seconds": 374.2695647000073
+    },
+    {
+      "actual_examples": 1280000,
+      "parameter_count": 59844,
+      "run_id": "H-s71",
+      "status": "complete",
+      "updates": 10000,
+      "wall_seconds": 370.75763639999786
+    }
+  ],
+  "runtime": {
+    "cpu_threads": 12,
+    "cuda_memory_fraction_applied": 0.5,
+    "device": "cuda",
+    "phase": "train"
+  },
+  "schema": "hybrid-generalization-train-receipt-v1",
+  "source_hashes": {
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "benchmarks/duration-calibration-20261015/run_calibration.py": "71c9879b8e5fb25158a498d64bbd2395cc62d06baae10b55c9a2a2f893bd5702",
+    "benchmarks/hybrid-generalization-20261015/analyze_hybrid.py": "a388b766df69e91c53638d2d605df2949d7ddbefbd4d1f9ed8b7b7619946db09",
+    "benchmarks/hybrid-generalization-20261015/protocol.json": "e83d4b8f739b92fa7e447e407d300883556e59a3070f136789d96c9574281760",
+    "benchmarks/hybrid-generalization-20261015/run_hybrid.py": "31df89a790a864a568f926424de67496099156df00449f83022591ea80beb768",
+    "benchmarks/minimal-generalization-20261015/analyze_study.py": "32dc80517320c2d6fe620b1c37211b55715afed93baa3c901e67506cd941e908",
+    "benchmarks/minimal-generalization-20261015/freeze.json": "64da1d811fb71a1913042d50efc62fdda49d240b70e2f54c375ebbe328810bd0",
+    "benchmarks/minimal-generalization-20261015/preregistration.json": "cdaea8ae86a41783fedad58709486877f8cb9e76f0e782bba2a749ddf6ada7ab",
+    "benchmarks/minimal-generalization-20261015/protocol.json": "5f97e38b0ac7ab5d3e004c85ae1b24029d133fa64a22e3a08c4e7880b2d0ff68",
+    "benchmarks/minimal-generalization-20261015/run_study.py": "975bed54c7f23312a157e1e009a955a7cca988be98422d649a683629f8e19d1a",
+    "benchmarks/minimal-generalization-20261015/runs/B-s11/metrics.jsonl.gz": "3eead195ed99823684ad80a38f5e9f72aa2966952823f741128e37a9c035d941",
+    "benchmarks/minimal-generalization-20261015/runs/B-s23/metrics.jsonl.gz": "343e43fa607e9853ff760574610d16c17c10d95aea45bec701368271abb922a1",
+    "benchmarks/minimal-generalization-20261015/runs/B-s37/metrics.jsonl.gz": "c21414fdf7a10cd33113918ac7b0f121d33a511002226d48c7d02e8d0da74655",
+    "benchmarks/minimal-generalization-20261015/runs/B-s53/metrics.jsonl.gz": "133d55b2ba926a9faec880515aa7b56007e24dadde6a4d44886287888a821778",
+    "benchmarks/minimal-generalization-20261015/runs/B-s71/metrics.jsonl.gz": "c3b268b5af1679e3065008a3e01b78840f6c93ec088175dd88fcde847f807934",
+    "benchmarks/minimal-generalization-20261015/runs/C-s11/metrics.jsonl.gz": "a0404345575e63a12ef7855dd08d993bf196fdfd2f2036fedbb823901d53d0fb",
+    "benchmarks/minimal-generalization-20261015/runs/C-s23/metrics.jsonl.gz": "12e8573dfda01fe51bc696194d8164d7e2c52276e5aafb8426ffe374daf7b3c0",
+    "benchmarks/minimal-generalization-20261015/runs/C-s37/metrics.jsonl.gz": "8bf0224adde2723b1c0158171ac3a6bf5db464f8664e087920b27d8898da6eb1",
+    "benchmarks/minimal-generalization-20261015/runs/C-s53/metrics.jsonl.gz": "aac262d2b7007be1a339a566511bcfd0b2af33f0bc0c1a722523c1897d327c92",
+    "benchmarks/minimal-generalization-20261015/runs/C-s71/metrics.jsonl.gz": "73f46ed595a6ab6dcf8ed72bdb1dab214af43545873b7ab8a6248b8e8eee4c81",
+    "benchmarks/minimal-generalization-20261015/test_metrics.json": "16c6f5dc258d76c2a9d15eb5ac09a62c87e2288cab0736d63f801b2d85b13e76",
+    "benchmarks/minimal-generalization-20261015/validation.json": "5d5325b3893e84c8cabc5e1c8da387c91e86e46ea5588f8bbdaa363ead2e46d7",
+    "provenance/frozen-source.zip": "6afe0446bb3e9eacf329186c8fd2d882497b2e16f4e421dc4a6792f4add853fd",
+    "pyproject.toml": "e37fee9660241cbddb202bc2e5ebe49d4834e088678a41c7dcb92af4c0d66f7f",
+    "scripts/make_hybrid_figures.py": "13d689d8a6084ab4dee9b04c6ada06fa95d4fc030c5f500632abbe067453da39",
+    "src/recurrent_cnn/__init__.py": "4b9608fa2fbec6405399173629d04e3157b3cb706be4ce423a80e2d31503adb7",
+    "src/recurrent_cnn/__main__.py": "985e653dcb45b624289ae78f3235686e618caa610371d3765ab89b13efa0e225",
+    "src/recurrent_cnn/analysis.py": "07fa2763f0b62584dae3649411214f442e39affdf93a1cb3c1289eff62c3aa15",
+    "src/recurrent_cnn/backend.py": "a8c581d2cff092114f02172995f9193b89b653efcdd0f0b7d13e135865a015a6",
+    "src/recurrent_cnn/cli.py": "ec1fc63ab8f7e2475544658df536e6b744c8f34bd988b61dcee3c58dd815cf9e",
+    "src/recurrent_cnn/config.py": "9f8e5eefcc2f699abbc88ca2be624e228f8c0754006efba244ad529e8189f2c8",
+    "src/recurrent_cnn/costs.py": "f8fb550b2f65b5a6df61990b48ba0527badf5f6c0970df1da8cb1b2742513abb",
+    "src/recurrent_cnn/data.py": "7cf4a43db7d367bf41da6e4a63976818c022d7eae0efee796ac0bf8f097888d5",
+    "src/recurrent_cnn/engine.py": "6dccb5b9898bf584812ceb28a886566d14cbecb0ef545b78a9f57564c38dc164",
+    "src/recurrent_cnn/models.py": "7d32cf648d75c06acd054beacfdc2d511d8b8cd42795de86916d17403013b28c",
+    "src/recurrent_cnn/profiling.py": "381b7d1a481707c7741fc02642c1355b63e1b49c3106c12309df41b7ecd9f55e",
+    "src/recurrent_cnn/protocol.py": "4cb28400c7050d420b5639532f8ee0e7021996b2072ca267e7777ebd12962880"
+  },
+  "status": "complete"
+}
