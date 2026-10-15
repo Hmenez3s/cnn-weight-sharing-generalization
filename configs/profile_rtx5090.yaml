@@ -1,0 +1,16 @@
+# Profile request only; no output path or measurement claim is included.
+family: E
+depth: 8
+width: 32
+alpha: 0.1
+device: cuda
+amp: false
+warmup: 10
+repeats: 50
+batch_size: 128
+inference_grid: [1, 2, 4, 8, 12, 16, 24, 32, 64, 128]
+sweep_examples: 128
+progressive_weight: 0.5
+recall: true
+variable_depth: true
+progressive_loss: true

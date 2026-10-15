@@ -1,0 +1,14 @@
+# Safe generated-data smoke; the CLI limits smoke execution to its bounded steps.
+family: C
+depth: 2
+width: 4
+role: smoke
+synthetic: true
+total_updates: 2
+batch_size: 2
+validation_cadence: 1
+split_seed: 1729
+paired_seed: 0
+fraction: 1.0
+device: cpu
+amp: false

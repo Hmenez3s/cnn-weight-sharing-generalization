@@ -1,0 +1,9 @@
+# Inert amended roster request (290 full trials); this file does not execute runs.
+# Operator supplies manifests for all six required seeds (including pilot 101), an explicit
+# preregistered update budget, and explicit root in a completed request copy.
+protocol_version: 2
+full: true
+batch_size: 128
+device: cuda
+amp: false
+seeds: [11, 23, 37, 53, 71]

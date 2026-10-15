@@ -1,0 +1,14 @@
+# Synthetic fixed-batch overfit; one-batch restriction is enforced by the CLI.
+family: C
+depth: 2
+width: 4
+role: overfit
+synthetic: true
+total_updates: 12
+batch_size: 16
+validation_cadence: 4
+split_seed: 1729
+paired_seed: 0
+fraction: 1.0
+device: cpu
+amp: false

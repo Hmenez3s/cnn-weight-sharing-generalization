@@ -1,0 +1,21 @@
+# Illustrative TrainConfig only: the matrix pilot owns all six variants x both LRs.
+# LR 0.01 is one predeclared trial, not a selected learning rate.
+family: E
+depth: 8
+width: 32
+alpha: 0.1
+fraction: 0.1
+paired_seed: 101
+split_seed: 1729
+role: pilot
+synthetic: false
+total_updates: 200
+batch_size: 128
+learning_rate: 0.01
+validation_cadence: 100
+device: cuda
+amp: false
+progressive_weight: 0.5
+recall: true
+variable_depth: true
+progressive_loss: true

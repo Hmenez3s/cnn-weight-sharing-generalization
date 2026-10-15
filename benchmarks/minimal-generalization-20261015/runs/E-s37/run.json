@@ -1,0 +1,97 @@
+{
+  "amp": false,
+  "config": {
+    "alpha": 0.05,
+    "amp": false,
+    "batch_size": 128,
+    "cosine_horizon": 10000,
+    "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+    "depth": 8,
+    "device": "cuda",
+    "family": "E",
+    "fraction": 0.1,
+    "learning_rate": 0.1,
+    "momentum": 0.9,
+    "num_classes": 100,
+    "paired_seed": 37,
+    "progressive_loss": true,
+    "progressive_weight": 0.75,
+    "recall": true,
+    "role": "research",
+    "selection_identity": "amended_v2",
+    "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+    "split_seed": 1729,
+    "subset_hash": "505fe12243d4a4f14cbb046964f6f15bd47f02d7ec5b8c0b609d4765b7f15281",
+    "synthetic": false,
+    "total_updates": 10000,
+    "validation_cadence": 200,
+    "variable_depth": true,
+    "weight_decay": 0.0005,
+    "width": 32
+  },
+  "config_hash": "b8c6e3454ec53e54d6e07beb333ac78d9edf361528f27ec9fe84315b61c579f4",
+  "costs": {
+    "depth": 8,
+    "family": "E",
+    "inference_k": 8,
+    "input_shape": [
+      1,
+      3,
+      32,
+      32
+    ],
+    "mac_breakdown": {
+      "branch_conv_per_step": 4718592,
+      "executed_branch": 37748736,
+      "executed_recall_projection": 4194304,
+      "head": 3200,
+      "recall_projection_per_step": 524288,
+      "stem": 221184,
+      "total": 42167424
+    },
+    "omitted": [
+      "GroupNorm",
+      "ReLU",
+      "residual add/scale",
+      "pooling",
+      "memory traffic"
+    ],
+    "parameter_breakdown": {
+      "branch_per_unique_copy": 18560,
+      "head": 3300,
+      "recall_projection": 2048,
+      "stem": 864,
+      "unique_branch_copies": 1,
+      "unique_total": 24772
+    },
+    "width": 32
+  },
+  "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+  "depth": 8,
+  "derived_seeds": {
+    "augmentation": 926193537,
+    "init": 994647955,
+    "minibatch": 1834291221,
+    "recurrence_path": 2360256778,
+    "subset": 37
+  },
+  "device": "cuda",
+  "environment": {
+    "python": "3.13.13",
+    "torch": "2.9.1+cu128"
+  },
+  "family": "E",
+  "fraction": 0.1,
+  "macs": 42167424,
+  "paired_seed": 37,
+  "parameter_count": 24772,
+  "parameter_mismatch": {},
+  "role": "research",
+  "run_id": "E-s37",
+  "schema_version": 1,
+  "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+  "status": "complete",
+  "subset_hash": "505fe12243d4a4f14cbb046964f6f15bd47f02d7ec5b8c0b609d4765b7f15281",
+  "synthetic": false,
+  "width": 32
+}
