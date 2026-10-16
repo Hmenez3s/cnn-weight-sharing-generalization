@@ -8,9 +8,9 @@
 ![Dataset: CIFAR-100](https://img.shields.io/badge/dataset-CIFAR--100-334155)
 ![Paired seeds: 5](https://img.shields.io/badge/paired%20seeds-5-0f766e)
 
-A small, fully paired CIFAR-100 experiment that asks one question: **when a convolutional network executes the same eight residual updates, does reusing one block at every update generalize better than giving each update its own weights?**
+A controlled study of weight sharing in residual convolutional networks for image classification. At equal compute, reusing a single convolutional block across all eight residual updates (**C8**) generalizes better than eight independent blocks (**B8**) on CIFAR-100 with limited training data: **+2.07 pp test top-1 across five paired seeds, with 6.7× fewer parameters**. A hybrid that gives only the first and last updates their own weights (**H8**) achieves the highest accuracy, 21.28%.
 
-The two main models run the same stem, the same readout and the same eight branch applications at width 32. They differ in one respect: **B8** has eight distinct blocks, **C8** applies a single block eight times.
+B8, C8 and H8 share the same stem, classifier, eight-update residual trunk at width 32, training recipe and seeds; they differ only in how the trunk's weights are shared. A fourth model, E8, adds recurrence mechanisms on top of C8 and is reported as a reference.
 
 ## Result at a glance
 
