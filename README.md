@@ -52,6 +52,37 @@ Further figures, all generated from the same evidence:
 
 **4. Running more steps at test time breaks the models, and the extra mechanisms did not help.** Going from 8 to 32 steps without retraining costs C 13.2 pp and E 7.6 pp. The block learned an eight-step trajectory, not a stable fixed point it can keep iterating. E8's recall, variable depth and progressive loss left it underfit in this budget (22.5% train accuracy) and 2.71 pp behind B8.
 
+### Memorization versus generalization
+
+The *train/validation gap* is clean training accuracy minus validation accuracy. Clean training accuracy is measured on the training images without augmentation. A large gap means much of what the model learned only works on the images it trained on, i.e. memorization. A small gap is only good when validation accuracy is also high. A small gap with low accuracy means the model did not learn the training set either.
+
+| Model | Train, selected checkpoint | Validation | Gap | Train, end of training | Validation, end | Gap, end |
+|---|--:|--:|--:|--:|--:|--:|
+| B8 | 35.5% | 18.8% | 16.7 pp | 41.4% | 18.4% | **23.0 pp** |
+| C8 | 38.2% | 21.3% | 17.0 pp | 38.8% | 21.2% | 17.6 pp |
+| H8 | 41.4% | 21.7% | **19.6 pp** | 42.9% | 21.5% | 21.4 pp |
+| E8 | 22.5% | 16.1% | 6.3 pp | 22.7% | 15.8% | 6.8 pp |
+
+Means over five seeds, from the per-run training logs (`runs/*/metrics.jsonl.gz`). "Selected" is the checkpoint chosen on validation; "end" is update 10,000.
+
+- **B8 memorizes most by the end.** Training accuracy keeps rising (35.5% → 41.4%) while validation falls (18.8% → 18.4%). This is classic overfitting: its spare capacity goes into the training images.
+- **H8 memorizes more *and* generalizes best.** It has the largest gap at the selected checkpoint, yet the highest accuracy on unseen images. Its extra endpoint parameters learn both useful features and image-specific detail.
+- **C8 is the most contained of the models that learn well.** Its gap barely moves through training; one shared block has little spare capacity to memorize.
+- **E8's small gap is underfitting, not good generalization.** It reaches only 22.5% on its own training images.
+
+### Strengths and weaknesses by model
+
+*ECE* (expected calibration error) measures whether stated confidence matches the observed hit rate. Predictions are grouped into 15 confidence bins. ECE is the count-weighted average gap between mean confidence and accuracy in each bin. Lower is better; 0% would mean that "70% confident" is right 70% of the time.
+
+| Model | Strength | Weakness | Why |
+|---|---|---|---|
+| **B8** · eight independent blocks | Best calibrated (test ECE 8.8%). | Lowest accuracy of the three equal-compute models (18.39%) despite the most parameters (152,644), and the most late-training memorization. | Each block learns only from its own position's gradient, so the training signal is split eight ways. With 4,500 images it fits the training set worse than C8 at its best checkpoint, then spends spare capacity memorizing. |
+| **C8** · one block × 8 | Best accuracy per parameter: 20.46% with 22,724 parameters. Stable gap. | Overconfident (test ECE 12.9%). Collapses when run for more steps (−13.2 pp at 32 steps). No step can specialize. | Every step trains the same weights with eight largely aligned gradients. It learns an eight-step trajectory, not a stable fixed point, so extra iterations push it off course. |
+| **H8** · own first and last blocks, shared middle | Highest accuracy (21.28%), ahead of B8 on 5/5 seeds and C8 on 4/5. | Least calibrated (test ECE 13.3%). 2.6× C8's parameters, the largest selected gap, and the most seed-to-seed spread on validation (SD 1.25 vs 0.41 for C8). Lost to C8 on seed 71. | The first step adapts stem features and the last prepares features for the classifier, unlike the repeated refinement in the middle. The END vs INNER test shows untying pays at the ends rather than the interior. The extra parameters also add room to memorize. |
+| **E8** · C8 + recall, variable depth, progressive loss | Smallest gap; degrades least at 32 steps (−7.6 pp vs −13.2 pp for C8). | Lowest accuracy (15.67%, 2.71 pp below B8). The only model with extra compute (42.2M MACs). | The added mechanisms hold it back in a 10,000-update budget: it underfits. Training at varied depths makes it more tolerant of extra steps. Several settings changed at once (including learning rate and α), so no single mechanism can be credited. |
+
+In every pair we measured, the more accurate model was also the more overconfident: C8/H8 vs B8 on test, and END vs INNER on validation. Pick H8 for accuracy, C8 when parameters are scarce, and B8 when predicted probabilities must be trustworthy.
+
 **In short:** for small-data image classification at this scale, reusing one convolutional block is a better use of parameters than stacking distinct ones. The best layout we found keeps a shared middle and gives the first and last steps their own weights.
 
 ## Architecture
