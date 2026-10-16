@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 770" width="1200" height="770" role="img" aria-labelledby="arch-title arch-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-  <title id="arch-title">Untied B8 versus weight-shared C8: same executed depth, different parameter sharing</title>
-  <desc id="arch-desc">Two matched pipelines. Both encode a 3 by 32 by 32 image with a stride-2 convolution to a 32-channel state, apply eight residual convolutional updates, and read out 100 class logits. B8 uses eight distinct weight sets W1 to W8; C8 reuses a single weight set W at all eight updates. Both execute 37,973,120 multiply-accumulates; B8 has 152,644 parameters and C8 has 22,724.</desc>
-  <rect x="1" y="1" width="1198" height="768" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1056" width="1200" height="1056" role="img" aria-labelledby="arch-title arch-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
+  <title id="arch-title">Untied B8, weight-shared C8 and hybrid H8: same executed depth, different parameter sharing</title>
+  <desc id="arch-desc">Three matched pipelines. Each encodes a 3 by 32 by 32 image with a stride-2 convolution to a 32-channel state, applies eight residual convolutional updates, and reads out 100 class logits. B8 uses eight distinct weight sets W1 to W8; C8 reuses a single weight set W at all eight updates; H8 uses its own block A at update 1, one shared block S at updates 2 to 7, and its own block Z at update 8. All execute 37,973,120 multiply-accumulates; B8 has 152,644 parameters, C8 has 22,724 and H8 has 59,844. H8 is an exploratory follow-up. A validation-only position ablation compares END (the same A, S, Z map) with INNER, whose two independent blocks sit at updates 2 and 7.</desc>
+  <rect x="1" y="1" width="1198" height="1054" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
   <text x="40" y="52" font-size="28" font-weight="700" fill="#0f172a">Equal executed depth, different parameter sharing</text>
   <text x="40" y="82" font-size="16" fill="#334155">Width 32 · eight residual updates, each adding 0.1 · F(h) to the state h · F = (GroupNorm, ReLU, 3×3 conv) applied twice, 8 groups</text>
 
@@ -124,28 +124,92 @@
   <text x="1013.0" y="445.9" text-anchor="middle" font-size="14" fill="#0f172a">100 logits</text>
   <path d="M322 466L322 476L916 476L916 466" fill="none" stroke="#0f766e" stroke-width="3"/>
   <text x="619.0" y="502" text-anchor="middle" font-size="16" font-weight="600" fill="#0f766e">same tensor W reused 8× · 18,560 branch parameters · 4,718,592 MACs per update</text>
-  <rect x="24" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-  <rect x="24" y="548" width="8" height="176" rx="4" fill="#0f766e"/>
-  <text x="50" y="582" font-size="18" font-weight="700" fill="#0f766e">Sharing differs</text>
-  <text x="50" y="614" font-size="15" font-weight="700" fill="#0f172a">B8: 152,644 parameters</text>
-  <text x="50" y="638" font-size="15" font-weight="700" fill="#0f172a">C8: 22,724 parameters</text>
-  <text x="50" y="662" font-size="15" fill="#0f172a">C8 stores ≈ 6.7× fewer parameters;</text>
-  <text x="50" y="686" font-size="15" fill="#0f172a">stem (864) and head (3,300) are identical.</text>
-  <rect x="416" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-  <rect x="416" y="548" width="8" height="176" rx="4" fill="#0f172a"/>
-  <text x="442" y="582" font-size="18" font-weight="700" fill="#0f172a">Executed compute matches</text>
-  <text x="442" y="614" font-size="15" font-weight="700" fill="#0f172a">8 branch applications in both models</text>
-  <text x="442" y="638" font-size="15" font-weight="700" fill="#0f172a">37,973,120 MACs per image</text>
-  <text x="442" y="662" font-size="15" fill="#0f172a">Counts convolutions and head only; GroupNorm,</text>
-  <text x="442" y="686" font-size="15" fill="#0f172a">ReLU, residual add, pooling and memory traffic</text>
-  <text x="442" y="710" font-size="15" fill="#0f172a">are omitted. No latency claim is made.</text>
-  <rect x="808" y="548" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
-  <rect x="808" y="548" width="8" height="176" rx="4" fill="#475569"/>
-  <text x="834" y="582" font-size="18" font-weight="700" fill="#475569">E8 reference (not the main pair)</text>
-  <text x="834" y="614" font-size="15" fill="#0f172a">Shared block + recall of the stem state</text>
-  <text x="834" y="638" font-size="15" fill="#0f172a">(1×1 projection), variable depth, progressive</text>
-  <text x="834" y="662" font-size="15" fill="#0f172a">loss, α = 0.05. 24,772 parameters;</text>
-  <text x="834" y="686" font-size="15" fill="#0f172a">42,167,424 MACs. Official test:</text>
-  <text x="834" y="710" font-size="15" font-weight="700" fill="#0f172a">E8 − B8 = −2.71 pp (negative).</text>
-  <text x="40" y="748" font-size="14" fill="#475569">Counts come from recorded run metadata (seed 11, executed depth 8, width 32). Both main models share the same stem, readout and depth.</text>
+  <rect x="24" y="544" width="1152" height="270" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="44" y="578" font-size="20" font-weight="700" fill="#b45309">H8 · hybrid</text>
+  <text x="168" y="578" font-size="16" fill="#334155">own block A at update 1, one shared block S at updates 2–7, own block Z at update 8</text>
+  <rect x="44" y="610" width="86" height="64" rx="9" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <text x="87.0" y="637.4" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Input</text>
+  <text x="87.0" y="656.4" text-anchor="middle" font-size="14" fill="#0f172a">3×32×32</text>
+  <path d="M132 642L160 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M166 642L158 637L158 647Z" fill="#475569"/>
+  <rect x="168" y="606" width="112" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="224.0" y="627.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Stem</text>
+  <text x="224.0" y="646.9" text-anchor="middle" font-size="14" fill="#0f172a">3×3 conv, s2</text>
+  <text x="224.0" y="665.9" text-anchor="middle" font-size="14" fill="#0f172a">3 to 32 channels</text>
+  <path d="M282 642L312 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M318 642L310 637L310 647Z" fill="#475569"/>
+  <rect x="322" y="608" width="62" height="68" rx="9" fill="#fde68a" stroke="#475569" stroke-width="2"/>
+  <text x="353.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">A</text>
+  <text x="353.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M385 642L391 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M397 642L389 637L389 647Z" fill="#475569"/>
+  <rect x="398" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="429.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="429.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M461 642L467 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M473 642L465 637L465 647Z" fill="#475569"/>
+  <rect x="474" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="505.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="505.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M537 642L543 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M549 642L541 637L541 647Z" fill="#475569"/>
+  <rect x="550" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="581.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="581.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M613 642L619 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M625 642L617 637L617 647Z" fill="#475569"/>
+  <rect x="626" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="657.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="657.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M689 642L695 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M701 642L693 637L693 647Z" fill="#475569"/>
+  <rect x="702" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="733.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="733.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M765 642L771 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M777 642L769 637L769 647Z" fill="#475569"/>
+  <rect x="778" y="608" width="62" height="68" rx="9" fill="#99f6e4" stroke="#0f766e" stroke-width="2"/>
+  <text x="809.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">S</text>
+  <text x="809.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M841 642L847 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M853 642L845 637L845 647Z" fill="#475569"/>
+  <rect x="854" y="608" width="62" height="68" rx="9" fill="#d8b4fe" stroke="#475569" stroke-width="2"/>
+  <text x="885.0" y="636.8" text-anchor="middle" font-size="18" font-weight="700" fill="#0f172a">Z</text>
+  <text x="885.0" y="659.8" text-anchor="middle" font-size="18" fill="#0f172a">F</text>
+  <path d="M918 642L944 642" stroke="#475569" stroke-width="2.5"/>
+  <path d="M950 642L942 637L942 647Z" fill="#475569"/>
+  <rect x="952" y="606" width="122" height="72" rx="9" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+  <text x="1013.0" y="627.9" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">Readout</text>
+  <text x="1013.0" y="646.9" text-anchor="middle" font-size="14" fill="#0f172a">avg-pool + linear</text>
+  <text x="1013.0" y="665.9" text-anchor="middle" font-size="14" fill="#0f172a">100 logits</text>
+  <path d="M398 686L398 696L840 696L840 686" fill="none" stroke="#0f766e" stroke-width="3"/>
+  <text x="619.0" y="722" text-anchor="middle" font-size="16" font-weight="600" fill="#0f766e">same tensor S reused 6× (updates 2–7)</text>
+  <text x="619.0" y="748" text-anchor="middle" font-size="16" font-weight="600" fill="#0f172a">3 distinct weight sets · 3 × 18,560 branch parameters · 4,718,592 MACs per update</text>
+  <text x="44" y="776" font-size="14" fill="#475569">Exploratory follow-up, proposed after the original B/C/E test results were known; reuses the frozen B8/C8 controls. 59,844 parameters.</text>
+  <text x="44" y="798" font-size="14" fill="#475569">Position ablation (validation only): END uses this map [A,S,S,S,S,S,S,Z]; INNER = [S,A,S,S,S,S,Z,S], independent blocks at updates 2 and 7. Both 59,844 parameters.</text>
+  <rect x="24" y="834" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="24" y="834" width="8" height="176" rx="4" fill="#0f766e"/>
+  <text x="50" y="868" font-size="18" font-weight="700" fill="#0f766e">Sharing differs</text>
+  <text x="50" y="900" font-size="15" font-weight="700" fill="#0f172a">B8: 152,644 parameters</text>
+  <text x="50" y="924" font-size="15" font-weight="700" fill="#0f172a">C8: 22,724 parameters</text>
+  <text x="50" y="948" font-size="15" font-weight="700" fill="#0f172a">H8: 59,844 parameters</text>
+  <text x="50" y="972" font-size="15" fill="#0f172a">C8 stores ≈ 6.7× fewer parameters than B8;</text>
+  <text x="50" y="996" font-size="15" fill="#0f172a">stem (864) and head (3,300) are identical.</text>
+  <rect x="416" y="834" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="416" y="834" width="8" height="176" rx="4" fill="#0f172a"/>
+  <text x="442" y="868" font-size="18" font-weight="700" fill="#0f172a">Executed compute matches</text>
+  <text x="442" y="900" font-size="15" font-weight="700" fill="#0f172a">8 branch applications in B8, C8 and H8</text>
+  <text x="442" y="924" font-size="15" font-weight="700" fill="#0f172a">37,973,120 MACs per image</text>
+  <text x="442" y="948" font-size="15" fill="#0f172a">Counts convolutions and head only; GroupNorm,</text>
+  <text x="442" y="972" font-size="15" fill="#0f172a">ReLU, residual add, pooling and memory traffic</text>
+  <text x="442" y="996" font-size="15" fill="#0f172a">are omitted. No latency claim is made.</text>
+  <rect x="808" y="834" width="368" height="176" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+  <rect x="808" y="834" width="8" height="176" rx="4" fill="#475569"/>
+  <text x="834" y="868" font-size="18" font-weight="700" fill="#475569">E8 reference (not the main pair)</text>
+  <text x="834" y="900" font-size="15" fill="#0f172a">Shared block + recall of the stem state</text>
+  <text x="834" y="924" font-size="15" fill="#0f172a">(1×1 projection), variable depth, progressive</text>
+  <text x="834" y="948" font-size="15" fill="#0f172a">loss, α = 0.05. 24,772 parameters;</text>
+  <text x="834" y="972" font-size="15" fill="#0f172a">42,167,424 MACs. Official test:</text>
+  <text x="834" y="996" font-size="15" font-weight="700" fill="#0f172a">E8 − B8 = −2.71 pp (negative).</text>
+  <text x="40" y="1034" font-size="14" fill="#475569">Counts come from recorded run metadata (seed 11, executed depth 8, width 32). B8, C8 and H8 share the same stem, readout and executed depth.</text>
 </svg>

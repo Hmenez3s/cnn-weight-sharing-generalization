@@ -688,5 +688,57 @@
     }
   },
   "analysis_assumption": "Student-t intervals/tests use five paired seed-level deltas (df=4), approximately normal; images are not independent units.",
-  "hierarchy": "Two-sided fixed sequence alpha=0.05: E8-B8 official-test gain is inferential only if C8-B8 official-test CI95 lower bound > 0; otherwise E interval is nominal descriptive."
+  "hierarchy": "Two-sided fixed sequence alpha=0.05: E8-B8 official-test gain is inferential only if C8-B8 official-test CI95 lower bound > 0; otherwise E interval is nominal descriptive.",
+  "exploratory_h8": {
+    "status": "Exploratory follow-up proposed and evaluated after the original B/C/E official-test results were known; not part of the original protocol/hierarchy; not independent confirmation; primary C8\u2212B8 result unchanged. H8 has 2.63\u00d7 C8's parameters, confounding attribution.",
+    "source": "benchmarks/hybrid-generalization-20261015/analysis/summary.json and table.csv",
+    "official_test_k8": {
+      "mean": 21.284,
+      "sample_sd": 0.5354717546239017,
+      "ci95": [
+        20.6191240002285,
+        21.9488759997715
+      ],
+      "seed_accuracies": {
+        "11": 20.95,
+        "23": 21.01,
+        "37": 21.84,
+        "53": 21.88,
+        "71": 20.74
+      },
+      "mean_cross_entropy": 3.5618341965484617,
+      "parameter_count": 59844,
+      "macs_per_inference": 37973120
+    },
+    "paired_effects": {
+      "H8-B8": {
+        "mean": 2.8959999999999986,
+        "ci95": [
+          2.0360367454978343,
+          3.755963254502163
+        ],
+        "seed_deltas": {
+          "11": 1.7299999999999969,
+          "23": 3.150000000000002,
+          "37": 3.5799999999999983,
+          "53": 2.9899999999999984,
+          "71": 3.0299999999999976
+        }
+      },
+      "H8-C8": {
+        "mean": 0.8240000000000002,
+        "ci95": [
+          -0.26667301956206313,
+          1.9146730195620636
+        ],
+        "seed_deltas": {
+          "11": 1.3599999999999994,
+          "23": 0.15000000000000213,
+          "37": 1.0500000000000007,
+          "53": 1.8499999999999979,
+          "71": -0.28999999999999915
+        }
+      }
+    }
+  }
 }

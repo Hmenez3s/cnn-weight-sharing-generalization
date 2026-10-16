@@ -15,19 +15,26 @@ The recurrent model with recall, variable depth, and progressive loss (E) scored
 | Untied baseline (B) | 18.39% (17.58–19.20) | 19.22, 17.86, 18.26, 18.89, 17.71 | 3.631 | 152,644 | 37,973,120 |
 | Tied recurrent model (C) | 20.46% (19.69–21.23) | 19.59, 20.86, 20.79, 20.03, 21.03 | 3.546 | 22,724 | 37,973,120 |
 | Recurrent + recall, variable depth, progressive loss (E) | 15.67% (14.39–16.95) | 17.50, 15.44, 15.11, 15.23, 15.09 | 3.691 | 24,772 | 42,167,424 |
+| Endpoint-independent, shared-center hybrid (H8, exploratory follow-up) | 21.28% (20.62–21.95) | 20.95, 21.01, 21.84, 21.88, 20.74 | 3.562 | 59,844 | 37,973,120 |
 
 Paired C8−B8 test difference: **2.07 percentage points** (95% paired Student-t CI 0.50–3.64).
 
 Per-seed values are ordered by seeds 11, 23, 37, 53, 71. Parameter counts are unique parameters; B and C have equal reported MACs per inference. Fewer parameters do not imply lower compute. MAC estimates omit normalization, activations, residual operations, pooling, and memory traffic.
 
+H8 exploratory follow-up: H8−C8 was +0.82 pp (nominal 95% CI −0.27 to 1.91; unresolved) and H8−B8 was +2.90 pp (2.04 to 3.76). H8 has 2.63× C8's parameters, confounding attribution. H8 was evaluated after the original official-test results were known, is outside the original protocol/hierarchy, is not independent confirmation, and leaves the primary C8−B8 result unchanged.
 
-![K8 test accuracy by model, with seed-level points and mean 95% confidence intervals](../assets/accuracy.svg)
 
-![Paired K8 test-accuracy differences by seed and mean 95% confidence interval](../assets/paired-effects.svg)
+![K8 test accuracy by B, C, E, and exploratory H8, with seed-level points and mean 95% confidence intervals](../assets/accuracy.svg)
 
-![K8 test accuracy against unique parameter count](../assets/parameters.svg)
+![Paired K8 test-accuracy differences for C8−B8, E8−B8, and exploratory H8 contrasts by seed and mean 95% confidence interval](../assets/paired-effects.svg)
+
+![K8 test accuracy against unique parameter count, including exploratory H8](../assets/parameters.svg)
 
 ![Observed K8 and K32 test accuracy by seed](../assets/iterations.svg)
+
+## Exploratory H8 follow-up
+
+H8 scored 21.28% official-test top-1 (95% CI 20.62–21.95). Exploratory contrasts: H8−C8 was +0.82 pp (nominal 95% CI −0.27 to 1.91; unresolved) and H8−B8 was +2.90 pp (2.04 to 3.76). H8 has 2.63× C8's parameters, confounding attribution. This follow-up was proposed and evaluated after the original B/C/E official-test results were known, is outside the original protocol/hierarchy, is not independent confirmation, and leaves the primary C8−B8 result unchanged. See [the H8 follow-up report](HYBRID_GENERALIZATION.md).
 
 ## Protocol and limits
 
@@ -37,6 +44,6 @@ C was selected as the primary comparison after exploratory calibration. This fav
 
 ## Reproducibility and resources
 
-Figures and tables are generated from the validated raw study records and the run metadata, rather than hand-entered metrics. The analysis reuses the study analyzer's roster, schema, pairing, provenance, finite-value, and sample-count checks. Parameter counts and MAC estimates are taken from the corresponding run records. B and C have the same reported MAC count per inference; their parameter counts differ. The parameter reduction is not a measured compute or latency saving. MAC accounting excludes normalization, activations, residual operations, pooling, and memory traffic.
+Figures and tables are generated from the validated raw study records and the run metadata, rather than hand-entered metrics. H8 uses the validated hybrid analysis summary/table and its run metadata as an exploratory evidence source. The analysis reuses the study analyzer's roster, schema, pairing, provenance, finite-value, and sample-count checks. Parameter counts and MAC estimates are taken from the corresponding run records. B and C have the same reported MAC count per inference; their parameter counts differ. The parameter reduction is not a measured compute or latency saving. MAC accounting excludes normalization, activations, residual operations, pooling, and memory traffic.
 
 Run `python scripts/make_figures.py --output-dir assets` from the repository root. The default evidence source is `benchmarks/minimal-generalization-20261015`; pass `--input-dir PATH` to validate a compatible frozen evidence directory. The figures are self-contained SVG files. Figure data and the generated table are in `assets/figure-data.json` and `assets/results-table.md`.

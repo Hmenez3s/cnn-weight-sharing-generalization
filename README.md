@@ -21,16 +21,20 @@ Official CIFAR-100 test set, top-1 accuracy, five paired seeds, eight iterations
 | **B8** | eight distinct blocks | 152,644 | 37,973,120 | 18.39 ± 0.65 | [17.58, 19.20] |
 | **C8** | one block, applied 8× | 22,724 | 37,973,120 | **20.46 ± 0.62** | [19.69, 21.23] |
 | E8 | shared block + recall, variable depth, progressive loss | 24,772 | 42,167,424 | 15.67 ± 1.03 | [14.39, 16.95] |
+| H8 † | independent first and last blocks around one shared block | 59,844 | 37,973,120 | 21.28 ± 0.54 | [20.62, 21.95] |
+
+† Exploratory follow-up: H8 was proposed and evaluated after the B8/C8/E8 test results were known, and it reuses the frozen B8 and C8 runs as controls. It is not part of the original protocol and does not change the primary result below.
 
 - **Primary contrast, C8 − B8: +2.07 percentage points** (95% CI [0.50, 3.64], paired t-test, df = 4, two-sided p = 0.021). All 5 of 5 seeds are positive: +0.37, +3.00, +2.53, +1.14, +3.32.
 - **Secondary contrast, E8 − B8: −2.71 pp** (95% CI [−3.63, −1.80]); 0 of 5 seeds are positive. E8 is a negative addition, not part of the main pair.
+- **Exploratory H8 − C8: +0.82 pp** (nominal 95% CI [−0.27, 1.91]; 4 of 5 seeds positive). The interval includes zero, so an H8 advantage over C8 is unresolved. H8 − B8 is +2.90 pp ([2.04, 3.76]). H8 stores 2.6× as many parameters as C8, so its extra capacity confounds any attribution to where the blocks are shared.
 - **Running 32 iterations at test time hurts.** With no retraining, accuracy falls by 13.24 pp for C (C32 − C8, CI [−15.20, −11.29]) and by 7.60 pp for E (E32 − E8, CI [−8.70, −6.50]). These models were trained at eight iterations and do not extrapolate to more.
-- **Same counted MACs, fewer parameters.** B8 and C8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. No latency or wall-clock saving is claimed.
+- **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. No latency or wall-clock saving is claimed.
 
-The table is a display copy computed from [`benchmarks/minimal-generalization-20261015/analysis/table.csv`](benchmarks/minimal-generalization-20261015/analysis/table.csv) and [`contrasts.csv`](benchmarks/minimal-generalization-20261015/analysis/contrasts.csv). The generated result tables, [`docs/RESULTS.md`](docs/RESULTS.md) and [`assets/results-table.md`](assets/results-table.md), are produced by `scripts/make_figures.py` and take precedence over this page.
+The table is a display copy computed from [`benchmarks/minimal-generalization-20261015/analysis/table.csv`](benchmarks/minimal-generalization-20261015/analysis/table.csv) and [`contrasts.csv`](benchmarks/minimal-generalization-20261015/analysis/contrasts.csv); the H8 row and contrasts come from [`benchmarks/hybrid-generalization-20261015/analysis/`](benchmarks/hybrid-generalization-20261015/analysis/). The generated result tables, [`docs/RESULTS.md`](docs/RESULTS.md) and [`assets/results-table.md`](assets/results-table.md), are produced by `scripts/make_figures.py` and take precedence over this page.
 
 <p align="center">
-  <img src="assets/accuracy.svg" alt="Official-test top-1 accuracy for B8, C8 and E8 across five paired seeds" width="100%">
+  <img src="assets/accuracy.svg" alt="Official-test top-1 accuracy for B8, C8, E8 and the exploratory H8 follow-up across five paired seeds" width="100%">
 </p>
 
 Further figures, all generated from the same evidence:
@@ -41,22 +45,24 @@ Further figures, all generated from the same evidence:
 ## Architecture
 
 <p align="center">
-  <img src="assets/architecture.svg" alt="B8 applies eight distinct residual blocks W1 to W8; C8 applies one shared block W eight times; both execute the same 37,973,120 MACs" width="100%">
+  <img src="assets/architecture.svg" alt="B8 applies eight distinct residual blocks W1 to W8; C8 applies one shared block W eight times; H8 applies independent blocks A and Z at the first and last updates around one shared block S applied six times; all three execute the same 37,973,120 MACs" width="100%">
 </p>
 
-Both models encode a 3×32×32 image with a stride-2 3×3 convolution into a 32-channel state at 16×16 resolution, apply eight residual updates `h ← h + α·F(h)` with α = 0.1, then average-pool and classify into 100 classes. The branch `F` is GroupNorm (8 groups) → ReLU → 3×3 convolution, applied twice, as implemented in [`src/recurrent_cnn/models.py`](src/recurrent_cnn/models.py).
+B8, C8 and H8 all encode a 3×32×32 image with a stride-2 3×3 convolution into a 32-channel state at 16×16 resolution, apply eight residual updates `h ← h + α·F(h)` with α = 0.1, then average-pool and classify into 100 classes. The branch `F` is GroupNorm (8 groups) → ReLU → 3×3 convolution, applied twice, as implemented in [`src/recurrent_cnn/models.py`](src/recurrent_cnn/models.py).
 
-| | B8 (untied) | C8 (weight-shared) |
-|---|---|---|
-| Branch modules | 8, one per update | 1, reused at every update |
-| Branch parameters | 8 × 18,560 | 1 × 18,560 |
-| Stem + head parameters | 864 + 3,300 | 864 + 3,300 |
-| Executed branch applications | 8 | 8 |
-| MACs per image | 37,973,120 | 37,973,120 |
+| | B8 (untied) | C8 (weight-shared) | H8 (hybrid, exploratory) |
+|---|---|---|---|
+| Branch modules | 8, one per update | 1, reused at every update | 3: A (update 1), S (updates 2–7), Z (update 8) |
+| Branch parameters | 8 × 18,560 | 1 × 18,560 | 3 × 18,560 |
+| Stem + head parameters | 864 + 3,300 | 864 + 3,300 | 864 + 3,300 |
+| Executed branch applications | 8 | 8 | 8 |
+| MACs per image | 37,973,120 | 37,973,120 | 37,973,120 |
 
 Parameter counts and MACs are read from the recorded run metadata (`runs/*/run.json`). The MAC convention counts convolutions and the linear head, and omits GroupNorm, ReLU, the residual add, pooling and memory traffic. Equal MACs therefore means equal counted compute, not equal speed.
 
 E8 reuses one block as C8 does, and additionally concatenates the stem state back into each update through a 1×1 projection (recall), trains with variable depth and a progressive loss, and uses α = 0.05 and a different learning rate. That adds 2,048 parameters and 4,194,304 MACs relative to C8.
+
+H8 (`[A,S,S,S,S,S,S,Z]`) keeps the recipe of B8 and C8 but unties only the first and last updates, giving three unique blocks and 59,844 parameters. The later validation-only [position ablation](#exploratory-endinner-position-ablation-validation-only) holds that three-block budget fixed and compares two maps: END uses the H8 map, and INNER (`[S,A,S,S,S,S,Z,S]`) moves the two independent blocks to updates 2 and 7.
 
 ## Experimental protocol
 
@@ -121,10 +127,12 @@ Full replication is not a one-line command. The preserved training operator was 
 ├── assets/                     banner, architecture diagram, figures, generated results table
 ├── benchmarks/
 │   ├── minimal-generalization-20261015/   protocol, freeze, per-run metadata and metrics, analysis
+│   ├── hybrid-generalization-20261015/    exploratory H8 follow-up: protocol, evidence, analysis
 │   ├── position-ablation-20261016/        validation-only END/INNER position ablation and provenance
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
+│   ├── HYBRID_GENERALIZATION.md           generated H8 report
 │   ├── MINIMAL_GENERALIZATION.md          fixed protocol and what was completed
 │   ├── PROVENANCE.md                      source hashes and packaging notes
 │   ├── REPRODUCIBILITY.md                 replication requirements
@@ -167,5 +175,11 @@ A completed paired follow-up compares untied boundary blocks (**END**, `[A,S,S,S
 Across five paired seeds, selected-validation top-1 was 21.672 ± 0.5168% for END and 21.096 ± 0.6520% for INNER. END−INNER was +0.576 percentage points (nominal two-sided Student-t 95% CI [+0.2194, +0.9326], df=4; 5/5 positive). This conditional exploratory result favors boundaries under this recipe, but is not independent confirmation, universal evidence, or official-test evidence. Validation split 1729 was used for checkpoint selection and evaluation; paired seeds are the inference units.
 
 END was not an across-metric win: its mean selected cross-entropy was 3.547269 versus 3.527459 for INNER (difference +0.0198106; nominal CI [−0.004803, +0.044424], crossing zero), and its mean 15-bin ECE was 13.287063% versus 11.767394% (END +1.519669 pp; lower is better). A larger train/validation gap is descriptive, not proof of overfitting. Gradient-probe associations do not identify a causal mechanism or represent actual optimizer updates.
+
+END and INNER are absent from the test-accuracy chart at the top because they were never evaluated on the official test set. Their validation results are shown separately:
+
+<p align="center">
+  <img src="benchmarks/position-ablation-20261016/analysis/position-accuracy.svg" alt="Selected-validation top-1 accuracy for END and INNER across five paired seeds, with lines joining each seed's pair" width="80%">
+</p>
 
 See the [study README](benchmarks/position-ablation-20261016/README.md), the authoritative generated [mechanism-ablation report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md), and its [summary data](benchmarks/position-ablation-20261016/analysis/summary.json), [contrasts](benchmarks/position-ablation-20261016/analysis/contrasts.csv), and [result table](benchmarks/position-ablation-20261016/analysis/table.csv). See [provenance and continuation notes](benchmarks/position-ablation-20261016/provenance/README.md) for execution history and evidence boundaries.

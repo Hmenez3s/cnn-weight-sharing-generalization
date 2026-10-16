@@ -55,6 +55,18 @@ def test_public_figures_are_data_driven_and_valid_svg(tmp_path: Path) -> None:
     assert abs(paired["ci95"][0] - (paired["mean"] - half_width)) < 1e-10
     assert abs(paired["ci95"][1] - (paired["mean"] + half_width)) < 1e-10
     assert data["paired_effects_official_test_percentage_points"]["E8-B8"]["mean"] < 0
+    h8 = data["exploratory_h8"]
+    hseeds = h8["official_test_k8"]["seed_accuracies"]
+    assert len(hseeds) == 5
+    assert abs(h8["official_test_k8"]["mean"] - sum(hseeds.values()) / 5) < 1e-10
+    hce = h8["paired_effects"]["H8-C8"]["seed_deltas"]
+    assert all(abs(hce[seed] - (hseeds[seed] - c_seed_accuracy[seed])) < 1e-10 for seed in hseeds)
+    accuracy_svg = (output / "accuracy.svg").read_text(encoding="utf-8")
+    assert "H8" in accuracy_svg and "exploratory follow-up" in accuracy_svg
+    results_table = (output / "results-table.md").read_text(encoding="utf-8")
+    assert "H8, exploratory follow-up" in results_table
+    for original in ("Untied baseline (B)", "Tied recurrent model (C)", "Recurrent + recall, variable depth, progressive loss (E)"):
+        assert original in results_table
 
     for filename in ("accuracy.svg", "paired-effects.svg", "parameters.svg", "iterations.svg"):
         root = ET.parse(output / filename).getroot()
@@ -64,3 +76,28 @@ def test_public_figures_are_data_driven_and_valid_svg(tmp_path: Path) -> None:
     assert "10,000 updates" in report
     assert "not a gain" in report
     assert "five seeds" in report
+    assert "not independent confirmation" in report
+
+
+def test_hybrid_control_mismatch_fails_closed(tmp_path: Path) -> None:
+    import csv
+    import shutil
+
+    hybrid_copy = tmp_path / "hybrid"
+    shutil.copytree(ROOT / "benchmarks" / "hybrid-generalization-20261015", hybrid_copy)
+    table_path = hybrid_copy / "analysis" / "table.csv"
+    with table_path.open(newline="", encoding="utf-8") as source:
+        rows = list(csv.DictReader(source))
+        fields = list(rows[0])
+    target = next(row for row in rows if row["split"] == "official-test" and row["family"] == "B" and row["seed"] == "11")
+    target["accuracy_percent"] = str(float(target["accuracy_percent"]) + 0.01)
+    with table_path.open("w", newline="", encoding="utf-8") as destination:
+        writer = csv.DictWriter(destination, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(rows)
+    completed = subprocess.run(
+        [sys.executable, str(SCRIPT), "--output-dir", str(tmp_path / "assets"), "--hybrid-dir", str(hybrid_copy)],
+        cwd=ROOT, text=True, capture_output=True, check=False,
+    )
+    assert completed.returncode != 0
+    assert "summary/table mismatch" in completed.stderr
