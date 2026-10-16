@@ -23,11 +23,11 @@ Official CIFAR-100 test set, top-1 accuracy, five paired seeds, eight iterations
 | E8 | shared block + recall, variable depth, progressive loss | 24,772 | 42,167,424 | 15.67 ± 1.03 | [14.39, 16.95] |
 | H8 † | independent first and last blocks around one shared block | 59,844 | 37,973,120 | 21.28 ± 0.54 | [20.62, 21.95] |
 
-† Exploratory follow-up: H8 was proposed and evaluated after the B8/C8/E8 test results were known, and it reuses the frozen B8 and C8 runs as controls. It is not part of the original protocol and does not change the primary result below.
+† Follow-up model, trained after the first three. It reuses the same B8 and C8 runs as its controls.
 
 - **Primary contrast, C8 − B8: +2.07 percentage points** (95% CI [0.50, 3.64], paired t-test, df = 4, two-sided p = 0.021). All 5 of 5 seeds are positive: +0.37, +3.00, +2.53, +1.14, +3.32.
 - **Secondary contrast, E8 − B8: −2.71 pp** (95% CI [−3.63, −1.80]); 0 of 5 seeds are positive. E8 is a negative addition, not part of the main pair.
-- **Exploratory H8 − C8: +0.82 pp** (nominal 95% CI [−0.27, 1.91]; 4 of 5 seeds positive). The interval includes zero, so an H8 advantage over C8 is unresolved. H8 − B8 is +2.90 pp ([2.04, 3.76]). H8 stores 2.6× as many parameters as C8, so its extra capacity confounds any attribution to where the blocks are shared.
+- **Follow-up H8 is the most accurate model.** H8 − B8 is +2.90 pp (95% CI [2.04, 3.76], 5 of 5 seeds). H8 − C8 is +0.82 pp (95% CI [−0.27, 1.91], 4 of 5 seeds): ahead, but not yet clearly separated from C8.
 - **Running 32 iterations at test time hurts.** With no retraining, accuracy falls by 13.24 pp for C (C32 − C8, CI [−15.20, −11.29]) and by 7.60 pp for E (E32 − E8, CI [−8.70, −6.50]). These models were trained at eight iterations and do not extrapolate to more.
 - **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. No latency or wall-clock saving is claimed.
 
@@ -41,6 +41,18 @@ Further figures, all generated from the same evidence:
 [paired seed-level effects](assets/paired-effects.svg) ·
 [parameter counts](assets/parameters.svg) ·
 [accuracy at 8 versus 32 iterations](assets/iterations.svg).
+
+## What the results say
+
+**1. One shared block beats eight separate blocks.** C8 was ahead of B8 on every seed (+2.07 pp) while storing 6.7× fewer parameters and running the same compute. It was not simply that B8 memorized more: at its selected checkpoint C8 also fit the *training* set better (38.2% vs 35.5% clean train accuracy) and the validation set better (21.3% vs 18.8%). Our reading is that the shared block learns from all eight positions at once. Every training step sums eight gradients into the same weights. Those gradients point mostly the same way: coherence ρ ≈ 0.80 at the selected checkpoint, with 0 of 28 position pairs in conflict. Each step is therefore a stronger, cleaner signal. B8 splits the same signal across eight blocks, which is a poor trade when there are only 4,500 training images. Late in training, B8's train accuracy kept rising (41.4%) while its validation accuracy slipped.
+
+**2. Giving the first and last steps their own weights helps further.** H8 (`[A,S,S,S,S,S,S,Z]`) was the best model on the test set (21.28%). A controlled follow-up shows *where* untying pays. With parameters, compute and initialization held fixed, free blocks at the ends (END) beat free blocks in the interior (INNER) on all five seeds (+0.58 pp validation, 95% CI [0.22, 0.93]). The first and last steps have different jobs from the middle: one adapts the stem's features, the other prepares features for the classifier. The middle steps do repeated refinement, which suits one shared block. With the ends freed, the six shared middle steps also kept more aligned gradients (ρ ≈ 0.88 for END vs 0.77 for INNER).
+
+**3. Accuracy and calibration trade off.** B8 had the best-calibrated confidences (test ECE 8.8% vs 12.9% for C8 and 13.3% for H8), and INNER was better calibrated than END. The shared models are more accurate but more overconfident. Sharing alone does not make predicted probabilities more trustworthy.
+
+**4. Running more steps at test time breaks the models, and the extra mechanisms did not help.** Going from 8 to 32 steps without retraining costs C 13.2 pp and E 7.6 pp. The block learned an eight-step trajectory, not a stable fixed point it can keep iterating. E8's recall, variable depth and progressive loss left it underfit in this budget (22.5% train accuracy) and 2.71 pp behind B8.
+
+**In short:** for small-data image classification at this scale, reusing one convolutional block is a better use of parameters than stacking distinct ones. The best layout we found keeps a shared middle and gives the first and last steps their own weights.
 
 ## Architecture
 
@@ -62,7 +74,7 @@ Parameter counts and MACs are read from the recorded run metadata (`runs/*/run.j
 
 E8 reuses one block as C8 does, and additionally concatenates the stem state back into each update through a 1×1 projection (recall), trains with variable depth and a progressive loss, and uses α = 0.05 and a different learning rate. That adds 2,048 parameters and 4,194,304 MACs relative to C8.
 
-H8 (`[A,S,S,S,S,S,S,Z]`) keeps the recipe of B8 and C8 but unties only the first and last updates, giving three unique blocks and 59,844 parameters. The later validation-only [position ablation](#exploratory-endinner-position-ablation-validation-only) holds that three-block budget fixed and compares two maps: END uses the H8 map, and INNER (`[S,A,S,S,S,S,Z,S]`) moves the two independent blocks to updates 2 and 7.
+H8 (`[A,S,S,S,S,S,S,Z]`) keeps the recipe of B8 and C8 but unties only the first and last updates, giving three unique blocks and 59,844 parameters. The later validation-only [position ablation](#follow-up-studies) holds that three-block budget fixed and compares two maps: END uses the H8 map, and INNER (`[S,A,S,S,S,S,Z,S]`) moves the two independent blocks to updates 2 and 7.
 
 ## Experimental protocol
 
@@ -82,14 +94,23 @@ The protocol was fixed before the 15 training runs and is summarised in [`docs/M
 
 K = 32 and validation-split intervals are descriptive diagnostics, not additional confirmatory tests.
 
-## Interpretation and limitations
+## Follow-up studies
 
-- **Scope.** The result compares these B8, C8 and E8 configurations on a 10%-data CIFAR-100 regime. It does not show that recurrent or weight-shared CNNs are generally better than conventional ones.
-- **Primary contrast chosen after exploration.** C8 − B8 became the primary comparison after a single-seed exploratory calibration. That calibration is not part of the five reported seeds.
-- **Unequal historical tuning.** B and E had their own learning-rate selection, E received an additional historical adjustment, and C inherited B's learning rate. The comparison is of these configurations, not of equally tuned model classes.
-- **Small sample and low absolute accuracy.** Five seeds give limited power and rely on approximately normal paired differences. Absolute K = 8 test accuracies are 15.7–20.5%.
-- **One interrupted run was resumed.** Run C-s53 was resumed from its saved update 7,999 with an updated operator; see [`docs/PROVENANCE.md`](docs/PROVENANCE.md).
-- **No claims of state-of-the-art accuracy, novelty or robustness.** Corruption benchmarks (CIFAR-100-C), larger data fractions and broader model matrices were not run, and there is no measured latency or energy result.
+**H8.** `[A,S,S,S,S,S,S,Z]` keeps the B8/C8 recipe and unties only the endpoint blocks: three unique blocks, 59,844 parameters, same compute. It reuses the frozen B8/C8 runs as controls. Seed-level results, calibration and confidence bands are in the [H8 report](docs/HYBRID_GENERALIZATION.md); protocol and evidence are in [`benchmarks/hybrid-generalization-20261015/`](benchmarks/hybrid-generalization-20261015/README.md).
+
+**END vs INNER position test (validation only).** Both arms have three unique blocks, 59,844 parameters, the same compute and the same C-initialized starting function. END frees updates 1 and 8 (`[A,S,S,S,S,S,S,Z]`); INNER frees updates 2 and 7 (`[S,A,S,S,S,S,Z,S]`). END reached 21.67% and INNER 21.10% selected-validation top-1, with END ahead on all five seeds; INNER had lower cross-entropy and ECE. These arms were never run on the test set, so they are not in the test chart above.
+
+<p align="center">
+  <img src="benchmarks/position-ablation-20261016/analysis/position-accuracy.svg" alt="Selected-validation top-1 accuracy for END and INNER across five paired seeds, with lines joining each seed's pair" width="80%">
+</p>
+
+Full analysis: [mechanism report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md) · [study README and data](benchmarks/position-ablation-20261016/README.md) · [continuation provenance](benchmarks/position-ablation-20261016/provenance/README.md).
+
+## Caveats
+
+- **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Larger data, wider models and other tasks were not tested.
+- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8 and END/INNER were designed after the first results; END/INNER were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
+- **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
 ## Running the code
 
@@ -158,28 +179,3 @@ Full replication is not a one-line command. The preserved training operator was 
 ## Citation
 
 No paper, DOI or formal release accompanies this repository. If you use it, cite the repository URL, <https://github.com/Hmenez3s/cnn-weight-sharing-generalization>, together with the exact commit hash you used. No author list is asserted here.
-
-## Exploratory H8 follow-up
-
-A separate follow-up adds **H8**, `[A,S,S,S,S,S,S,Z]`: independent endpoint blocks around a shared center, for three unique blocks and eight applications at width 32. The five H seeds use the original paired recipe and frozen B8/C8 controls; no controls were retrained.
-
-H8 has higher mean test accuracy than both controls, but its paired interval against C8 includes zero: an advantage over C8 remains unresolved despite its larger parameter count. Post-hoc diagnostics show mixed trade-offs in accuracy, cross-entropy and 15-bin calibration; they do not establish a mechanism or class/image explanation. See the [generated “Where H8 gains and loses” report section](docs/HYBRID_GENERALIZATION.md#where-h8-gains-and-loses) for measured seed-level outcomes, split-specific dispersion and confidence-band caveats. This follow-up was proposed after the original test outcomes were known and is exploratory, not a fresh confirmatory three-model replication. The original results above remain unchanged.
-
-[Generated H8 results, figures and regeneration commands](docs/HYBRID_GENERALIZATION.md) ·
-[H8 protocol, native evidence and isolated operator](benchmarks/hybrid-generalization-20261015/README.md).
-
-## Exploratory END/INNER position ablation (validation only)
-
-A completed paired follow-up compares untied boundary blocks (**END**, `[A,S,S,S,S,S,S,Z]`) with two untied interior blocks (**INNER**, `[S,A,S,S,S,S,Z,S]`). Both have 59,844 parameters, 37,973,120 counted forward MACs and the same 1/6/1 branch-use counts; both start from the same cloned C-initialized function. New END is not historical H8, whose initialization differs. Historical B/C/H results and freezes remain unchanged.
-
-Across five paired seeds, selected-validation top-1 was 21.672 ± 0.5168% for END and 21.096 ± 0.6520% for INNER. END−INNER was +0.576 percentage points (nominal two-sided Student-t 95% CI [+0.2194, +0.9326], df=4; 5/5 positive). This conditional exploratory result favors boundaries under this recipe, but is not independent confirmation, universal evidence, or official-test evidence. Validation split 1729 was used for checkpoint selection and evaluation; paired seeds are the inference units.
-
-END was not an across-metric win: its mean selected cross-entropy was 3.547269 versus 3.527459 for INNER (difference +0.0198106; nominal CI [−0.004803, +0.044424], crossing zero), and its mean 15-bin ECE was 13.287063% versus 11.767394% (END +1.519669 pp; lower is better). A larger train/validation gap is descriptive, not proof of overfitting. Gradient-probe associations do not identify a causal mechanism or represent actual optimizer updates.
-
-END and INNER are absent from the test-accuracy chart at the top because they were never evaluated on the official test set. Their validation results are shown separately:
-
-<p align="center">
-  <img src="benchmarks/position-ablation-20261016/analysis/position-accuracy.svg" alt="Selected-validation top-1 accuracy for END and INNER across five paired seeds, with lines joining each seed's pair" width="80%">
-</p>
-
-See the [study README](benchmarks/position-ablation-20261016/README.md), the authoritative generated [mechanism-ablation report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md), and its [summary data](benchmarks/position-ablation-20261016/analysis/summary.json), [contrasts](benchmarks/position-ablation-20261016/analysis/contrasts.csv), and [result table](benchmarks/position-ablation-20261016/analysis/table.csv). See [provenance and continuation notes](benchmarks/position-ablation-20261016/provenance/README.md) for execution history and evidence boundaries.
