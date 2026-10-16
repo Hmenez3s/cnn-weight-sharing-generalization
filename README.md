@@ -121,6 +121,7 @@ Full replication is not a one-line command. The preserved training operator was 
 ├── assets/                     banner, architecture diagram, figures, generated results table
 ├── benchmarks/
 │   ├── minimal-generalization-20261015/   protocol, freeze, per-run metadata and metrics, analysis
+│   ├── position-ablation-20261016/        validation-only END/INNER position ablation and provenance
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
@@ -158,3 +159,13 @@ H8 has higher mean test accuracy than both controls, but its paired interval aga
 
 [Generated H8 results, figures and regeneration commands](docs/HYBRID_GENERALIZATION.md) ·
 [H8 protocol, native evidence and isolated operator](benchmarks/hybrid-generalization-20261015/README.md).
+
+## Exploratory END/INNER position ablation (validation only)
+
+A completed paired follow-up compares untied boundary blocks (**END**, `[A,S,S,S,S,S,S,Z]`) with two untied interior blocks (**INNER**, `[S,A,S,S,S,S,Z,S]`). Both have 59,844 parameters, 37,973,120 counted forward MACs and the same 1/6/1 branch-use counts; both start from the same cloned C-initialized function. New END is not historical H8, whose initialization differs. Historical B/C/H results and freezes remain unchanged.
+
+Across five paired seeds, selected-validation top-1 was 21.672 ± 0.5168% for END and 21.096 ± 0.6520% for INNER. END−INNER was +0.576 percentage points (nominal two-sided Student-t 95% CI [+0.2194, +0.9326], df=4; 5/5 positive). This conditional exploratory result favors boundaries under this recipe, but is not independent confirmation, universal evidence, or official-test evidence. Validation split 1729 was used for checkpoint selection and evaluation; paired seeds are the inference units.
+
+END was not an across-metric win: its mean selected cross-entropy was 3.547269 versus 3.527459 for INNER (difference +0.0198106; nominal CI [−0.004803, +0.044424], crossing zero), and its mean 15-bin ECE was 13.287063% versus 11.767394% (END +1.519669 pp; lower is better). A larger train/validation gap is descriptive, not proof of overfitting. Gradient-probe associations do not identify a causal mechanism or represent actual optimizer updates.
+
+See the [study README](benchmarks/position-ablation-20261016/README.md), the authoritative generated [mechanism-ablation report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md), and its [summary data](benchmarks/position-ablation-20261016/analysis/summary.json), [contrasts](benchmarks/position-ablation-20261016/analysis/contrasts.csv), and [result table](benchmarks/position-ablation-20261016/analysis/table.csv). See [provenance and continuation notes](benchmarks/position-ablation-20261016/provenance/README.md) for execution history and evidence boundaries.
