@@ -62,7 +62,16 @@
             "selected_update": 8800,
             "checkpoint_sha256": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 12.983468827769162,
+          "sample_sd": 1.525568328590185,
+          "ci95": [
+            11.089225557358839,
+            14.877712098179485
+          ]
+        }
       },
       "official-test": {
         "top1_percent": {
@@ -119,7 +128,16 @@
             "selected_update": 8800,
             "checkpoint_sha256": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 13.316596519537267,
+          "sample_sd": 1.2568610469388006,
+          "ci95": [
+            11.755997406808667,
+            14.877195632265867
+          ]
+        }
       }
     },
     "B": {
@@ -178,7 +196,16 @@
             "selected_update": 7000,
             "checkpoint_sha256": "8a48acc95d22abe76159cc441e91fcf804082642baf2ddfd4d17914932258e8e"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 8.642127970755102,
+          "sample_sd": 1.7898058717875054,
+          "ci95": [
+            6.419790455982854,
+            10.864465485527349
+          ]
+        }
       },
       "official-test": {
         "top1_percent": {
@@ -235,7 +262,16 @@
             "selected_update": 7000,
             "checkpoint_sha256": "8a48acc95d22abe76159cc441e91fcf804082642baf2ddfd4d17914932258e8e"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 8.836651003971696,
+          "sample_sd": 2.128789014807747,
+          "ci95": [
+            6.193410324513257,
+            11.479891683430134
+          ]
+        }
       }
     },
     "C": {
@@ -294,7 +330,16 @@
             "selected_update": 10000,
             "checkpoint_sha256": "a97f162be3b2a6a3dcb8f2553781e23438f339fe0e09005ede91c0f216be2ef3"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 12.373456063091755,
+          "sample_sd": 1.2616779496006796,
+          "ci95": [
+            10.806875975745047,
+            13.940036150438463
+          ]
+        }
       },
       "official-test": {
         "top1_percent": {
@@ -351,7 +396,16 @@
             "selected_update": 10000,
             "checkpoint_sha256": "a97f162be3b2a6a3dcb8f2553781e23438f339fe0e09005ede91c0f216be2ef3"
           }
-        ]
+        ],
+        "ece_percent": {
+          "n": 5,
+          "mean": 12.877449913084508,
+          "sample_sd": 1.0258941215700819,
+          "ci95": [
+            11.60363411636206,
+            14.151265709806955
+          ]
+        }
       }
     }
   },
@@ -461,6 +515,459 @@
       "classification": "exploratory_nominal_unadjusted"
     }
   ],
+  "diagnostics": {
+    "calibration": {
+      "tolerance": 1e-07,
+      "ece_units": "percent",
+      "coverage": {
+        "validation/H": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        },
+        "validation/B": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        },
+        "validation/C": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        },
+        "official-test/H": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        },
+        "official-test/B": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        },
+        "official-test/C": {
+          "available": true,
+          "present": 5,
+          "expected": 5
+        }
+      },
+      "model_summaries": {
+        "validation/H": {
+          "n": 5,
+          "mean": 12.983468827769162,
+          "sample_sd": 1.525568328590185,
+          "ci95": [
+            11.089225557358839,
+            14.877712098179485
+          ]
+        },
+        "validation/B": {
+          "n": 5,
+          "mean": 8.642127970755102,
+          "sample_sd": 1.7898058717875054,
+          "ci95": [
+            6.419790455982854,
+            10.864465485527349
+          ]
+        },
+        "validation/C": {
+          "n": 5,
+          "mean": 12.373456063091755,
+          "sample_sd": 1.2616779496006796,
+          "ci95": [
+            10.806875975745047,
+            13.940036150438463
+          ]
+        },
+        "official-test/H": {
+          "n": 5,
+          "mean": 13.316596519537267,
+          "sample_sd": 1.2568610469388006,
+          "ci95": [
+            11.755997406808667,
+            14.877195632265867
+          ]
+        },
+        "official-test/B": {
+          "n": 5,
+          "mean": 8.836651003971696,
+          "sample_sd": 2.128789014807747,
+          "ci95": [
+            6.193410324513257,
+            11.479891683430134
+          ]
+        },
+        "official-test/C": {
+          "n": 5,
+          "mean": 12.877449913084508,
+          "sample_sd": 1.0258941215700819,
+          "ci95": [
+            11.60363411636206,
+            14.151265709806955
+          ]
+        }
+      },
+      "per_seed": {
+        "validation/H": [
+          {
+            "seed": 11,
+            "ece_percent": 11.09162069298327
+          },
+          {
+            "seed": 23,
+            "ece_percent": 13.501088797673583
+          },
+          {
+            "seed": 37,
+            "ece_percent": 12.454061657264829
+          },
+          {
+            "seed": 53,
+            "ece_percent": 12.637166815847156
+          },
+          {
+            "seed": 71,
+            "ece_percent": 15.233406175076961
+          }
+        ],
+        "validation/B": [
+          {
+            "seed": 11,
+            "ece_percent": 7.548054456114768
+          },
+          {
+            "seed": 23,
+            "ece_percent": 11.631313810497522
+          },
+          {
+            "seed": 37,
+            "ece_percent": 8.241017298996447
+          },
+          {
+            "seed": 53,
+            "ece_percent": 7.057129186540843
+          },
+          {
+            "seed": 71,
+            "ece_percent": 8.733125101625921
+          }
+        ],
+        "validation/C": [
+          {
+            "seed": 11,
+            "ece_percent": 13.973157536238432
+          },
+          {
+            "seed": 23,
+            "ece_percent": 12.706328788250687
+          },
+          {
+            "seed": 37,
+            "ece_percent": 12.629042064696549
+          },
+          {
+            "seed": 53,
+            "ece_percent": 10.492569377869366
+          },
+          {
+            "seed": 71,
+            "ece_percent": 12.066182548403741
+          }
+        ],
+        "official-test/H": [
+          {
+            "seed": 11,
+            "ece_percent": 11.484993822462856
+          },
+          {
+            "seed": 23,
+            "ece_percent": 14.359514617137611
+          },
+          {
+            "seed": 37,
+            "ece_percent": 12.53163829244673
+          },
+          {
+            "seed": 53,
+            "ece_percent": 13.998496829271318
+          },
+          {
+            "seed": 71,
+            "ece_percent": 14.208339036367828
+          }
+        ],
+        "official-test/B": [
+          {
+            "seed": 11,
+            "ece_percent": 7.046441041976218
+          },
+          {
+            "seed": 23,
+            "ece_percent": 12.245758093595505
+          },
+          {
+            "seed": 37,
+            "ece_percent": 8.81514814775437
+          },
+          {
+            "seed": 53,
+            "ece_percent": 7.032018676586449
+          },
+          {
+            "seed": 71,
+            "ece_percent": 9.043889059945938
+          }
+        ],
+        "official-test/C": [
+          {
+            "seed": 11,
+            "ece_percent": 14.513962214663623
+          },
+          {
+            "seed": 23,
+            "ece_percent": 12.5446286245808
+          },
+          {
+            "seed": 37,
+            "ece_percent": 13.153012623898682
+          },
+          {
+            "seed": 53,
+            "ece_percent": 11.866535340696576
+          },
+          {
+            "seed": 71,
+            "ece_percent": 12.309110761582849
+          }
+        ]
+      },
+      "paired_diagnostics": {
+        "validation/H8-B8": {
+          "cross_entropy": {
+            "n": 5,
+            "mean": -0.05778436767578121,
+            "sample_sd": 0.10087473682517858,
+            "ci95": [
+              -0.18303689671988493,
+              0.06746816136832251
+            ],
+            "deltas": [
+              -0.015681365966797145,
+              -0.20833941650390608,
+              -0.11161917724609349,
+              0.013442761230468836,
+              0.033275360107421825
+            ],
+            "units": "native cross-entropy; negative favors H"
+          },
+          "ece_percentage_points": {
+            "n": 5,
+            "mean": 4.3413408570140595,
+            "sample_sd": 1.7997871219204684,
+            "ci95": [
+              2.1066099832946454,
+              6.5760717307334735
+            ],
+            "deltas": [
+              3.543566236868502,
+              1.8697749871760607,
+              4.213044358268382,
+              5.580037629306313,
+              6.500281073451039
+            ],
+            "units": "percentage points; negative favors H"
+          }
+        },
+        "validation/H8-C8": {
+          "cross_entropy": {
+            "n": 5,
+            "mean": 0.006968632812499998,
+            "sample_sd": 0.1020928773023613,
+            "ci95": [
+              -0.11979641740687626,
+              0.13373368303187624
+            ],
+            "deltas": [
+              -0.10105842285156275,
+              0.047699145507812624,
+              -0.060399987792968624,
+              -0.011597326660156337,
+              0.16019975585937507
+            ],
+            "units": "native cross-entropy; negative favors H"
+          },
+          "ece_percentage_points": {
+            "n": 5,
+            "mean": 0.6100127646774048,
+            "sample_sd": 2.331069604365713,
+            "ci95": [
+              -2.284392440370593,
+              3.5044179697254023
+            ],
+            "deltas": [
+              -2.8815368432551614,
+              0.7947600094228957,
+              -0.17498040743172127,
+              2.144597437977791,
+              3.16722362667322
+            ],
+            "units": "percentage points; negative favors H"
+          }
+        },
+        "official-test/H8-B8": {
+          "cross_entropy": {
+            "n": 5,
+            "mean": -0.06876805480957034,
+            "sample_sd": 0.10115348076986282,
+            "ci95": [
+              -0.19436669017450575,
+              0.05683058055536509
+            ],
+            "deltas": [
+              -0.013576580810546801,
+              -0.2113239807128906,
+              -0.13958776931762706,
+              0.006245507812499884,
+              0.014402548980712915
+            ],
+            "units": "native cross-entropy; negative favors H"
+          },
+          "ece_percentage_points": {
+            "n": 5,
+            "mean": 4.479945515565573,
+            "sample_sd": 1.7912857616944546,
+            "ci95": [
+              2.255770474774562,
+              6.704120556356584
+            ],
+            "deltas": [
+              4.438552780486639,
+              2.113756523542107,
+              3.7164901446923624,
+              6.966478152684869,
+              5.16444997642189
+            ],
+            "units": "percentage points; negative favors H"
+          }
+        },
+        "official-test/H8-C8": {
+          "cross_entropy": {
+            "n": 5,
+            "mean": 0.01585386840820302,
+            "sample_sd": 0.09840569399614287,
+            "ci95": [
+              -0.10633293904506387,
+              0.1380406758614699
+            ],
+            "deltas": [
+              -0.11386638870239274,
+              0.07155846519470188,
+              -0.031479266738891454,
+              0.008700600433349415,
+              0.144355931854248
+            ],
+            "units": "native cross-entropy; negative favors H"
+          },
+          "ece_percentage_points": {
+            "n": 5,
+            "mean": 0.439146606452763,
+            "sample_sd": 2.2384506843702883,
+            "ci95": [
+              -2.340257020084401,
+              3.2185502329899274
+            ],
+            "deltas": [
+              -3.0289683922007664,
+              1.8148859925568113,
+              -0.6213743314519515,
+              2.131961488574742,
+              1.8992282747849796
+            ],
+            "units": "percentage points; negative favors H"
+          }
+        }
+      },
+      "test_confidence_bands": {
+        "groups": [
+          {
+            "family": "C",
+            "band": 1,
+            "source_bins": [
+              0,
+              4
+            ],
+            "pooled_count": 30554,
+            "accuracy_percent": 11.154022386594226,
+            "mean_confidence_percent": 20.277303350478395,
+            "confidence_minus_accuracy_pp": 9.123280963884167
+          },
+          {
+            "family": "C",
+            "band": 2,
+            "source_bins": [
+              5,
+              9
+            ],
+            "pooled_count": 15068,
+            "accuracy_percent": 28.49747809928325,
+            "mean_confidence_percent": 46.145900459735124,
+            "confidence_minus_accuracy_pp": 17.64842236045187
+          },
+          {
+            "family": "C",
+            "band": 3,
+            "source_bins": [
+              10,
+              14
+            ],
+            "pooled_count": 4378,
+            "accuracy_percent": 57.74326176336226,
+            "mean_confidence_percent": 80.36512419370388,
+            "confidence_minus_accuracy_pp": 22.621862430341608
+          },
+          {
+            "family": "H",
+            "band": 1,
+            "source_bins": [
+              0,
+              4
+            ],
+            "pooled_count": 29340,
+            "accuracy_percent": 12.017723244717109,
+            "mean_confidence_percent": 21.062262438367178,
+            "confidence_minus_accuracy_pp": 9.044539193650067
+          },
+          {
+            "family": "H",
+            "band": 2,
+            "source_bins": [
+              5,
+              9
+            ],
+            "pooled_count": 16050,
+            "accuracy_percent": 27.794392523364486,
+            "mean_confidence_percent": 46.16266894581905,
+            "confidence_minus_accuracy_pp": 18.36827642245456
+          },
+          {
+            "family": "H",
+            "band": 3,
+            "source_bins": [
+              10,
+              14
+            ],
+            "pooled_count": 4610,
+            "accuracy_percent": 57.59219088937093,
+            "mean_confidence_percent": 80.48083534985457,
+            "confidence_minus_accuracy_pp": 22.888644460483643
+          }
+        ],
+        "pooled_prediction_instances": 50000,
+        "caveat": "Model-specific confidence groups pooled over five seeds; predictions reuse the same 10,000 images and are not matched cohorts or independent experimental units."
+      }
+    },
+    "paired_diagnostics_status": "post-hoc exploratory; nominal unadjusted seed-level summaries"
+  },
   "input_provenance": {
     "hybrid": {
       "protocol.json": "e83d4b8f739b92fa7e447e407d300883556e59a3070f136789d96c9574281760",

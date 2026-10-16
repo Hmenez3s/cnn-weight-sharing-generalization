@@ -54,14 +54,16 @@ def _read(analysis_dir: Path) -> dict[str, Any]:
 
 
 def _write_table(data: dict[str, Any], path: Path) -> None:
-    lines = ["| Model | Official-test top-1 mean (nominal 95% CI) | Per-seed official-test accuracy | Mean cross-entropy | Parameters | MACs/example |",
-             "|:--|--:|:--|--:|--:|--:|"]
+    has_ece = all(data["models"][family]["official-test"].get("ece_percent") is not None for family in ("B", "C", "H"))
+    lines = ["| Model | Official-test top-1 mean (nominal 95% CI) | Per-seed official-test accuracy | Mean cross-entropy |" + (" Mean ECE (lower is better) |" if has_ece else "") + " Parameters | MACs/example |",
+             "|:--|--:|:--|--:|" + ("--:|" if has_ece else "") + "--:|--:|"]
     labels = {"B": "Fully independent blocks (B8)", "C": "Fully shared block (C8)", "H": "Endpoint-independent, central-shared blocks (H8)"}
     for family in ("B", "C", "H"):
         stats = data["models"][family]["official-test"]
         seeds = [next(x for x in data["table"] if x["split"] == "official-test" and x["family"] == family and x["seed"] == s) for s in (11, 23, 37, 53, 71)]
         ci = stats["top1_percent"]["ci95"]
-        lines.append(f"| {labels[family]} | {_fmt(stats['top1_percent']['mean'])}% ({_fmt(ci[0])}–{_fmt(ci[1])}) | {', '.join(_fmt(x['accuracy_percent']) for x in seeds)} | {_fmt(stats['cross_entropy']['mean'], 3)} | { {'B':152644,'C':22724,'H':59844}[family]:,} | 37,973,120 |")
+        ece_cell = f"{_fmt(stats['ece_percent']['mean'])}%" if has_ece else ""
+        lines.append(f"| {labels[family]} | {_fmt(stats['top1_percent']['mean'])}% ({_fmt(ci[0])}–{_fmt(ci[1])}) | {', '.join(_fmt(x['accuracy_percent']) for x in seeds)} | {_fmt(stats['cross_entropy']['mean'], 3)} |" + (f" {ece_cell} |" if has_ece else "") + f" { {'B':152644,'C':22724,'H':59844}[family]:,} | 37,973,120 |")
     lines.extend(["", "Values are derived from validated input rows; seeds are 11, 23, 37, 53, 71. Intervals are descriptive nominal intervals across five seed-level outcomes."])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -116,6 +118,70 @@ def _document(data: dict[str, Any], out: Path, table_path: Path) -> None:
     def contrast(split: str, name: str) -> dict[str, Any]:
         return next(c for c in data["contrasts"] if c["split"] == split and c["name"] == name)
     h = data["models"]["H"]["official-test"]["top1_percent"]
+    cal = data.get("diagnostics", {}).get("calibration", {})
+    calibration_available = all(cal.get("coverage", {}).get(f"official-test/{family}", {}).get("available") for family in ("B", "C", "H"))
+    metric_rows = []
+    for family in ("B", "C", "H"):
+        validation_sd = data["models"][family]["validation"]["top1_percent"]["sample_sd"]
+        test_sd = data["models"][family]["official-test"]["top1_percent"]["sample_sd"]
+        ece = data["models"][family]["official-test"].get("ece_percent")
+        metric_rows.append(f"| {family}8 | {_fmt(data['models'][family]['official-test']['top1_percent']['mean'])}% (higher) | {_fmt(data['models'][family]['official-test']['cross_entropy']['mean'], 3)} (lower) | {(_fmt(ece['mean']) + '% (lower)') if ece else 'unavailable'} | {_fmt(validation_sd, 3)} | {_fmt(test_sd, 3)} |")
+    hc = cal.get("paired_diagnostics", {}).get("official-test/H8-C8", {})
+    hb = cal.get("paired_diagnostics", {}).get("official-test/H8-B8", {})
+    hb_ce, hb_ece = hb.get("cross_entropy"), hb.get("ece_percentage_points")
+    hc_ce = hc.get("cross_entropy")
+    hc_ece = hc.get("ece_percentage_points")
+    hs71 = next(row for row in data["table"] if row["split"] == "validation" and row["family"] == "H" and row["seed"] == 71)
+    cs71 = next(row for row in data["table"] if row["split"] == "validation" and row["family"] == "C" and row["seed"] == 71)
+    h71_ece = next((row["ece_percent"] for row in cal.get("per_seed", {}).get("validation/H", []) if row["seed"] == 71), None)
+    c71_ece = next((row["ece_percent"] for row in cal.get("per_seed", {}).get("validation/C", []) if row["seed"] == 71), None)
+    validation71_delta = hs71["accuracy_percent"] - cs71["accuracy_percent"]
+    test71_delta = contrast("official-test", "H8-C8")["deltas_pp"][-1]
+    seed71_context = f"Seed 71 validation H8−C8 top-1 difference was {_fmt(validation71_delta)} pp; its test difference was {_fmt(test71_delta)} pp."
+    if validation71_delta < 0 and test71_delta < 0:
+        seed71_context += " H8 was already behind C8 on validation and remained behind on test; this does not identify a cause."
+    test_deltas = contrast("official-test", "H8-C8")["deltas_pp"]
+    test_b_deltas = contrast("official-test", "H8-B8")["deltas_pp"]
+    if hc_ce:
+        hc_delta_table = "| Seed | H8−C8 top-1 (pp) | H8−C8 CE | H8−C8 ECE (pp) |\n|--:|--:|--:|--:|\n" + "\n".join(
+            f"| {seed} | {_fmt(top1)} | {_fmt(hc_ce['deltas'][i], 3)} | {_fmt(hc_ece['deltas'][i]) if hc_ece else 'n/a'} |"
+            for i, (seed, top1) in enumerate(zip((11, 23, 37, 53, 71), test_deltas)))
+        hc_counts = f"H8 had higher top-1 in {sum(x > 0 for x in test_deltas)}/5 seeds and lower CE in {sum(x < 0 for x in hc_ce['deltas'])}/5."
+        hc_counts += (f" H8 had lower ECE in {sum(x < 0 for x in hc_ece['deltas'])}/5." if hc_ece else " Paired ECE comparisons are unavailable because retained calibration bins are missing.")
+        hc_phrase = f"Test-split H8−C8 deltas are shown below (CE in native units; negative favors H8).\n\n{hc_delta_table}\n\n{hc_counts}"
+    else:
+        hc_phrase = "Paired CE comparisons are unavailable in this analysis output."
+    if hb_ce:
+        hb_counts = f"Against B8, H8 had higher top-1 in {sum(x > 0 for x in test_b_deltas)}/5 seeds and lower CE in {sum(x < 0 for x in hb_ce['deltas'])}/5."
+        hb_counts += (f" H8 had lower ECE in {sum(x < 0 for x in hb_ece['deltas'])}/5; B8 had lower ECE in {sum(x > 0 for x in hb_ece['deltas'])}/5." if hb_ece else " Paired ECE comparisons are unavailable because retained calibration bins are missing.")
+        hc_phrase += "\n\n" + hb_counts
+    c_stats, h_stats = data["models"]["C"]["official-test"], data["models"]["H"]["official-test"]
+    c_ece_mean, h_ece_mean = c_stats.get("ece_percent"), h_stats.get("ece_percent")
+    if c_ece_mean is not None and h_ece_mean is not None:
+        lower_mean_family = "C8" if c_stats["cross_entropy"]["mean"] < h_stats["cross_entropy"]["mean"] and c_ece_mean["mean"] < h_ece_mean["mean"] else "H8" if c_stats["cross_entropy"]["mean"] > h_stats["cross_entropy"]["mean"] and c_ece_mean["mean"] > h_ece_mean["mean"] else "Neither model is lower on both observed mean CE and ECE"
+        ece_mean_sentence = ("C8 has lower observed mean CE and ECE than H8." if lower_mean_family == "C8" else "H8 has lower observed mean CE and ECE than C8." if lower_mean_family == "H8" else lower_mean_family + ".")
+    else:
+        ece_mean_sentence = "Observed mean CE remains available; the mean ECE comparison is unavailable because retained calibration bins are missing."
+    b_ece_mean = data["models"]["B"]["official-test"].get("ece_percent")
+    h_ece_mean = data["models"]["H"]["official-test"].get("ece_percent")
+    if b_ece_mean is not None and h_ece_mean is not None and b_ece_mean["mean"] < h_ece_mean["mean"]:
+        calibration_interpretation = "B8 has lower observed mean ECE than H8, so good calibration is not uniquely associated with pure looping."
+    elif b_ece_mean is not None and h_ece_mean is not None and b_ece_mean["mean"] > h_ece_mean["mean"]:
+        calibration_interpretation = "H8 has lower observed mean ECE than B8 in these retained outcomes; this does not establish a pure-loop calibration advantage."
+    elif b_ece_mean is not None and h_ece_mean is not None:
+        calibration_interpretation = "B8 and H8 have equal observed mean ECE; this does not establish a pure-loop calibration advantage."
+    else:
+        calibration_interpretation = "B8/H8 mean ECE comparison is unavailable because retained calibration evidence is incomplete."
+    band_table = ""
+    if calibration_available and cal.get("test_confidence_bands"):
+        ranges = {1: "0–<33.33%", 2: "33.33–<66.67%", 3: "66.67–100%"}
+        def band_value(value: Any) -> str:
+            return "n/a" if value is None else _fmt(value)
+        band_table = "| Model | Confidence band | Pooled count | Mean confidence | Accuracy | Confidence − accuracy |\n|:--|:--|--:|--:|--:|--:|\n" + "\n".join(
+            f"| {row['family']}8 | {ranges[row['band']]} (bins {row['source_bins'][0]}–{row['source_bins'][1]} of 15) | {row['pooled_count']:,} | {band_value(row['mean_confidence_percent'])}{'%' if row['mean_confidence_percent'] is not None else ''} | {band_value(row['accuracy_percent'])}{'%' if row['accuracy_percent'] is not None else ''} | {band_value(row['confidence_minus_accuracy_pp'])}{' pp' if row['confidence_minus_accuracy_pp'] is not None else ''} |"
+            for row in cal["test_confidence_bands"]["groups"])
+    else:
+        band_table = "Calibration-bin evidence is unavailable or incomplete in the retained inputs; no calibration comparison is reported."
     document = f'''# H8 exploratory generalization follow-up
 
 This report compares H8 with the frozen B8 and C8 controls on the existing CIFAR-100 study. It is an exploratory post-original-test follow-up: the official B/C/E test outcomes were already known before the H hypothesis and follow-up protocol. The original controls were not rerun. This is not an independent preregistered confirmation, and no fresh confirmatory success claim is made.
@@ -132,6 +198,30 @@ H8 official-test mean top-1 accuracy was {_fmt(h['mean'])}% (nominal 95% Student
 | H8 − C8, official test | {_fmt(contrast('official-test','H8-C8')['mean'])} | {_fmt(contrast('official-test','H8-C8')['ci95'][0])} to {_fmt(contrast('official-test','H8-C8')['ci95'][1])} | {', '.join(_fmt(x) for x in contrast('official-test','H8-C8')['deltas_pp'])} |
 
 These values are generated only from supplied result evidence. Per-seed accuracy, cross-entropy, selected updates, checkpoint hashes, raw input SHA-256 hashes, and all model summaries are included in the [figure data](../assets/hybrid-figure-data.json) and [analytical outputs](../benchmarks/hybrid-generalization-20261015/analysis/).
+
+## Where H8 gains and loses
+
+| Model | Mean test top-1 | Mean test cross-entropy | Mean test ECE | Validation top-1 sample SD | Test top-1 sample SD |
+|:--|--:|--:|--:|--:|--:|
+{chr(10).join(metric_rows)}
+
+Top-1 is higher-is-better; cross-entropy (CE) and expected calibration error (ECE) are lower-is-better. CE is not a calibration metric. ECE summarizes calibration using the producer's particular 15 equal-width confidence bins; it is not a bin-independent property. The dispersion columns are observed sample standard deviations across the five paired seeds, shown separately by split; they do not support a universal stability ranking.
+
+{hc_phrase}
+
+{ece_mean_sentence} Five-seed uncertainty remains substantial.
+
+{seed71_context} Seed 71 validation CE difference H8−C8 was {_fmt(hs71['cross_entropy'] - cs71['cross_entropy'], 3)}; validation ECE difference was {(_fmt(h71_ece - c71_ece) + ' pp') if h71_ece is not None and c71_ece is not None else 'unavailable'}.
+
+H8's 59,844 parameters are 2.6335× C8's 22,724 (60.8% fewer than B8's 152,644); all have the same counted 37,973,120 MACs/example. This is a parameter trade-off, not a latency measurement. Extra H8 capacity also confounds attribution to endpoint specialization.
+
+### Test confidence bands (descriptive)
+
+{band_table}
+
+{cal.get('test_confidence_bands', {}).get('caveat', 'No calibration-bin cohort comparison is available.') if calibration_available else ''} These are model-specific confidence groups, not matched image cohorts: they cannot identify which classes or images H8 wins or loses on. The 50,000 pooled prediction instances per model reuse the same 10,000 images over five seeds; the experimental units remain five seeds, not images or predictions.
+
+All diagnostics in this section are post-hoc, exploratory, and unadjusted. {calibration_interpretation} The measurements do not establish a class/task mechanism, causal explanation, regularization effect, or K-extrapolation superiority.
 
 ## Topology, protocol, and interpretation
 

@@ -132,6 +132,60 @@ def _stats(values: list[float]) -> dict[str, Any]:
     return {"n": n, "mean": mean, "sample_sd": sd, "ci95": [mean - half, mean + half]}
 
 
+def _calibration(metric: dict[str, Any], label: str, expected_count: int) -> dict[str, Any] | None:
+    """Validate retained producer ECE bins; tolerate 1e-7 aggregation roundoff."""
+    tol = 1e-7
+    if "ece" not in metric and "ece_bins" not in metric:
+        return None
+    if "ece" not in metric or "ece_bins" not in metric:
+        _fail(f"{label}: ECE and its bins must be retained together")
+    ece = _finite(metric["ece"], f"{label} ece")
+    if not 0 <= ece <= 1:
+        _fail(f"{label}: ece must be in [0, 1]")
+    bins = metric["ece_bins"]
+    if not isinstance(bins, list) or len(bins) != 15:
+        _fail(f"{label}: expected exactly 15 ECE bins")
+    total, correct, reconstructed = 0, 0.0, 0.0
+    normalized = []
+    for i, row in enumerate(bins):
+        if not isinstance(row, dict):
+            _fail(f"{label}: ECE bin {i} must be an object")
+        lo, hi = _finite(row.get("lower"), f"{label} bin {i} lower"), _finite(row.get("upper"), f"{label} bin {i} upper")
+        if abs(lo - i / 15) > tol or abs(hi - (i + 1) / 15) > tol:
+            _fail(f"{label}: ECE bin {i} boundary mismatch")
+        if type(row.get("upper_inclusive")) is not bool or row["upper_inclusive"] != (i == 14):
+            _fail(f"{label}: ECE bin {i} inclusivity mismatch")
+        count = row.get("count")
+        if type(count) is not int or count < 0:
+            _fail(f"{label}: ECE bin {i} count must be a nonnegative integer")
+        total += count
+        acc, conf = row.get("accuracy"), row.get("mean_confidence")
+        if count == 0:
+            if acc is not None or conf is not None:
+                _fail(f"{label}: empty ECE bin {i} values must be null")
+        else:
+            acc = _finite(acc, f"{label} bin {i} accuracy")
+            conf = _finite(conf, f"{label} bin {i} mean_confidence")
+            if not 0 <= acc <= 1:
+                _fail(f"{label}: ECE bin {i} accuracy must be in [0, 1]")
+            if not 0 <= conf <= 1:
+                _fail(f"{label}: ECE bin {i} mean_confidence must be in [0, 1]")
+            if not lo - tol <= conf <= hi + tol:
+                _fail(f"{label}: ECE bin {i} mean_confidence outside bin boundaries")
+            correct += count * acc
+            reconstructed += count / expected_count * abs(acc - conf)
+        normalized.append({"lower": lo, "upper": hi, "upper_inclusive": row["upper_inclusive"],
+                           "count": count, "accuracy": acc, "mean_confidence": conf})
+    if total != expected_count:
+        _fail(f"{label}: ECE bin counts sum to {total}, expected {expected_count}")
+    if abs(reconstructed - ece) > tol:
+        _fail(f"{label}: ECE does not match retained bin aggregates")
+    top1 = _finite(metric.get("top1"), f"{label} top1")
+    if abs(correct / expected_count - top1) > tol:
+        _fail(f"{label}: ECE bins do not reconstruct top1")
+    return {"ece": ece, "bins": normalized}
+
+
 def _h_paths(input_dir: Path) -> tuple[Path, Path]:
     """Accept either the operator root (protocol + study/) or its flat study evidence directory."""
     if (input_dir / "study" / "freeze.json").is_file():
@@ -201,22 +255,31 @@ def analyze(h_dir: Path, controls_dir: Path = ORIGINAL) -> dict[str, Any]:
             if any(hc.get(k) != cc.get(k) for k in shared):
                 _fail(f"H recipe differs from paired frozen {fam} control at seed {seed}")
     models, table = {}, []
+    calibration_rows: dict[tuple[str, str, int], dict[str, Any] | None] = {}
     for split, hres in (("validation", h_val), ("official-test", h_test)):
+        expected_count = 5000 if split == "validation" else 10000
         for family in ("H", "B", "C"):
             values = {"top1_percent": [], "cross_entropy": []}
+            ece_values = []
             per_seed = []
             for seed in SEEDS:
                 row = hres["rows_by_id"][f"H-s{seed}"] if family == "H" else control_rows[split][f"{family}-s{seed}"]
                 metric = row["sweep"]["metrics"]["8"]
                 accuracy = 100 * float(metric["top1"])
                 ce = float(metric["cross_entropy"])
+                calibration = _calibration(metric, f"{split} {family}-s{seed}", expected_count)
+                calibration_rows[(split, family, seed)] = calibration
+                if calibration is not None:
+                    ece_values.append(100 * calibration["ece"])
                 observation = {"split": split, "family": family, "seed": seed, "accuracy_percent": accuracy,
                                "cross_entropy": ce, "selected_update": row["selected_update"], "checkpoint_sha256": row["checkpoint_sha256"]}
                 table.append(observation)
                 per_seed.append({key: observation[key] for key in ("seed", "accuracy_percent", "cross_entropy", "selected_update", "checkpoint_sha256")})
                 values["top1_percent"].append(accuracy)
                 values["cross_entropy"].append(ce)
-            models.setdefault(family, {})[split] = {key: _stats(value) for key, value in values.items()} | {"seeds": per_seed}
+            model_stats = {key: _stats(value) for key, value in values.items()} | {"seeds": per_seed}
+            model_stats["ece_percent"] = _stats(ece_values) if len(ece_values) == len(SEEDS) else None
+            models.setdefault(family, {})[split] = model_stats
     contrasts = []
     for split in ("validation", "official-test"):
         for family in ("B", "C"):
@@ -227,10 +290,53 @@ def analyze(h_dir: Path, controls_dir: Path = ORIGINAL) -> dict[str, Any]:
             stats = _stats(delta)
             contrasts.append({"split": split, "name": f"H8-{family}8", **stats, "deltas_pp": delta,
                               "seeds": list(SEEDS), "classification": "exploratory_nominal_unadjusted"})
+    calibration = {"tolerance": 1e-7, "ece_units": "percent", "coverage": {}, "model_summaries": {}, "per_seed": {}, "paired_diagnostics": {},
+                   "test_confidence_bands": None}
+    for split in ("validation", "official-test"):
+        for family in ("H", "B", "C"):
+            retained = [calibration_rows[(split, family, seed)] for seed in SEEDS]
+            present = sum(value is not None for value in retained)
+            key = f"{split}/{family}"
+            calibration["coverage"][key] = {"available": present == len(SEEDS), "present": present, "expected": len(SEEDS)}
+            calibration["model_summaries"][key] = models[family][split]["ece_percent"]
+            calibration["per_seed"][key] = [{"seed": seed, "ece_percent": None if calibration_rows[(split, family, seed)] is None else 100 * calibration_rows[(split, family, seed)]["ece"]} for seed in SEEDS]
+        for family in ("B", "C"):
+            ce_deltas = []
+            ece_deltas = []
+            for seed in SEEDS:
+                hrow = next(r for r in table if r["split"] == split and r["family"] == "H" and r["seed"] == seed)
+                crow = next(r for r in table if r["split"] == split and r["family"] == family and r["seed"] == seed)
+                ce_deltas.append(hrow["cross_entropy"] - crow["cross_entropy"])
+                hp, cp = calibration_rows[(split, "H", seed)], calibration_rows[(split, family, seed)]
+                if hp is not None and cp is not None:
+                    ece_deltas.append(100 * (hp["ece"] - cp["ece"]))
+            calibration["paired_diagnostics"][f"{split}/H8-{family}8"] = {
+                "cross_entropy": {**_stats(ce_deltas), "deltas": ce_deltas, "units": "native cross-entropy; negative favors H"},
+                "ece_percentage_points": ({**_stats(ece_deltas), "deltas": ece_deltas, "units": "percentage points; negative favors H"}
+                                           if len(ece_deltas) == len(SEEDS) else None)}
+    if all(calibration_rows[("official-test", fam, seed)] is not None for fam in ("C", "H") for seed in SEEDS):
+        bands = []
+        for family in ("C", "H"):
+            for band_index, (start, end) in enumerate(((0, 5), (5, 10), (10, 15))):
+                count = 0
+                correct = confidence = 0.0
+                for seed in SEEDS:
+                    for bin_row in calibration_rows[("official-test", family, seed)]["bins"][start:end]:
+                        count += bin_row["count"]
+                        if bin_row["count"]:
+                            correct += bin_row["count"] * bin_row["accuracy"]
+                            confidence += bin_row["count"] * bin_row["mean_confidence"]
+                bands.append({"family": family, "band": band_index + 1, "source_bins": [start, end - 1], "pooled_count": count,
+                              "accuracy_percent": 100 * correct / count if count else None,
+                              "mean_confidence_percent": 100 * confidence / count if count else None,
+                              "confidence_minus_accuracy_pp": 100 * (confidence - correct) / count if count else None})
+        calibration["test_confidence_bands"] = {"groups": bands, "pooled_prediction_instances": 50000,
+            "caveat": "Model-specific confidence groups pooled over five seeds; predictions reuse the same 10,000 images and are not matched cohorts or independent experimental units."}
     inputs = {"hybrid": {"protocol.json": _sha(h_protocol_path), **{name: _sha(h_study / name) for name in ("preregistration.json", "freeze.json", "validation.json", "test_metrics.json")}},
               "original_controls": {name: _sha(controls_dir / name) for name in ("protocol.json", "preregistration.json", "freeze.json", "validation.json", "test_metrics.json")}}
     return {"schema": "hybrid-generalization-analysis-v1", "units": {"accuracy": "percent top-1", "contrasts": "percentage points", "cross_entropy": "native units"},
-            "models": models, "contrasts": contrasts, "table": table, "input_provenance": inputs,
+            "models": models, "contrasts": contrasts, "table": table, "diagnostics": {"calibration": calibration,
+                "paired_diagnostics_status": "post-hoc exploratory; nominal unadjusted seed-level summaries"}, "input_provenance": inputs,
             "interpretation": {"status": "exploratory post-original-test follow-up; original controls not rerun; no post-H-test tuning",
                 "comparisons": "H8-B8 and H8-C8; nominal paired Student-t 95% intervals use five seed-level deltas (df=4), unadjusted for two comparisons; exploratory, not an independent preregistered confirmation and no fresh confirmatory success claim.",
                 "experimental_unit": "five paired seeds, not individual images", "training_subset": "4,500 examples per run (small subset)",
