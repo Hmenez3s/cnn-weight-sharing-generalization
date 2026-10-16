@@ -1,0 +1,203 @@
+{
+  "schema": "position-ablation-protocol-v1",
+  "experiment_id": "position-ablation-20261016",
+  "created_utc": "2026-10-16T03:28:57.571875+00:00",
+  "status": "prospective specification for a separate post-hoc exploratory mechanism follow-up",
+  "question": "Does freeing the boundary transformations help more than freeing two interior transformations, when capacity, branch-use counts, initial function, data stream, optimizer and computation are held fixed?",
+  "provenance": {
+    "original_B_C_and_H_official_results_already_known": true,
+    "independent_confirmation": false,
+    "historical_H8_is_not_a_new_arm": true,
+    "prior_public_head": "7536d03f88870ca1bf42f4c3a6e8e0d2367e0b76",
+    "original_control_freeze_sha256": "64da1d811fb71a1913042d50efc62fdda49d240b70e2f54c375ebbe328810bd0",
+    "original_H8_freeze_sha256": "611282d3df12b6ae553dec9b7bb2febd7611704250a603fd063ac2fe1a45d335",
+    "explanation": "New END/INNER arms use cloned C-initialized branches. Historical H8 used separate branch initialization draws. Do not relabel new END results as the historical H8 result."
+  },
+  "arms": {
+    "END": {
+      "branch_map": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "unique_positions_one_indexed": [
+        1,
+        8
+      ]
+    },
+    "INNER": {
+      "branch_map": [
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        2,
+        1
+      ],
+      "unique_positions_one_indexed": [
+        2,
+        7
+      ]
+    }
+  },
+  "model": {
+    "native_base_family": "H",
+    "native_family_is_implementation_detail": true,
+    "depth": 8,
+    "width": 32,
+    "alpha": 0.1,
+    "num_classes": 100,
+    "unique_branches": 3,
+    "branch_use_counts": [
+      1,
+      6,
+      1
+    ],
+    "parameters": 59844,
+    "forward_macs_per_example": 37973120,
+    "initialization": "Same-seed native C stem/head/first branch stream; copy the initial first branch state into all three independent branch parameter objects. Both arms and native C must have identical initial logits before any update. Parameter objects must remain independent.",
+    "normalization": "Native affine GroupNorm, no BatchNorm running statistics",
+    "factory_scope": "Dedicated single-process run-local engine.build_model substitution; restore in finally; checkpoint reconstruction requires the explicit arm map and companion treatment identity"
+  },
+  "recipe": {
+    "paired_seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "run_order": "seed-major, END then INNER",
+    "split_seed": 1729,
+    "fraction": 0.1,
+    "train_examples_per_seed": 4500,
+    "validation_examples": 5000,
+    "batch_size": 128,
+    "total_updates_per_run": 10000,
+    "expected_scientific_runs": 10,
+    "expected_scientific_updates": 100000,
+    "cosine_horizon": 10000,
+    "validation_cadence": 200,
+    "optimizer": {
+      "name": "SGD",
+      "learning_rate": 0.03,
+      "momentum": 0.9,
+      "weight_decay": 0.0005
+    },
+    "device": "cuda",
+    "amp": false,
+    "selection_identity": "amended_v2",
+    "selection": [
+      "highest_validation_accuracy",
+      "lowest_validation_cross_entropy",
+      "earliest_update"
+    ],
+    "inference_grid": [
+      8
+    ],
+    "scientific_phase": "train-validation only; no official-test phase"
+  },
+  "primary_analysis": {
+    "contrast": "END-INNER",
+    "endpoint": "selected-checkpoint validation top1",
+    "unit": "paired seed",
+    "n": 5,
+    "units": "percentage points",
+    "interval": "two-sided Student t 95%, df=4, nominal and unadjusted",
+    "selection_caveat": "Validation is reused for model selection and evaluation, already known and not an independent holdout. Effect is conditional on this recipe and selection rule, not a new unbiased test estimate.",
+    "interpretation": "Positive observed effect favors boundary placement, negative favors interior placement. An interval crossing zero does not establish equivalence or lack of a mechanism. No outcome-dependent extensions or tuning."
+  },
+  "secondary_analyses": [
+    "Selected-checkpoint validation cross-entropy and native 15-bin ECE",
+    "Fixed 10000-update train/validation accuracy, validation cross-entropy and generalization gap",
+    "Same-update learning trajectories; selected and fixed-budget checkpoints must never be conflated",
+    "Frozen C8 validation results as explicitly historical reference, not a retrained control",
+    "Paired per-example correctness/NLL/confidence decomposition for END-INNER and historical H8-C8 on the identical validation examples",
+    "Per-class validation error-count differences, descriptive only; 50 validation examples/class, no classwise significance claims",
+    "Per-use gradient decomposition on one fixed clean training batch of128 per seed, at common initialization and selected checkpoints; verify untied-copy gradient sums reproduce native tied gradients. Local conflicts are diagnostics, not proof of global learning causation."
+  ],
+  "diagnostics": {
+    "partition": "Only the original training subset and fixed validation split, never official test",
+    "fixed_training_batch": "numpy.default_rng(100000+paired_seed), choose128 training-subset indices without replacement, no augmentation, cross-entropy mean reduction",
+    "prediction_groups": [
+      "both_correct",
+      "END_only_correct",
+      "INNER_only_correct",
+      "both_wrong"
+    ],
+    "historical_prediction_groups": [
+      "both_correct",
+      "H_only_correct",
+      "C_only_correct",
+      "both_wrong"
+    ],
+    "gradient_reference": "Native B8 occurrence clones with all stem/head/branch states copied from the evaluated model. Same logits and same per-group summed parameter gradients are mandatory conservation checks.",
+    "calibration_tuning_allowed": false,
+    "reference_checkpoint_verification": "Copied frozen H8/C8 selected checkpoints must match public freeze SHA256; validation predictions must reproduce frozen top1 within1e-12 and CE/ECE within2e-5. All copies remain private."
+  },
+  "resources": {
+    "run_owned_train_meta_copies_only": true,
+    "synthetic_tests_only_in_new_disposable_roots": true,
+    "no_global_cache_writes": true,
+    "no_cleanup_or_deletion": true,
+    "network_inside_workload": false,
+    "cpu_budget_fraction_max": 0.8,
+    "cuda_memory_fraction": 0.5,
+    "other_ML_workloads_must_not_be_running_at_launch": true,
+    "YOLO26_interference_allowed": false
+  },
+  "limits": {
+    "no_official_test_access": true,
+    "no_control_retraining": true,
+    "no_historical_protocol_or_result_modification": true,
+    "no_extra_architectures_or_seeds_beyond_two_fixed_maps": true,
+    "no_outcome_based_tuning_or_run_extensions": true,
+    "no_new_provider_or_purchase": true,
+    "no_K32_or_other_datasets": true
+  },
+  "output_contract": {
+    "validation_schema": "position-ablation-validation-v1",
+    "row_required": [
+      "arm",
+      "paired_seed",
+      "branch_map",
+      "selected_update",
+      "checkpoint_sha256",
+      "data_hash",
+      "split_hash",
+      "subset_hash",
+      "metrics",
+      "selected_train_accuracy",
+      "selected_gap",
+      "fixed_budget",
+      "parameters",
+      "forward_macs",
+      "training_updates",
+      "paired_stream_sha256"
+    ],
+    "metrics_keys": [
+      "top1",
+      "cross_entropy",
+      "ece",
+      "ece_bins"
+    ],
+    "fixed_budget_keys": [
+      "update",
+      "train_accuracy",
+      "validation_accuracy",
+      "validation_cross_entropy",
+      "gap"
+    ],
+    "freeze_schema": "position-ablation-freeze-v1",
+    "probe_schema": "position-ablation-probe-v1",
+    "diagnostics_schema": "position-ablation-diagnostics-v1",
+    "public_artifacts": "Protocol, source, sanitized native run configs/compressed scalar logs, freeze/preregistration/validation receipts, aggregate diagnostics, analysis tables/figures/report. No weights, images, private raw prediction arrays, host/account paths or operational credentials."
+  }
+}
