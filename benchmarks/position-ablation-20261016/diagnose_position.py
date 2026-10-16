@@ -316,7 +316,9 @@ def _run_diagnostics_guarded(root_arg: Path, source_head: str, diagnostic_head: 
                         "ece": float(ece), "ece_bin_counts": bin_counts}
             expected_metric = val_rows[(family, seed)]["metrics"]
             if not math.isclose(measured["top1"], expected_metric["top1"], rel_tol=0, abs_tol=1e-12) or not math.isclose(measured["cross_entropy"], expected_metric["cross_entropy"], rel_tol=0, abs_tol=2e-5) or not math.isclose(measured["ece"], expected_metric["ece"], rel_tol=0, abs_tol=2e-5):
-                raise ValueError(f"reference validation top1/CE/ECE mismatch for {family}-s{seed}")
+                raise ValueError(f"reference validation top1/CE/ECE mismatch for {family}-s{seed}: "
+                                 f"measured={(measured['top1'], measured['cross_entropy'], measured['ece'])}, "
+                                 f"expected={(expected_metric['top1'], expected_metric['cross_entropy'], expected_metric['ece'])}")
             expected_bins = expected_metric.get("ece_bins", expected_metric.get("15ece_bins"))
             if expected_bins is not None:
                 expected_counts = [b["count"] for b in expected_bins]
