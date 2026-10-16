@@ -1,0 +1,88 @@
+{
+  "amp": false,
+  "config": {
+    "alpha": 0.1,
+    "amp": false,
+    "batch_size": 128,
+    "cosine_horizon": 10000,
+    "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+    "depth": 8,
+    "device": "cuda",
+    "family": "H",
+    "fraction": 0.1,
+    "learning_rate": 0.03,
+    "momentum": 0.9,
+    "num_classes": 100,
+    "paired_seed": 71,
+    "role": "research",
+    "selection_identity": "amended_v2",
+    "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+    "split_seed": 1729,
+    "subset_hash": "71fc99244cb0a5981d5cb513d2e7c2088dff20466a72f97fb9b809473d78afa9",
+    "synthetic": false,
+    "total_updates": 10000,
+    "validation_cadence": 200,
+    "weight_decay": 0.0005,
+    "width": 32
+  },
+  "config_hash": "d9207eba33eca5a90bffd2aa09285c08521a45b1b54a46dd5d451f79c1255b9f",
+  "costs": {
+    "depth": 8,
+    "family": "H",
+    "input_shape": [
+      1,
+      3,
+      32,
+      32
+    ],
+    "mac_breakdown": {
+      "branch_conv_per_step": 4718592,
+      "executed_branch": 37748736,
+      "head": 3200,
+      "stem": 221184,
+      "total": 37973120
+    },
+    "omitted": [
+      "GroupNorm",
+      "ReLU",
+      "residual add/scale",
+      "pooling",
+      "memory traffic"
+    ],
+    "parameter_breakdown": {
+      "branch_per_unique_copy": 18560,
+      "head": 3300,
+      "stem": 864,
+      "unique_branch_copies": 3,
+      "unique_total": 59844
+    },
+    "width": 32
+  },
+  "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+  "depth": 8,
+  "derived_seeds": {
+    "augmentation": 383767883,
+    "init": 2915609356,
+    "minibatch": 4164765339,
+    "subset": 71
+  },
+  "device": "cuda",
+  "environment": {
+    "python": "3.13.13",
+    "torch": "2.9.1+cu128"
+  },
+  "family": "H",
+  "fraction": 0.1,
+  "macs": 37973120,
+  "paired_seed": 71,
+  "parameter_count": 59844,
+  "parameter_mismatch": {},
+  "role": "research",
+  "run_id": "INNER-s71",
+  "schema_version": 1,
+  "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+  "status": "complete",
+  "subset_hash": "71fc99244cb0a5981d5cb513d2e7c2088dff20466a72f97fb9b809473d78afa9",
+  "synthetic": false,
+  "width": 32
+}

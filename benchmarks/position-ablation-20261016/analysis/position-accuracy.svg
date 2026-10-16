@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="440" viewBox="0 0 760 440">
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="84" y="28" font-family="sans-serif" font-size="18" font-weight="bold">Selected validation top-1 by paired seed</text>
+<line x1="84" y1="368.00" x2="730" y2="368.00" stroke="#dbe3e8"/>
+<text x="74" y="372.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#526575">20.07</text>
+<line x1="84" y1="289.00" x2="730" y2="289.00" stroke="#dbe3e8"/>
+<text x="74" y="293.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#526575">20.71</text>
+<line x1="84" y1="210.00" x2="730" y2="210.00" stroke="#dbe3e8"/>
+<text x="74" y="214.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#526575">21.35</text>
+<line x1="84" y1="131.00" x2="730" y2="131.00" stroke="#dbe3e8"/>
+<text x="74" y="135.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#526575">21.99</text>
+<line x1="84" y1="52.00" x2="730" y2="52.00" stroke="#dbe3e8"/>
+<text x="74" y="56.00" text-anchor="end" font-family="sans-serif" font-size="12" fill="#526575">22.63</text>
+<line x1="66.00" y1="186.50" x2="712.00" y2="295.36" stroke="#94a3b8" stroke-width="1"/>
+<line x1="75.00" y1="82.58" x2="721.00" y2="149.38" stroke="#94a3b8" stroke-width="1"/>
+<line x1="84.00" y1="127.12" x2="730.00" y2="169.18" stroke="#94a3b8" stroke-width="1"/>
+<line x1="93.00" y1="231.03" x2="739.00" y2="337.42" stroke="#94a3b8" stroke-width="1"/>
+<line x1="102.00" y1="223.61" x2="748.00" y2="255.77" stroke="#94a3b8" stroke-width="1"/>
+<line x1="84.00" y1="249.55" x2="84.00" y2="90.78" stroke="#0f766e" stroke-width="3"/>
+<polygon points="84.00,164.17 90.00,170.17 84.00,176.17 78.00,170.17" fill="#0f766e"/>
+<circle cx="66.00" cy="186.50" r="3.5" fill="#0f766e"/>
+<circle cx="75.00" cy="82.58" r="3.5" fill="#0f766e"/>
+<circle cx="84.00" cy="127.12" r="3.5" fill="#0f766e"/>
+<circle cx="93.00" cy="231.03" r="3.5" fill="#0f766e"/>
+<circle cx="102.00" cy="223.61" r="3.5" fill="#0f766e"/>
+<line x1="730.00" y1="341.57" x2="730.00" y2="141.27" stroke="#c76b32" stroke-width="3"/>
+<polygon points="730.00,235.42 736.00,241.42 730.00,247.42 724.00,241.42" fill="#c76b32"/>
+<circle cx="712.00" cy="295.36" r="3.5" fill="#c76b32"/>
+<circle cx="721.00" cy="149.38" r="3.5" fill="#c76b32"/>
+<circle cx="730.00" cy="169.18" r="3.5" fill="#c76b32"/>
+<circle cx="739.00" cy="337.42" r="3.5" fill="#c76b32"/>
+<circle cx="748.00" cy="255.77" r="3.5" fill="#c76b32"/>
+<text x="84.00" y="392" text-anchor="middle" font-family="sans-serif" font-size="13">END</text>
+<text x="730.00" y="392" text-anchor="middle" font-family="sans-serif" font-size="13">INNER</text>
+<text transform="translate(22 220.0) rotate(-90)" text-anchor="middle" font-family="sans-serif" font-size="13">Top-1 accuracy (%)</text>
+<text x="84" y="420" font-family="sans-serif" font-size="11" fill="#526575">Dots: individual paired seeds; diamonds/bars: arm mean and nominal 95% CI.</text>
+</svg>
