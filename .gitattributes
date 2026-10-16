@@ -2,5 +2,7 @@ benchmarks/minimal-generalization-20261015/*.json -text
 benchmarks/minimal-generalization-20261015/runs/** -text
 benchmarks/hybrid-generalization-20261015/*.json -text whitespace=cr-at-eol
 benchmarks/hybrid-generalization-20261015/runs/** -text whitespace=cr-at-eol
+benchmarks/position-ablation-20261016/*.json -text whitespace=cr-at-eol
+benchmarks/position-ablation-20261016/runs/** -text whitespace=cr-at-eol
 *.gz binary
 *.zip binary
