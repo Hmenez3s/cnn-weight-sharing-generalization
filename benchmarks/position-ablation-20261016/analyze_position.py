@@ -385,6 +385,331 @@ def validate_control(path: Path) -> dict[str, Any]:
     return result
 
 
+def _class_error_rows(class_counts: Any, left: str, right: str, left_top1: float, right_top1: float, label: str) -> list[dict[str, Any]]:
+    if not isinstance(class_counts, list) or len(class_counts) != 100:
+        _fail(f"{label}: expected 100 class-count rows")
+    seen, rows = set(), []
+    for item in class_counts:
+        if not isinstance(item, dict) or type(item.get("class_id")) is not int or not 0 <= item["class_id"] < 100 or item["class_id"] in seen or type(item.get("count")) is not int or item["count"] != 50:
+            _fail(f"{label}: invalid class count")
+        seen.add(item["class_id"])
+        lc, rc = item.get(f"{left}_correct"), item.get(f"{right}_correct")
+        le, re = item.get(f"{left}_errors"), item.get(f"{right}_errors")
+        correct_delta, error_delta = item.get(f"{right}_minus_{left}_correct"), item.get(f"{right}_minus_{left}_errors")
+        if any(type(value) is not int or not 0 <= value <= 50 for value in (lc, rc, le, re)) or lc + le != 50 or rc + re != 50:
+            _fail(f"{label}: invalid per-class correctness/errors")
+        if type(correct_delta) is not int or type(error_delta) is not int or correct_delta != rc - lc or error_delta != re - le:
+            _fail(f"{label}: per-class signed difference mismatch")
+        rows.append({"class_id": item["class_id"], "count": item["count"], "left_errors": le,
+                     "right_errors": re, "right_minus_left_errors": error_delta})
+    if seen != set(range(100)):
+        _fail(f"{label}: class IDs must be exactly 0..99")
+    for name, observed, expected in ((left, sum(x[f"{left}_correct"] for x in class_counts), round(left_top1 * 5000)),
+                                     (right, sum(x[f"{right}_correct"] for x in class_counts), round(right_top1 * 5000))):
+        if observed != expected:
+            _fail(f"{label}: per-class {name} correct counts do not sum to overall top1")
+    totals = (sum(x[f"{left}_errors"] for x in class_counts), sum(x[f"{right}_errors"] for x in class_counts),
+              sum(x[f"{right}_minus_{left}_errors"] for x in class_counts))
+    expected = (5000 - round(left_top1 * 5000), 5000 - round(right_top1 * 5000),
+                round(left_top1 * 5000) - round(right_top1 * 5000))
+    if totals != expected:
+        _fail(f"{label}: per-class error counts do not sum to overall errors")
+    return rows
+
+
+def _validate_diagnostics(path: Path, validated: dict[str, Any], validation_path: Path | None = None) -> dict[str, Any]:
+    doc = _read(path)
+    if doc.get("schema") != "position-ablation-diagnostics-v1":
+        _fail(f"{path}: diagnostics schema mismatch")
+    if _head(doc.get("source_head"), f"{path} source_head") != validated["source_head"]:
+        _fail(f"{path}: source_head does not match validation")
+    _head(doc.get("diagnostic_head"), f"{path} diagnostic_head")
+    _hash(doc.get("script_sha256"), f"{path} script_sha256")
+    _hash(doc.get("data_hash"), f"{path} data_hash")
+    hashes = doc.get("input_checkpoint_sha256")
+    expected_hash_keys = {f"{family}-s{seed}" for family in ("C", "H") for seed in SEEDS}
+    expected_position_keys = {f"{arm}-s{seed}" for arm in ARMS for seed in SEEDS}
+    position_hashes = doc.get("position_checkpoint_sha256")
+    if not isinstance(hashes, dict) or set(hashes) != expected_hash_keys:
+        _fail(f"{path}: expected exactly ten C/H checkpoint hashes")
+    if not isinstance(position_hashes, dict) or set(position_hashes) != expected_position_keys:
+        _fail(f"{path}: expected exactly ten position checkpoint hashes")
+    for seed in SEEDS:
+        for family in ("C", "H"):
+            _hash(hashes.get(f"{family}-s{seed}"), f"{family}-s{seed} input checkpoint SHA256")
+        for arm in ARMS:
+            key = f"{arm}-s{seed}"
+            position_hash = _hash(position_hashes.get(key), f"{key} position checkpoint SHA256")
+            if position_hash != validated["rows_by_arm_seed"][(arm, seed)]["checkpoint_sha256"]:
+                _fail(f"{path}: {key} diagnostic checkpoint SHA does not match validated selected row")
+    freeze_hash = _hash(doc.get("position_freeze_sha256"), f"{path} position_freeze_sha256")
+    validation_hash = _hash(doc.get("position_validation_sha256"), f"{path} position_validation_sha256")
+    if freeze_hash != validated["freeze_sha256"]:
+        _fail(f"{path}: position freeze SHA does not match validation receipt")
+    if validation_path is None:
+        _fail(f"{path}: explicit primary validation path is required for byte binding")
+    if hashlib.sha256(validation_path.read_bytes()).hexdigest() != validation_hash:
+        _fail(f"{path}: position validation SHA does not match validation file bytes")
+    for seed in SEEDS:
+        for arm in ARMS:
+            if validated["rows_by_arm_seed"][(arm, seed)]["data_hash"] != doc["data_hash"]:
+                _fail(f"diagnostics data_hash does not match new-study seed {seed}")
+    counts = doc.get("counts")
+    if (not isinstance(counts, dict) or counts.get("seeds") != list(SEEDS)
+            or type(counts.get("validation_examples_per_seed")) is not int or counts["validation_examples_per_seed"] != 5000
+            or type(counts.get("fixed_batch_examples_per_seed")) is not int or counts["fixed_batch_examples_per_seed"] != 128):
+        _fail(f"{path}: diagnostics counts mismatch")
+    guards = doc.get("guard_counters")
+    expected_guards = {"official_test_before_freeze", "official_test_reads", "cifar100c", "network", "outside_write", "forbidden_stage"}
+    if not isinstance(guards, dict) or set(guards) != expected_guards or any(type(v) is not int or v != 0 for v in guards.values()):
+        _fail(f"{path}: expected six zero guard counters")
+    runtime = doc.get("runtime")
+    if not isinstance(runtime, dict) or not isinstance(runtime.get("device"), str) or not runtime["device"] or not isinstance(runtime.get("torch_version"), str) or not runtime["torch_version"] or type(runtime.get("cpu_threads")) is not int or runtime["cpu_threads"] < 1:
+        _fail(f"{path}: invalid diagnostics runtime provenance")
+
+    cohorts, gradients, position_cohorts = doc.get("cohorts"), doc.get("gradient_decomposition"), doc.get("position_cohorts")
+    compact_cohorts, compact_position_cohorts, compact_gradients = [], [], []
+    if not isinstance(cohorts, list) or not isinstance(gradients, list) or len(cohorts) != 5 or len(gradients) != 5:
+        _fail(f"{path}: expected five cohort and gradient rows")
+    if not isinstance(position_cohorts, list) or len(position_cohorts) != 5:
+        _fail(f"{path}: expected five position cohort rows")
+    cohort_by_seed, gradient_by_seed = {}, {}
+    names = ("both_correct", "C_only_correct", "H_only_correct", "both_wrong")
+    for row in cohorts:
+        if not isinstance(row, dict) or type(row.get("paired_seed")) is not int or row["paired_seed"] not in SEEDS or row["paired_seed"] in cohort_by_seed:
+            _fail(f"{path}: invalid or duplicate cohort seed")
+        seed = row["paired_seed"]
+        if type(row.get("count")) is not int or row["count"] != 5000:
+            _fail(f"{path}: cohort seed {seed} count mismatch")
+        group_rows = row.get("cohorts")
+        if not isinstance(group_rows, dict) or set(group_rows) != set(names):
+            _fail(f"{path}: cohort seed {seed} groups mismatch")
+        if sum((g.get("count") if isinstance(g, dict) and type(g.get("count")) is int else -5001) for g in group_rows.values()) != 5000:
+            _fail(f"{path}: cohort seed {seed} group counts do not sum to 5000")
+        for name, group in group_rows.items():
+            if type(group.get("count")) is not int or group["count"] < 0:
+                _fail(f"{path}: invalid {name} count for seed {seed}")
+            for key in ("C_mean_nll", "H_mean_nll", "C_mean_max_confidence", "H_mean_max_confidence"):
+                value = group.get(key)
+                if group["count"] == 0:
+                    if value is not None: _fail(f"{path}: empty {name} {key} must be null")
+                elif not 0 <= _finite(value, f"{name} {key}") <= (1 if "confidence" in key else float("inf")):
+                    _fail(f"{path}: invalid {name} {key}")
+            contribution = _finite(group.get("H_minus_C_nll_contribution_per_full_cohort"), f"{name} NLL contribution")
+            if group["count"]:
+                expected_contribution = group["count"] / 5000 * (group["H_mean_nll"] - group["C_mean_nll"])
+                if not math.isclose(contribution, expected_contribution, rel_tol=1e-12, abs_tol=1e-12):
+                    _fail(f"{path}: seed {seed} {name} NLL contribution does not match cohort means")
+            elif contribution != 0:
+                _fail(f"{path}: empty {name} NLL contribution must be zero")
+        contribution_sum = sum(g["H_minus_C_nll_contribution_per_full_cohort"] for g in group_rows.values())
+        delta = _finite(row.get("H_minus_C_mean_nll"), f"seed {seed} H_minus_C_mean_nll")
+        if not math.isclose(contribution_sum, delta, rel_tol=1e-12, abs_tol=1e-12):
+            _fail(f"{path}: seed {seed} cohort NLL contributions do not conserve")
+        for family in ("C", "H"):
+            top1 = _finite(row.get(f"{family}_top1"), f"seed {seed} {family}_top1")
+            nll = _finite(row.get(f"{family}_mean_nll"), f"seed {seed} {family}_mean_nll")
+            if not 0 <= top1 <= 1 or nll < 0: _fail(f"{path}: invalid seed {seed} {family} validation metric")
+            weighted_nll = sum(group["count"] * group[f"{family}_mean_nll"] for group in group_rows.values() if group["count"] > 0) / 5000
+            if not math.isclose(weighted_nll, nll, rel_tol=1e-12, abs_tol=1e-12):
+                _fail(f"{path}: seed {seed} weighted {family} cohort NLL does not match overall NLL")
+        metrics = row.get("validation_metrics")
+        if not isinstance(metrics, dict) or set(metrics) != {"C", "H"}:
+            _fail(f"{path}: seed {seed} validation_metrics mismatch")
+        for family in ("C", "H"):
+            metric = metrics[family]
+            if not isinstance(metric, dict): _fail(f"{path}: invalid {family} validation metrics")
+            if (not math.isclose(_finite(metric.get("top1"), "validation metric top1"), row[f"{family}_top1"], rel_tol=0, abs_tol=1e-12)
+                    or not math.isclose(_finite(metric.get("cross_entropy"), "validation metric cross_entropy"), row[f"{family}_mean_nll"], rel_tol=0, abs_tol=2e-5)
+                    or not 0 <= _finite(metric.get("ece"), "validation metric ece") <= 1):
+                _fail(f"{path}: seed {seed} {family} validation metric mismatch")
+            bins = metric.get("ece_bin_counts")
+            if not isinstance(bins, list) or len(bins) != 15 or any(type(x) is not int or x < 0 for x in bins) or sum(bins) != 5000:
+                _fail(f"{path}: seed {seed} {family} ECE bin counts mismatch")
+        for family, exclusive in (("C", "C_only_correct"), ("H", "H_only_correct")):
+            reconstructed = (group_rows["both_correct"]["count"] + group_rows[exclusive]["count"]) / 5000
+            if not math.isclose(row[f"{family}_top1"], reconstructed, rel_tol=0, abs_tol=1e-12):
+                _fail(f"{path}: seed {seed} {family} top1 does not reconstruct matched correctness counts")
+        if not math.isclose(delta, row["H_mean_nll"] - row["C_mean_nll"], rel_tol=1e-12, abs_tol=1e-12):
+            _fail(f"{path}: seed {seed} H-C mean NLL does not match family means")
+        cohort_by_seed[seed] = row
+    if set(cohort_by_seed) != set(SEEDS): _fail(f"{path}: incomplete cohort seed roster")
+
+    position_by_seed = {}
+    position_names = ("both_correct", "INNER_only_correct", "END_only_correct", "both_wrong")
+    for row in position_cohorts:
+        if not isinstance(row, dict) or type(row.get("paired_seed")) is not int or row["paired_seed"] not in SEEDS or row["paired_seed"] in position_by_seed:
+            _fail(f"{path}: invalid or duplicate position cohort seed")
+        seed = row["paired_seed"]
+        if type(row.get("count")) is not int or row["count"] != 5000:
+            _fail(f"{path}: position cohort seed {seed} count mismatch")
+        groups = row.get("cohorts")
+        if not isinstance(groups, dict) or set(groups) != set(position_names):
+            _fail(f"{path}: position cohort seed {seed} group roster mismatch")
+        if any(not isinstance(g, dict) or type(g.get("count")) is not int or g["count"] < 0 for g in groups.values()) or sum(g["count"] for g in groups.values()) != 5000:
+            _fail(f"{path}: position cohort seed {seed} group counts do not sum to 5000")
+        for name, group in groups.items():
+            for family in ARMS:
+                for metric in ("mean_nll", "mean_max_confidence"):
+                    key = f"{family}_{metric}"
+                    value = group.get(key)
+                    if group["count"] == 0:
+                        if value is not None: _fail(f"{path}: empty position {name} {key} must be null")
+                    else:
+                        value = _finite(value, f"position {name} {key}")
+                        if value < 0 or (metric == "mean_max_confidence" and value > 1):
+                            _fail(f"{path}: invalid position {name} {key}")
+            expected_contribution = 0.0 if group["count"] == 0 else group["count"] / 5000 * (group["END_mean_nll"] - group["INNER_mean_nll"])
+            contribution = _finite(group.get("END_minus_INNER_nll_contribution_per_full_cohort"), f"position {name} NLL contribution")
+            if not math.isclose(contribution, expected_contribution, rel_tol=1e-12, abs_tol=1e-12):
+                _fail(f"{path}: position {name} NLL contribution does not match cohort means")
+        for family in ARMS:
+            top1 = _finite(row.get(f"{family}_top1"), f"position {family} top1")
+            nll = _finite(row.get(f"{family}_mean_nll"), f"position {family} mean NLL")
+            confidence = _finite(row.get(f"{family}_mean_max_confidence"), f"position {family} mean confidence")
+            reconstructed = (groups["both_correct"]["count"] + groups[f"{family}_only_correct"]["count"]) / 5000
+            if not 0 <= top1 <= 1 or not math.isclose(top1, reconstructed, rel_tol=0, abs_tol=1e-12) or nll < 0 or not 0 <= confidence <= 1:
+                _fail(f"{path}: position seed {seed} {family} metrics do not reconstruct matched cohorts")
+        end_minus_inner = _finite(row.get("END_minus_INNER_mean_nll"), f"position seed {seed} END_minus_INNER_mean_nll")
+        if not math.isclose(end_minus_inner, row["END_mean_nll"] - row["INNER_mean_nll"], rel_tol=1e-12, abs_tol=1e-12) or not math.isclose(sum(g["END_minus_INNER_nll_contribution_per_full_cohort"] for g in groups.values()), end_minus_inner, rel_tol=1e-12, abs_tol=1e-12):
+            _fail(f"{path}: position seed {seed} NLL decomposition does not conserve")
+        for family in ARMS:
+            weighted_nll = sum(group["count"] * group[f"{family}_mean_nll"] for group in groups.values() if group["count"] > 0) / 5000
+            weighted_confidence = sum(group["count"] * group[f"{family}_mean_max_confidence"] for group in groups.values() if group["count"] > 0) / 5000
+            if not math.isclose(weighted_nll, row[f"{family}_mean_nll"], rel_tol=1e-12, abs_tol=1e-12) or not math.isclose(weighted_confidence, row[f"{family}_mean_max_confidence"], rel_tol=1e-12, abs_tol=1e-12):
+                _fail(f"{path}: position seed {seed} weighted {family} cohort means are inconsistent")
+        for family in ARMS:
+            metrics = row.get("validation_metrics", {}).get(family) if isinstance(row.get("validation_metrics"), dict) else None
+            if not isinstance(metrics, dict): _fail(f"{path}: position seed {seed} {family} validation metrics missing")
+            selected = validated["rows_by_arm_seed"][(family, seed)]["metrics"]
+            if (not math.isclose(_finite(metrics.get("top1"), "position validation top1"), row[f"{family}_top1"], rel_tol=0, abs_tol=1e-12)
+                    or not math.isclose(row[f"{family}_top1"], selected["top1"], rel_tol=0, abs_tol=1e-12)):
+                _fail(f"{path}: position seed {seed} {family} top1 differs from matched counts or selected validation")
+            if (not math.isclose(_finite(metrics.get("cross_entropy"), "position validation cross_entropy"), row[f"{family}_mean_nll"], rel_tol=0, abs_tol=2e-5)
+                    or not math.isclose(row[f"{family}_mean_nll"], selected["cross_entropy"], rel_tol=0, abs_tol=2e-5)):
+                _fail(f"{path}: position seed {seed} {family} NLL differs from scalar validation")
+            ece = _finite(metrics.get("ece"), f"position seed {seed} {family} ece")
+            bins = metrics.get("ece_bin_counts")
+            expected_bins = [item["count"] for item in selected["ece_bins"]]
+            if not 0 <= ece <= 1 or not math.isclose(ece, selected["ece"], rel_tol=0, abs_tol=2e-5):
+                _fail(f"{path}: position seed {seed} {family} ECE differs from scalar validation")
+            if not isinstance(bins, list) or len(bins) != 15 or any(type(n) is not int or n < 0 for n in bins) or sum(bins) != 5000 or bins != expected_bins:
+                _fail(f"{path}: position seed {seed} {family} ECE bin counts mismatch")
+        position_by_seed[seed] = row
+    if set(position_by_seed) != set(SEEDS): _fail(f"{path}: incomplete position cohort seed roster")
+
+    def gradient(g: Any, label: str, expected_map: list[int]) -> dict[str, Any]:
+        if not isinstance(g, dict) or g.get("branch_map") != expected_map:
+            _fail(f"{label}: branch map mismatch")
+        per = g.get("per_occurrence")
+        if not isinstance(per, list) or len(per) != 8: _fail(f"{label}: expected eight occurrence rows")
+        for i, item in enumerate(per):
+            if not isinstance(item, dict) or item.get("position") != i or item.get("mapped_branch") != expected_map[i] or _finite(item.get("gradient_l2"), f"{label} gradient norm") < 0:
+                _fail(f"{label}: invalid occurrence {i}")
+        for key in ("cosine_matrix", "dot_product_matrix"):
+            matrix = g.get(key)
+            if not isinstance(matrix, list) or len(matrix) != 8 or any(not isinstance(r, list) or len(r) != 8 for r in matrix):
+                _fail(f"{label}: {key} must be 8x8")
+            for i, r in enumerate(matrix):
+                for j, value in enumerate(r):
+                    if key == "cosine_matrix" and value is None:
+                        if per[i]["gradient_l2"] != 0 and per[j]["gradient_l2"] != 0: _fail(f"{label}: nullable cosine for two nonzero norms")
+                    elif key == "cosine_matrix":
+                        if not -1.000001 <= _finite(value, f"{label} cosine") <= 1.000001: _fail(f"{label}: cosine outside producer roundoff bounds")
+                    else: _finite(value, f"{label} dot product")
+        negatives = g.get("negative_dot_pair_count")
+        if type(negatives) is not int or not 0 <= negatives <= 28: _fail(f"{label}: invalid negative dot-pair count")
+        dots = g["dot_product_matrix"]
+        if negatives != sum(dots[i][j] < 0 for i in range(8) for j in range(i + 1, 8)):
+            _fail(f"{label}: negative dot-pair count mismatch")
+        group_rows, expected_branches = g.get("groups"), sorted(set(expected_map))
+        if not isinstance(group_rows, list) or len(group_rows) != len(expected_branches): _fail(f"{label}: group roster mismatch")
+        group_by_branch = {}
+        for group in group_rows:
+            if not isinstance(group, dict) or type(group.get("branch")) is not int or group["branch"] not in expected_branches or group["branch"] in group_by_branch:
+                _fail(f"{label}: invalid group branch")
+            branch = group["branch"]
+            positions = [i for i, b in enumerate(expected_map) if b == branch]
+            if group.get("positions") != positions: _fail(f"{label}: group position membership mismatch")
+            norm_sum = sum(per[i]["gradient_l2"] for i in positions)
+            ratio = _finite(group.get("sum_to_occurrence_norm_ratio"), f"{label} group ratio")
+            sum_l2 = _finite(group.get("sum_l2"), f"{label} group sum_l2")
+            if not 0 <= ratio <= 1.000001 or sum_l2 < 0 or not math.isclose(sum_l2 / max(norm_sum, 1e-30), ratio, rel_tol=2e-5, abs_tol=2e-7):
+                _fail(f"{label}: invalid group coherence metrics")
+            group_by_branch[branch] = {"positions": positions, "rho": ratio, "sum_l2": sum_l2}
+        if set(group_by_branch) != set(expected_branches): _fail(f"{label}: missing group branch")
+        conservation = g.get("native_gradient_conservation")
+        if not isinstance(conservation, dict) or set(conservation) != {str(b) for b in expected_branches}: _fail(f"{label}: conservation branch roster mismatch")
+        max_error = 0.0
+        for branch, values in conservation.items():
+            if not isinstance(values, dict): _fail(f"{label}: invalid conservation metrics")
+            absolute = _finite(values.get("max_absolute"), f"{label} max absolute error")
+            relative = _finite(values.get("relative_l2"), f"{label} relative error")
+            if absolute < 0 or not 0 <= relative <= 2e-4: _fail(f"{label}: gradient conservation exceeds producer tolerance")
+            max_error = max(max_error, absolute)
+        if type(g.get("optimizer_updates")) is not int or g["optimizer_updates"] != 0: _fail(f"{label}: optimizer_updates must be zero")
+        return {"groups": group_by_branch, "negative_dot_pair_count": negatives, "dot_product_matrix": dots, "max_absolute_conservation_error": max_error}
+
+    for row in gradients:
+        if not isinstance(row, dict) or type(row.get("paired_seed")) is not int or row["paired_seed"] not in SEEDS or row["paired_seed"] in gradient_by_seed:
+            _fail(f"{path}: invalid or duplicate gradient seed")
+        seed = row["paired_seed"]
+        common = row.get("common_initialization")
+        if not isinstance(common, dict) or set(common) != {"C", "END", "INNER"}: _fail(f"{path}: seed {seed} common initialization roster mismatch")
+        initial = {name: gradient(common[name], f"seed {seed} initial {name}", [0] * 8 if name == "C" else MAPS[name]) for name in common}
+        selected_c = gradient(row.get("C"), f"seed {seed} selected C", [0] * 8)
+        selected_h = gradient(row.get("H"), f"seed {seed} selected H", [0, 1, 1, 1, 1, 1, 1, 2])
+        selected_end = gradient(row.get("END"), f"seed {seed} selected END", MAPS["END"])
+        selected_inner = gradient(row.get("INNER"), f"seed {seed} selected INNER", MAPS["INNER"])
+        gradient_by_seed[seed] = {"initial": initial, "C": selected_c, "H": selected_h, "END": selected_end, "INNER": selected_inner}
+    if set(gradient_by_seed) != set(SEEDS): _fail(f"{path}: incomplete gradient seed roster")
+    for seed in SEEDS:
+        row = cohort_by_seed[seed]
+        compact_cohorts.append({"seed": seed, "both_correct": row["cohorts"]["both_correct"]["count"],
+            "C_only_correct": row["cohorts"]["C_only_correct"]["count"], "H_only_correct": row["cohorts"]["H_only_correct"]["count"],
+            "both_wrong": row["cohorts"]["both_wrong"]["count"],
+            "H_minus_C_top1": (row["cohorts"]["H_only_correct"]["count"]-row["cohorts"]["C_only_correct"]["count"])/5000,
+            "H_minus_C_mean_nll": row["H_minus_C_mean_nll"],
+            "nll_contributions": {n: row["cohorts"][n]["H_minus_C_nll_contribution_per_full_cohort"] for n in names},
+            "cohort_confidence": {n: {family: row["cohorts"][n][f"{family}_mean_max_confidence"] for family in ("C", "H")} for n in names}})
+        position_row = position_by_seed[seed]
+        compact_position_cohorts.append({"seed": seed, "both_correct": position_row["cohorts"]["both_correct"]["count"],
+            "INNER_only_correct": position_row["cohorts"]["INNER_only_correct"]["count"], "END_only_correct": position_row["cohorts"]["END_only_correct"]["count"],
+            "both_wrong": position_row["cohorts"]["both_wrong"]["count"], "END_minus_INNER_top1": position_row["END_top1"]-position_row["INNER_top1"],
+            "END_minus_INNER_mean_nll": position_row["END_minus_INNER_mean_nll"],
+            "nll_contributions": {n: position_row["cohorts"][n]["END_minus_INNER_nll_contribution_per_full_cohort"] for n in position_names},
+            "cohort_confidence": {n: {family: position_row["cohorts"][n][f"{family}_mean_max_confidence"] for family in ARMS} for n in position_names}})
+        grads = gradient_by_seed[seed]
+        def shared_group(value: dict[str, Any]) -> dict[str, Any]:
+            group = max(value["groups"].values(), key=lambda g: len(g["positions"]))
+            positions = group["positions"]
+            within = sum(value["dot_product_matrix"][i][j] < 0 for ix, i in enumerate(positions) for j in positions[ix + 1:])
+            return {"rho": group["rho"], "negative_dot_pairs": within,
+                "shared_group_pair_count": len(positions) * (len(positions) - 1) // 2,
+                "negative_dot_pairs_global": value["negative_dot_pair_count"]}
+        compact_gradients.append({"seed": seed, "initial_C8": shared_group(grads["initial"]["C"]),
+            "initial_END_shared6": shared_group(grads["initial"]["END"]),
+            "initial_INNER_shared6": shared_group(grads["initial"]["INNER"]),
+            "selected_C8": shared_group(grads["C"]), "selected_H_shared6": shared_group(grads["H"]),
+            "selected_END_shared6": shared_group(grads["END"]), "selected_INNER_shared6": shared_group(grads["INNER"]),
+            "max_absolute_conservation_error": max(g["max_absolute_conservation_error"] for g in (*grads["initial"].values(), grads["C"], grads["H"], grads["END"], grads["INNER"]))})
+    class_error_counts = []
+    for seed in SEEDS:
+        historical = cohort_by_seed[seed]
+        position_row = position_by_seed[seed]
+        for pair, row, left, right, left_top1, right_top1 in (
+                ("H-C", historical, "C", "H", historical["C_top1"], historical["H_top1"]),
+                ("END-INNER", position_row, "INNER", "END", position_row["INNER_top1"], position_row["END_top1"])):
+            class_rows = _class_error_rows(row.get("class_counts"), left, right, left_top1, right_top1,
+                                           f"seed {seed} {pair} class counts")
+            class_error_counts.extend({"pair": pair, "seed": seed, **item} for item in class_rows)
+    return {"provenance": {"source_head": doc["source_head"], "diagnostic_head": doc["diagnostic_head"], "script_sha256": doc["script_sha256"],
+            "data_hash": doc["data_hash"], "input_checkpoint_sha256": hashes, "position_checkpoint_sha256": position_hashes,
+            "position_freeze_sha256": freeze_hash, "position_validation_sha256": validation_hash, "runtime": runtime},
+        "cohorts": compact_cohorts, "position_cohorts": compact_position_cohorts,
+        "class_error_counts": class_error_counts, "gradients": compact_gradients}
+
+
 def _svg_text(text: str) -> str:
     return xml.escape(text, {"\"": "&quot;", "'": "&apos;"})
 
@@ -458,11 +783,22 @@ def _report(result: dict[str, Any]) -> str:
         interpretation = "The negative observed END−INNER point estimate favors interior placement in this experiment."
     else:
         interpretation = "The observed END−INNER point estimate is zero in this experiment."
-    uncertainty = "The interval crosses zero; this is uncertainty, not evidence of equivalence or proof that placement does not matter." if lo <= 0 <= hi else "The nominal interval excludes zero, but this is not universal proof or a unique explanation for any historical seed outcome."
+    uncertainty = "The interval crosses zero; the effect is unresolved, not evidence of equivalence or proof that placement does not matter." if lo <= 0 <= hi else ("The nominal interval is entirely above zero and favors END under this recipe, but is not universal proof or a unique explanation for any historical seed outcome." if lo > 0 else "The nominal interval is entirely below zero and favors INNER under this recipe, but is not universal proof or a unique explanation for any historical seed outcome.")
     rows = "\n".join(f"| {arm} | {s['seed']} | {s['selected_update']} | {s['accuracy_percent']:.3f}% | {s['cross_entropy']:.6f} | {s['ece_percent']:.3f}% | {s['gap_percentage_points']:.3f} pp |" for arm in ARMS for s in result["models"][arm]["seeds"])
     d = contrast["seed_deltas"]
     paired = "\n".join(f"| {seed} | {d[seed]:.3f} |" for seed in SEEDS)
     fixed_rows = "\n".join(f"| {arm} | {s['seed']} | {s['fixed_train_accuracy_percent']:.3f}% | {s['fixed_validation_accuracy_percent']:.3f}% | {s['fixed_gap_percentage_points']:.3f} pp |" for arm in ARMS for s in result["models"][arm]["seeds"])
+    diagnostics = result.get("diagnostics_summary")
+    confidence_text = lambda value: f"{value:.4f}" if value is not None else "n/a"
+    mechanism_rows = ""
+    position_mechanism_rows = ""
+    if diagnostics:
+        position_rows = "\n".join(f"| {r['seed']} | {r['both_correct']} | {r['INNER_only_correct']} | {r['END_only_correct']} | {r['both_wrong']} | {100*r['END_minus_INNER_top1']:.3f} pp | {r['END_minus_INNER_mean_nll']:.8f} | {r['nll_contributions']['both_correct']:.8f} | {r['nll_contributions']['INNER_only_correct']:.8f} | {r['nll_contributions']['END_only_correct']:.8f} | {r['nll_contributions']['both_wrong']:.8f} | {confidence_text(r['cohort_confidence']['both_wrong']['INNER'])} | {confidence_text(r['cohort_confidence']['both_wrong']['END'])} |" for r in diagnostics["position_cohorts"])
+        position_gradient_rows = "\n".join(f"| {r['seed']} | {r['initial_END_shared6']['rho']:.4f} | {r['initial_END_shared6']['negative_dot_pairs']}/15 | {r['initial_INNER_shared6']['rho']:.4f} | {r['initial_INNER_shared6']['negative_dot_pairs']}/15 | {r['selected_END_shared6']['rho']:.4f} | {r['selected_END_shared6']['negative_dot_pairs']}/15 | {r['selected_INNER_shared6']['rho']:.4f} | {r['selected_INNER_shared6']['negative_dot_pairs']}/15 |" for r in diagnostics["gradients"])
+        position_mechanism_rows = f'''\n\n## Matched END/INNER cohorts and selected gradients\n\nMatched correctness is only argmax wins; NLL penalizes the true-class probability, including confident errors; ECE summarizes confidence/accuracy reliability in bins. These are not interchangeable. Per-class counts (50 validation cases per class) are in `class-error-counts.csv` and the raw diagnostics; these are descriptive only, with no classwise p-values or causal claims. Contributions below are weighted by group count / 5,000; all four sum to END−INNER mean NLL.\n\n| Seed | Both correct | INNER only correct | END only correct | Both wrong | END−INNER top-1 | END−INNER mean NLL | Both-correct NLL contribution | INNER-only contribution | END-only contribution | Both-wrong contribution | Both-wrong INNER max confidence | Both-wrong END max confidence |\n|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n{position_rows}\n\nSelected-gradient shared-six comparison (rho and negative dot-product pairs):\n\n| Seed | Common END rho | Within-group negative pairs / 15 | Common INNER rho | Within-group negative pairs / 15 | Selected END rho | Within-group negative pairs / 15 | Selected INNER rho | Within-group negative pairs / 15 |\n|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n{position_gradient_rows}\n\nThe protocol split seed 1729 fixes the same validation cases across all seeds. Repeated predictions on shared validation images are not independent image observations; paired seeds, not images, are the inference units. Frozen H8 initialization differs from new END/INNER; frozen C8 is noncontemporaneous, and selected C/H points differ. Local coherence is not the actual SGD/momentum/weight-decay update and does not prove why historical seed 71 lost.\n'''
+        cohort_rows = "\n".join(f"| {r['seed']} | {r['both_correct']} | {r['C_only_correct']} | {r['H_only_correct']} | {r['both_wrong']} | {100*r['H_minus_C_top1']:.3f} pp | {r['H_minus_C_mean_nll']:.8f} | {r['nll_contributions']['both_correct']:.8f} | {r['nll_contributions']['C_only_correct']:.8f} | {r['nll_contributions']['H_only_correct']:.8f} | {r['nll_contributions']['both_wrong']:.8f} | {confidence_text(r['cohort_confidence']['both_wrong']['C'])} | {confidence_text(r['cohort_confidence']['both_wrong']['H'])} |" for r in diagnostics["cohorts"])
+        gradient_rows = "\n".join(f"| {r['seed']} | {r['initial_C8']['rho']:.4f} | {r['initial_C8']['negative_dot_pairs']}/28 | {r['selected_C8']['rho']:.4f} | {r['selected_C8']['negative_dot_pairs']}/28 | {r['selected_H_shared6']['rho']:.4f} | {r['selected_H_shared6']['negative_dot_pairs']}/15 | {r['max_absolute_conservation_error']:.3g} |" for r in diagnostics["gradients"])
+        mechanism_rows = f'''\n\n## Matched C/H validation cohorts and gradient diagnostics\n\nThese post-hoc diagnostics compare frozen historical C8 and H8 on the same 5,000 validation examples per seed; historical H8 initialization differs from the new END/INNER arms, and frozen C8 is noncontemporaneous. Cohorts are matched images (not historical confidence-bin marginals). Top-1 delta is (H-only correct − C-only correct)/5,000; each NLL contribution is divided by the full 5,000-case cohort, and the four contributions sum to the reported float64 H−C mean NLL delta. These data characterize these validation cases only; they do not explain the historical official-test accuracy/cross-entropy tradeoff or unobserved original test examples. Validation is not an independent test. The fixed split seed 1729 reuses the same validation cases across all seeds; repeated predictions on shared images are not independent observations, and no classwise p-values are inferred. Native-compatible validation scalar checks may differ numerically from float64 cohort diagnostics; that numerical difference is not a new scientific effect.\n\n| Seed | Both correct | C only correct | H only correct | Both wrong | H−C top-1 | H−C mean NLL | Both-correct NLL contribution | C-only contribution | H-only contribution | Both-wrong contribution | Both-wrong C max confidence | Both-wrong H max confidence |\n|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n{cohort_rows}\n\nGradient probes use one fixed batch of 128 clean TRAIN examples per seed at common initialization and selected checkpoints. No optimizer updates are performed.\n\n| Seed | Initial C8 rho | Within-group negative pairs / 28 | Selected C8 rho | Within-group negative pairs / 28 | Selected H shared-six rho | Within-group negative pairs / 15 | Max absolute conservation error |\n|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n{gradient_rows}\n\nPosition numbers in the raw diagnostics are zero-based; the report's descriptive branch grouping is C8 branch 0 (all eight positions) and H8 branch 1 (the shared six positions, positions 2–7 in one-based notation). Rho depends on group size (eight versus six); only within-shared-group negative pairs contribute to tied-gradient cancellation. At a fixed common function point, occurrence gradients gₜ add within each tied group: ∇θ_G L = Σₜ∈G gₜ. Positive dot products reinforce; negative dot products partly cancel. ρ = ||Σgₜ|| / Σ||gₜ|| measures local coherence, not evidence that larger gradients or lower conflict universally help. C8, END, and INNER share the same initial function but have different parameter coupling and update geometry. Selected C8/H8 are different learned parameter points, so their gradient comparison is descriptive, not a controlled causal comparison; these are gradients, not actual SGD/momentum/weight-decay updates.\n'''
     control_rows = ""
     if result.get("control_c8"):
         control_rows = "\n\n## Frozen historical C8 reference\n\nThis is a descriptive reference from the existing frozen C8 study, not a newly randomized or retrained control, held-out confirmation, or historical H8 result. It is shown only for seeds whose data/split/subset identities match this study.\n\n| Seed | Selected update | Validation top-1 | Cross-entropy | ECE | Selected train-validation gap |\n|--:|--:|--:|--:|--:|--:|\n" + "\n".join(f"| {seed} | {r['selected_update']} | {100*r['top1']:.3f}% | {r['cross_entropy']:.6f} | {100*r['ece']:.3f}% | {100*r['gap']:.3f} pp |" for seed, r in sorted(result["control_c8"].items()))
@@ -496,15 +832,19 @@ Selected-checkpoint cross-entropy is a separate predictive loss, not a calibrati
 | Arm | Seed | Fixed train accuracy | Fixed validation accuracy | Fixed train−validation gap |
 |:--|--:|--:|--:|--:|
 {fixed_rows}
-{trajectories_note}{control_rows}
+{trajectories_note}{control_rows}{mechanism_rows}{position_mechanism_rows}
 
 ![Selected validation accuracy by paired seed](position-accuracy.svg)
 
 ![Fixed-budget train/validation accuracy and gap](position-generalization.svg)
 
-## Interpretation limits
+## Mechanism and interpretation limits
 
-The design can address the relative effect of boundary versus interior placement under this specific controlled recipe. Validation is reused for checkpoint selection and evaluation, so estimates are conditional on the recipe and selection rule, not an unbiased independent test estimate. Five paired seeds imply substantial uncertainty. An interval excluding zero is not universal proof and cannot uniquely explain the original H seed-71 result. No gradient conflict or specialization claim is made without diagnostics. No official-test access or historical control retraining is represented here.
+The repeated residual operation is h[t+1] = h[t] + α F_θ[t](h[t]). C ties all eight transformations; H ties the six middle transformations and unties the endpoints. Setting A = S = Z embeds every C8 parameter setting in H8, but does not prove that H8 has a strictly larger function family or guaranteed generalization. Tying reduces free parameters but does not reduce the eight-step forward computation. It does not automatically improve validation accuracy or calibration.
+
+This prospective analysis compares END versus INNER, not the historical H8 result. Historical H8 used a different initialization; frozen C8 is descriptive and noncontemporaneous. Validation is reused for checkpoint selection and evaluation and is not an independent official-test estimate. Split seed 1729 fixes the same validation cases across all seeds; repeated predictions on shared validation images are not independent image observations. The END−INNER effect is conditional on this recipe and selection rule: a CI entirely above zero nominally favors END, entirely below zero nominally favors INNER, and crossing zero is unresolved, not equivalence. No official-test claim is made; no historical seed-71 outcome is causally explained.
+
+With diagnostics, the reported C/H comparisons are post-hoc description of matched validation examples and fixed training-batch gradients only. Probe gradients are not validation/test gradients and do not establish actual optimizer-update directions. No claim that the observed diagnostic pattern causes prospective END/INNER outcomes follows from these data. No official-test access or historical control retraining is represented here.
 '''
 
 
@@ -547,6 +887,11 @@ def _write(result: dict[str, Any], out: Path) -> None:
                                      "validation_accuracy_percent": 100*point["validation_accuracy"], "validation_cross_entropy": point["validation_loss"],
                                      "gap_percentage_points": 100*point["gap"]})
         (out / "position-trajectories.svg").write_text(_trajectory_svg(result["trajectories"]), encoding="utf-8")
+    if result.get("diagnostics_summary"):
+        rows = result["diagnostics_summary"]["class_error_counts"]
+        with (out / "class-error-counts.csv").open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=("pair", "seed", "class_id", "count", "left_errors", "right_errors", "right_minus_left_errors"), lineterminator="\n")
+            writer.writeheader(); writer.writerows(rows)
     if result.get("control_c8"):
         with (out / "control-c8.csv").open("w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=("seed", "selected_update", "top1_percent", "cross_entropy", "ece_percent", "gap_percentage_points"), lineterminator="\n")
@@ -617,6 +962,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--runs", type=Path, help="new-study runs/ directory containing run.json and metrics.jsonl.gz")
     parser.add_argument("--control-validation", type=Path, help="historical validation.json for descriptive frozen C8 context")
+    parser.add_argument("--diagnostics", type=Path, help="validated aggregate diagnostics.json from diagnose_position.py")
     args = parser.parse_args(argv)
     try:
         validated = validate(args.validation)
@@ -626,6 +972,14 @@ def main(argv: list[str] | None = None) -> int:
             result["trajectories"] = {(arm, seed): native["histories"][f"{arm}-s{seed}"]["checks"] for arm in ARMS for seed in SEEDS}
         if args.control_validation is not None:
             result["control_c8"] = _match_control(validate_control(args.control_validation), validated)
+        if args.diagnostics is not None:
+            diagnostic_summary = _validate_diagnostics(args.diagnostics, validated, args.validation)
+            if args.control_validation is not None:
+                reference = result["control_c8"]
+                for seed, item in reference.items():
+                    if diagnostic_summary["provenance"]["input_checkpoint_sha256"][f"C-s{seed}"] != item["checkpoint_sha256"]:
+                        _fail(f"diagnostics C8 seed {seed} checkpoint SHA does not match frozen control")
+            result["diagnostics_summary"] = diagnostic_summary
         _write(result, args.output)
     except (ValueError, OSError) as exc:
         print(f"analysis error: {exc}", file=sys.stderr)
