@@ -1,0 +1,1178 @@
+{
+ "split": "validation (split seed 1729); official test not used",
+ "class_names": [
+  "apple",
+  "aquarium_fish",
+  "baby",
+  "bear",
+  "beaver",
+  "bed",
+  "bee",
+  "beetle",
+  "bicycle",
+  "bottle",
+  "bowl",
+  "boy",
+  "bridge",
+  "bus",
+  "butterfly",
+  "camel",
+  "can",
+  "castle",
+  "caterpillar",
+  "cattle",
+  "chair",
+  "chimpanzee",
+  "clock",
+  "cloud",
+  "cockroach",
+  "couch",
+  "crab",
+  "crocodile",
+  "cup",
+  "dinosaur",
+  "dolphin",
+  "elephant",
+  "flatfish",
+  "forest",
+  "fox",
+  "girl",
+  "hamster",
+  "house",
+  "kangaroo",
+  "keyboard",
+  "lamp",
+  "lawn_mower",
+  "leopard",
+  "lion",
+  "lizard",
+  "lobster",
+  "man",
+  "maple_tree",
+  "motorcycle",
+  "mountain",
+  "mouse",
+  "mushroom",
+  "oak_tree",
+  "orange",
+  "orchid",
+  "otter",
+  "palm_tree",
+  "pear",
+  "pickup_truck",
+  "pine_tree",
+  "plain",
+  "plate",
+  "poppy",
+  "porcupine",
+  "possum",
+  "rabbit",
+  "raccoon",
+  "ray",
+  "road",
+  "rocket",
+  "rose",
+  "sea",
+  "seal",
+  "shark",
+  "shrew",
+  "skunk",
+  "skyscraper",
+  "snail",
+  "snake",
+  "spider",
+  "squirrel",
+  "streetcar",
+  "sunflower",
+  "sweet_pepper",
+  "table",
+  "tank",
+  "telephone",
+  "television",
+  "tiger",
+  "tractor",
+  "train",
+  "trout",
+  "tulip",
+  "turtle",
+  "wardrobe",
+  "whale",
+  "willow_tree",
+  "wolf",
+  "woman",
+  "worm"
+ ],
+ "learning_curves": {
+  "B": {
+   "updates": [
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1400,
+    1600,
+    1800,
+    2000,
+    2200,
+    2400,
+    2600,
+    2800,
+    3000,
+    3200,
+    3400,
+    3600,
+    3800,
+    4000,
+    4200,
+    4400,
+    4600,
+    4800,
+    5000,
+    5200,
+    5400,
+    5600,
+    5800,
+    6000,
+    6200,
+    6400,
+    6600,
+    6800,
+    7000,
+    7200,
+    7400,
+    7600,
+    7800,
+    8000,
+    8200,
+    8400,
+    8600,
+    8800,
+    9000,
+    9200,
+    9400,
+    9600,
+    9800,
+    10000
+   ],
+   "train_mean": [
+    3.827,
+    5.427,
+    6.951,
+    8.516,
+    9.302,
+    10.453,
+    11.458,
+    12.013,
+    13.049,
+    13.707,
+    14.551,
+    15.271,
+    16.364,
+    17.351,
+    17.893,
+    18.138,
+    19.413,
+    20.28,
+    20.182,
+    20.924,
+    22.364,
+    22.604,
+    23.196,
+    24.818,
+    25.124,
+    25.893,
+    26.333,
+    27.44,
+    28.293,
+    29.684,
+    30.28,
+    30.178,
+    31.867,
+    31.871,
+    33.191,
+    34.933,
+    35.378,
+    35.591,
+    36.462,
+    37.569,
+    38.582,
+    38.76,
+    39.098,
+    39.613,
+    40.307,
+    40.689,
+    40.996,
+    41.316,
+    41.36,
+    41.356
+   ],
+   "validation_mean": [
+    3.752,
+    5.048,
+    6.768,
+    7.876,
+    8.66,
+    8.864,
+    10.0,
+    10.584,
+    11.24,
+    11.84,
+    12.38,
+    12.724,
+    13.256,
+    13.772,
+    13.968,
+    14.02,
+    14.804,
+    15.232,
+    15.08,
+    15.188,
+    16.096,
+    15.728,
+    16.14,
+    16.424,
+    16.92,
+    17.072,
+    16.92,
+    17.288,
+    17.372,
+    17.824,
+    18.0,
+    17.744,
+    18.044,
+    17.828,
+    18.332,
+    18.524,
+    18.56,
+    18.06,
+    18.336,
+    18.252,
+    18.352,
+    18.436,
+    18.224,
+    18.232,
+    18.556,
+    18.304,
+    18.476,
+    18.352,
+    18.412,
+    18.364
+   ]
+  },
+  "C": {
+   "updates": [
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1400,
+    1600,
+    1800,
+    2000,
+    2200,
+    2400,
+    2600,
+    2800,
+    3000,
+    3200,
+    3400,
+    3600,
+    3800,
+    4000,
+    4200,
+    4400,
+    4600,
+    4800,
+    5000,
+    5200,
+    5400,
+    5600,
+    5800,
+    6000,
+    6200,
+    6400,
+    6600,
+    6800,
+    7000,
+    7200,
+    7400,
+    7600,
+    7800,
+    8000,
+    8200,
+    8400,
+    8600,
+    8800,
+    9000,
+    9200,
+    9400,
+    9600,
+    9800,
+    10000
+   ],
+   "train_mean": [
+    5.418,
+    8.333,
+    10.044,
+    11.231,
+    12.333,
+    13.289,
+    15.302,
+    16.493,
+    16.907,
+    18.56,
+    19.24,
+    19.609,
+    21.391,
+    22.889,
+    23.013,
+    23.649,
+    24.911,
+    25.351,
+    25.636,
+    26.289,
+    26.907,
+    27.733,
+    28.604,
+    29.364,
+    30.262,
+    30.653,
+    31.782,
+    31.987,
+    31.773,
+    33.458,
+    33.88,
+    32.92,
+    34.511,
+    34.756,
+    35.244,
+    35.329,
+    36.013,
+    36.884,
+    36.92,
+    37.356,
+    37.693,
+    37.813,
+    38.373,
+    38.444,
+    38.556,
+    38.76,
+    38.787,
+    38.742,
+    38.791,
+    38.782
+   ],
+   "validation_mean": [
+    5.176,
+    7.592,
+    9.024,
+    10.0,
+    10.736,
+    11.216,
+    12.752,
+    13.62,
+    13.496,
+    14.504,
+    15.02,
+    15.192,
+    15.984,
+    16.64,
+    16.868,
+    16.876,
+    17.82,
+    17.38,
+    17.264,
+    17.784,
+    18.12,
+    18.02,
+    18.508,
+    18.904,
+    19.252,
+    19.348,
+    19.492,
+    19.696,
+    19.364,
+    20.148,
+    19.984,
+    19.62,
+    20.252,
+    19.988,
+    20.392,
+    19.92,
+    20.568,
+    20.632,
+    20.428,
+    20.64,
+    20.776,
+    20.692,
+    20.892,
+    20.916,
+    20.972,
+    21.128,
+    21.06,
+    21.108,
+    21.14,
+    21.172
+   ]
+  },
+  "H": {
+   "updates": [
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1400,
+    1600,
+    1800,
+    2000,
+    2200,
+    2400,
+    2600,
+    2800,
+    3000,
+    3200,
+    3400,
+    3600,
+    3800,
+    4000,
+    4200,
+    4400,
+    4600,
+    4800,
+    5000,
+    5200,
+    5400,
+    5600,
+    5800,
+    6000,
+    6200,
+    6400,
+    6600,
+    6800,
+    7000,
+    7200,
+    7400,
+    7600,
+    7800,
+    8000,
+    8200,
+    8400,
+    8600,
+    8800,
+    9000,
+    9200,
+    9400,
+    9600,
+    9800,
+    10000
+   ],
+   "train_mean": [
+    5.151,
+    7.698,
+    9.547,
+    10.871,
+    11.96,
+    13.209,
+    14.32,
+    15.476,
+    16.676,
+    17.609,
+    17.991,
+    19.093,
+    20.2,
+    21.391,
+    22.627,
+    22.507,
+    24.08,
+    25.311,
+    25.667,
+    27.107,
+    27.64,
+    27.973,
+    28.227,
+    30.12,
+    30.707,
+    30.293,
+    32.209,
+    32.418,
+    31.849,
+    34.32,
+    34.529,
+    35.667,
+    36.649,
+    36.582,
+    38.129,
+    37.836,
+    39.364,
+    39.916,
+    40.031,
+    40.613,
+    41.209,
+    41.493,
+    41.933,
+    42.12,
+    42.351,
+    42.68,
+    42.844,
+    42.813,
+    42.858,
+    42.884
+   ],
+   "validation_mean": [
+    4.832,
+    6.992,
+    8.86,
+    9.84,
+    10.664,
+    11.232,
+    11.876,
+    12.82,
+    13.584,
+    13.708,
+    13.888,
+    14.72,
+    15.284,
+    16.224,
+    16.736,
+    16.476,
+    17.66,
+    17.78,
+    18.092,
+    18.524,
+    18.5,
+    18.524,
+    18.604,
+    19.544,
+    19.676,
+    19.124,
+    20.084,
+    19.8,
+    19.844,
+    20.216,
+    20.04,
+    20.296,
+    20.664,
+    20.224,
+    20.72,
+    20.672,
+    20.96,
+    21.272,
+    21.264,
+    21.164,
+    21.26,
+    21.292,
+    21.328,
+    21.436,
+    21.412,
+    21.456,
+    21.568,
+    21.5,
+    21.508,
+    21.528
+   ]
+  }
+ },
+ "reliability_pooled": {
+  "B": {
+   "pooled_ece_percent": 8.629,
+   "mean_confidence_percent": 27.413,
+   "accuracy_percent": 18.796,
+   "bins": [
+    {
+     "bin": 0,
+     "count": 105,
+     "mean_confidence": 0.06199,
+     "accuracy": 0.07619
+    },
+    {
+     "bin": 1,
+     "count": 4465,
+     "mean_confidence": 0.1066,
+     "accuracy": 0.06629
+    },
+    {
+     "bin": 2,
+     "count": 6084,
+     "mean_confidence": 0.16537,
+     "accuracy": 0.10487
+    },
+    {
+     "bin": 3,
+     "count": 4605,
+     "mean_confidence": 0.23136,
+     "accuracy": 0.1557
+    },
+    {
+     "bin": 4,
+     "count": 2993,
+     "mean_confidence": 0.29771,
+     "accuracy": 0.19412
+    },
+    {
+     "bin": 5,
+     "count": 2063,
+     "mean_confidence": 0.36477,
+     "accuracy": 0.23364
+    },
+    {
+     "bin": 6,
+     "count": 1358,
+     "mean_confidence": 0.43134,
+     "accuracy": 0.30854
+    },
+    {
+     "bin": 7,
+     "count": 991,
+     "mean_confidence": 0.49814,
+     "accuracy": 0.33804
+    },
+    {
+     "bin": 8,
+     "count": 765,
+     "mean_confidence": 0.56449,
+     "accuracy": 0.42092
+    },
+    {
+     "bin": 9,
+     "count": 554,
+     "mean_confidence": 0.63102,
+     "accuracy": 0.47473
+    },
+    {
+     "bin": 10,
+     "count": 371,
+     "mean_confidence": 0.69894,
+     "accuracy": 0.52022
+    },
+    {
+     "bin": 11,
+     "count": 276,
+     "mean_confidence": 0.76497,
+     "accuracy": 0.56884
+    },
+    {
+     "bin": 12,
+     "count": 182,
+     "mean_confidence": 0.831,
+     "accuracy": 0.71429
+    },
+    {
+     "bin": 13,
+     "count": 118,
+     "mean_confidence": 0.89981,
+     "accuracy": 0.79661
+    },
+    {
+     "bin": 14,
+     "count": 70,
+     "mean_confidence": 0.95789,
+     "accuracy": 0.91429
+    }
+   ]
+  },
+  "C": {
+   "pooled_ece_percent": 12.368,
+   "mean_confidence_percent": 33.62,
+   "accuracy_percent": 21.252,
+   "bins": [
+    {
+     "bin": 0,
+     "count": 37,
+     "mean_confidence": 0.0612,
+     "accuracy": 0.05405
+    },
+    {
+     "bin": 1,
+     "count": 2650,
+     "mean_confidence": 0.1094,
+     "accuracy": 0.07321
+    },
+    {
+     "bin": 2,
+     "count": 4924,
+     "mean_confidence": 0.16698,
+     "accuracy": 0.0987
+    },
+    {
+     "bin": 3,
+     "count": 4190,
+     "mean_confidence": 0.23189,
+     "accuracy": 0.13819
+    },
+    {
+     "bin": 4,
+     "count": 3349,
+     "mean_confidence": 0.29808,
+     "accuracy": 0.17557
+    },
+    {
+     "bin": 5,
+     "count": 2487,
+     "mean_confidence": 0.3655,
+     "accuracy": 0.21271
+    },
+    {
+     "bin": 6,
+     "count": 1877,
+     "mean_confidence": 0.43166,
+     "accuracy": 0.26958
+    },
+    {
+     "bin": 7,
+     "count": 1376,
+     "mean_confidence": 0.49808,
+     "accuracy": 0.30596
+    },
+    {
+     "bin": 8,
+     "count": 1043,
+     "mean_confidence": 0.56609,
+     "accuracy": 0.35858
+    },
+    {
+     "bin": 9,
+     "count": 806,
+     "mean_confidence": 0.63355,
+     "accuracy": 0.35484
+    },
+    {
+     "bin": 10,
+     "count": 676,
+     "mean_confidence": 0.69785,
+     "accuracy": 0.49704
+    },
+    {
+     "bin": 11,
+     "count": 508,
+     "mean_confidence": 0.76577,
+     "accuracy": 0.52756
+    },
+    {
+     "bin": 12,
+     "count": 456,
+     "mean_confidence": 0.83212,
+     "accuracy": 0.61404
+    },
+    {
+     "bin": 13,
+     "count": 364,
+     "mean_confidence": 0.89917,
+     "accuracy": 0.6978
+    },
+    {
+     "bin": 14,
+     "count": 257,
+     "mean_confidence": 0.96342,
+     "accuracy": 0.81712
+    }
+   ]
+  },
+  "H": {
+   "pooled_ece_percent": 12.98,
+   "mean_confidence_percent": 34.727,
+   "accuracy_percent": 21.748,
+   "bins": [
+    {
+     "bin": 0,
+     "count": 14,
+     "mean_confidence": 0.06176,
+     "accuracy": 0.07143
+    },
+    {
+     "bin": 1,
+     "count": 2047,
+     "mean_confidence": 0.11108,
+     "accuracy": 0.06497
+    },
+    {
+     "bin": 2,
+     "count": 4684,
+     "mean_confidence": 0.16774,
+     "accuracy": 0.1012
+    },
+    {
+     "bin": 3,
+     "count": 4385,
+     "mean_confidence": 0.23224,
+     "accuracy": 0.1325
+    },
+    {
+     "bin": 4,
+     "count": 3494,
+     "mean_confidence": 0.29838,
+     "accuracy": 0.17573
+    },
+    {
+     "bin": 5,
+     "count": 2588,
+     "mean_confidence": 0.36532,
+     "accuracy": 0.22025
+    },
+    {
+     "bin": 6,
+     "count": 1955,
+     "mean_confidence": 0.43191,
+     "accuracy": 0.27263
+    },
+    {
+     "bin": 7,
+     "count": 1486,
+     "mean_confidence": 0.49863,
+     "accuracy": 0.29677
+    },
+    {
+     "bin": 8,
+     "count": 1145,
+     "mean_confidence": 0.56391,
+     "accuracy": 0.34672
+    },
+    {
+     "bin": 9,
+     "count": 869,
+     "mean_confidence": 0.63254,
+     "accuracy": 0.41312
+    },
+    {
+     "bin": 10,
+     "count": 695,
+     "mean_confidence": 0.69909,
+     "accuracy": 0.44748
+    },
+    {
+     "bin": 11,
+     "count": 505,
+     "mean_confidence": 0.76591,
+     "accuracy": 0.50693
+    },
+    {
+     "bin": 12,
+     "count": 460,
+     "mean_confidence": 0.83298,
+     "accuracy": 0.57826
+    },
+    {
+     "bin": 13,
+     "count": 361,
+     "mean_confidence": 0.89829,
+     "accuracy": 0.70083
+    },
+    {
+     "bin": 14,
+     "count": 312,
+     "mean_confidence": 0.96359,
+     "accuracy": 0.79487
+    }
+   ]
+  }
+ },
+ "examples": {
+  "rule_shared_wins": "C8 and H8 correct in >=4/5 seeds, B8 correct in <=1/5 with a wrong majority prediction; ordered by C8+H8-2*B8 mean true-class probability",
+  "rule_confident_mistakes": "all three models wrong in all five seeds and agreeing on the same wrong class; ordered by H8 mean confidence",
+  "count_shared_wins": 10,
+  "count_reverse_b8_wins": 3,
+  "count_all_wrong": 1826,
+  "all_wrong_mean_confidence_percent": {
+   "B": 23.58,
+   "C": 28.93,
+   "H": 29.89
+  },
+  "shared_wins": [
+   {
+    "validation_position": 2729,
+    "label": 60,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 17,
+      "mean_confidence": 0.5309,
+      "mean_true_class_probability": 0.2424
+     },
+     "C": {
+      "seeds_correct": 4,
+      "majority_prediction": 60,
+      "mean_confidence": 0.7408,
+      "mean_true_class_probability": 0.7245
+     },
+     "H": {
+      "seeds_correct": 5,
+      "majority_prediction": 60,
+      "mean_confidence": 0.8599,
+      "mean_true_class_probability": 0.8599
+     }
+    }
+   },
+   {
+    "validation_position": 2616,
+    "label": 71,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 23,
+      "mean_confidence": 0.4851,
+      "mean_true_class_probability": 0.4046
+     },
+     "C": {
+      "seeds_correct": 5,
+      "majority_prediction": 71,
+      "mean_confidence": 0.8752,
+      "mean_true_class_probability": 0.8752
+     },
+     "H": {
+      "seeds_correct": 4,
+      "majority_prediction": 71,
+      "mean_confidence": 0.6005,
+      "mean_true_class_probability": 0.5704
+     }
+    }
+   },
+   {
+    "validation_position": 2692,
+    "label": 75,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 14,
+      "mean_confidence": 0.3143,
+      "mean_true_class_probability": 0.1493
+     },
+     "C": {
+      "seeds_correct": 4,
+      "majority_prediction": 75,
+      "mean_confidence": 0.6007,
+      "mean_true_class_probability": 0.5825
+     },
+     "H": {
+      "seeds_correct": 4,
+      "majority_prediction": 75,
+      "mean_confidence": 0.3581,
+      "mean_true_class_probability": 0.3489
+     }
+    }
+   },
+   {
+    "validation_position": 1674,
+    "label": 41,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 11,
+      "mean_confidence": 0.2032,
+      "mean_true_class_probability": 0.1273
+     },
+     "C": {
+      "seeds_correct": 4,
+      "majority_prediction": 41,
+      "mean_confidence": 0.4514,
+      "mean_true_class_probability": 0.4461
+     },
+     "H": {
+      "seeds_correct": 4,
+      "majority_prediction": 41,
+      "mean_confidence": 0.4507,
+      "mean_true_class_probability": 0.4336
+     }
+    }
+   },
+   {
+    "validation_position": 3929,
+    "label": 95,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 49,
+      "mean_confidence": 0.5246,
+      "mean_true_class_probability": 0.208
+     },
+     "C": {
+      "seeds_correct": 5,
+      "majority_prediction": 95,
+      "mean_confidence": 0.5279,
+      "mean_true_class_probability": 0.5279
+     },
+     "H": {
+      "seeds_correct": 4,
+      "majority_prediction": 95,
+      "mean_confidence": 0.5184,
+      "mean_true_class_probability": 0.5074
+     }
+    }
+   },
+   {
+    "validation_position": 3668,
+    "label": 47,
+    "models": {
+     "B": {
+      "seeds_correct": 1,
+      "majority_prediction": 89,
+      "mean_confidence": 0.2954,
+      "mean_true_class_probability": 0.2124
+     },
+     "C": {
+      "seeds_correct": 4,
+      "majority_prediction": 47,
+      "mean_confidence": 0.4852,
+      "mean_true_class_probability": 0.4814
+     },
+     "H": {
+      "seeds_correct": 5,
+      "majority_prediction": 47,
+      "mean_confidence": 0.5234,
+      "mean_true_class_probability": 0.5234
+     }
+    }
+   }
+  ],
+  "confident_mistakes": [
+   {
+    "validation_position": 1719,
+    "label": 4,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.8254,
+      "mean_true_class_probability": 0.0006
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.9125,
+      "mean_true_class_probability": 0.0015
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.8557,
+      "mean_true_class_probability": 0.0045
+     }
+    }
+   },
+   {
+    "validation_position": 2786,
+    "label": 96,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 47,
+      "mean_confidence": 0.6319,
+      "mean_true_class_probability": 0.0216
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 47,
+      "mean_confidence": 0.6778,
+      "mean_true_class_probability": 0.0107
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 47,
+      "mean_confidence": 0.8049,
+      "mean_true_class_probability": 0.017
+     }
+    }
+   },
+   {
+    "validation_position": 1846,
+    "label": 68,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 60,
+      "mean_confidence": 0.6916,
+      "mean_true_class_probability": 0.1313
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 60,
+      "mean_confidence": 0.6605,
+      "mean_true_class_probability": 0.1299
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 60,
+      "mean_confidence": 0.7928,
+      "mean_true_class_probability": 0.0776
+     }
+    }
+   },
+   {
+    "validation_position": 4297,
+    "label": 39,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 23,
+      "mean_confidence": 0.5653,
+      "mean_true_class_probability": 0.0199
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 23,
+      "mean_confidence": 0.6424,
+      "mean_true_class_probability": 0.0093
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 23,
+      "mean_confidence": 0.7368,
+      "mean_true_class_probability": 0.0292
+     }
+    }
+   },
+   {
+    "validation_position": 33,
+    "label": 50,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.5816,
+      "mean_true_class_probability": 0.0022
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.8982,
+      "mean_true_class_probability": 0.0006
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 24,
+      "mean_confidence": 0.733,
+      "mean_true_class_probability": 0.0071
+     }
+    }
+   },
+   {
+    "validation_position": 441,
+    "label": 12,
+    "models": {
+     "B": {
+      "seeds_correct": 0,
+      "majority_prediction": 71,
+      "mean_confidence": 0.6119,
+      "mean_true_class_probability": 0.0183
+     },
+     "C": {
+      "seeds_correct": 0,
+      "majority_prediction": 71,
+      "mean_confidence": 0.6387,
+      "mean_true_class_probability": 0.0424
+     },
+     "H": {
+      "seeds_correct": 0,
+      "majority_prediction": 71,
+      "mean_confidence": 0.7016,
+      "mean_true_class_probability": 0.0228
+     }
+    }
+   }
+  ]
+ }
+}

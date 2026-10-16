@@ -18,7 +18,7 @@ The license texts below were inspected from their official repositories. Exact s
 
 ## Dataset and checkpoints
 
-CIFAR-100 images and the source dataset archive are **not redistributed**. Obtain data separately from the [dataset's official page](https://www.cs.toronto.edu/~kriz/cifar.html), review the applicable rights and restrictions, and cite Alex Krizhevsky's 2009 technical report, *Learning Multiple Layers of Features from Tiny Images*. The project license does not grant rights to the dataset. Published measurements, split indices, hashes and training logs do not include image pixels.
+CIFAR-100 images and the source dataset archive are **not redistributed**. Obtain data separately from the [dataset's official page](https://www.cs.toronto.edu/~kriz/cifar.html), review the applicable rights and restrictions, and cite Alex Krizhevsky's 2009 technical report, *Learning Multiple Layers of Features from Tiny Images*. The project license does not grant rights to the dataset. Published measurements, split indices, hashes and training logs do not include image pixels. The one exception is [`assets/validation-examples.png`](assets/validation-examples.png), which shows twelve 32×32 validation images, enlarged, to illustrate model predictions; the dataset itself is not redistributed.
 
 No trained checkpoint is included in this repository or promised as a public download. Original checkpoints are retained privately for recovery; redistribution rights and storage would need to be resolved before a separate checkpoint release. The small ZIP under `provenance/` contains source text, not model weights or data.
 

@@ -65,6 +65,10 @@ The *train/validation gap* is clean training accuracy minus validation accuracy.
 
 Means over five seeds, from the per-run training logs (`runs/*/metrics.jsonl.gz`). "Selected" is the checkpoint chosen on validation; "end" is update 10,000.
 
+<p align="center">
+  <img src="assets/learning-curves.svg" alt="Training and validation accuracy over 10,000 updates for B8, C8 and H8. B8's training accuracy keeps rising to about 41% while its validation accuracy flattens near 18%, ending with a 23 pp gap; C8's curves stay closer, ending with a 17.6 pp gap" width="100%">
+</p>
+
 - **B8 memorizes most by the end.** Training accuracy keeps rising (35.5% → 41.4%) while validation falls (18.8% → 18.4%). This is classic overfitting: its spare capacity goes into the training images.
 - **H8 memorizes more *and* generalizes best.** It has the largest gap at the selected checkpoint, yet the highest accuracy on unseen images. Its extra endpoint parameters learn both useful features and image-specific detail.
 - **C8 is the most contained of the models that learn well.** Its gap barely moves through training; one shared block has little spare capacity to memorize.
@@ -80,6 +84,23 @@ Means over five seeds, from the per-run training logs (`runs/*/metrics.jsonl.gz`
 | **C8** · one block × 8 | Best accuracy per parameter: 20.46% with 22,724 parameters. Stable gap. | Overconfident (test ECE 12.9%). Collapses when run for more steps (−13.2 pp at 32 steps). No step can specialize. | Every step trains the same weights with eight largely aligned gradients. It learns an eight-step trajectory, not a stable fixed point, so extra iterations push it off course. |
 | **H8** · own first and last blocks, shared middle | Highest accuracy (21.28%), ahead of B8 on 5/5 seeds and C8 on 4/5. | Least calibrated (test ECE 13.3%). 2.6× C8's parameters, the largest selected gap, and the most seed-to-seed spread on validation (SD 1.25 vs 0.41 for C8). Lost to C8 on seed 71. | The first step adapts stem features and the last prepares features for the classifier, unlike the repeated refinement in the middle. The END vs INNER test shows untying pays at the ends rather than the interior. The extra parameters also add room to memorize. |
 | **E8** · C8 + recall, variable depth, progressive loss | Smallest gap; degrades least at 32 steps (−7.6 pp vs −13.2 pp for C8). | Lowest accuracy (15.67%, 2.71 pp below B8). The only model with extra compute (42.2M MACs). | The added mechanisms hold it back in a 10,000-update budget: it underfits. Training at varied depths makes it more tolerant of extra steps. Several settings changed at once (including learning rate and α), so no single mechanism can be credited. |
+
+<p align="center">
+  <img src="assets/reliability.svg" alt="Calibration curves on validation images: all three models sit below the diagonal, meaning they are overconfident; B8 is closest to the diagonal (pooled ECE 8.6%), C8 and H8 are further below (12.4% and 13.0%)" width="60%">
+</p>
+
+The calibration curve pools five seeds × 5,000 validation images per model, so its ECE values differ slightly from the per-seed test means quoted above.
+
+### What this looks like on real images
+
+Model predictions on CIFAR-100 validation images. The examples were picked by a fixed rule, requiring the pattern in at least four of five seeds, not by hand.
+
+<p align="center">
+  <img src="assets/validation-examples.png" alt="Twelve validation images. Top row: six images such as a plain, a skunk and a whale that C8 and H8 classify correctly while B8 does not. Bottom row: six images such as a beaver, a willow tree and a road that all three models misclassify the same way, often with high confidence" width="100%">
+</p>
+
+- **Top row.** Examples of the shared models generalizing where B8 does not. On the validation set, C8 and H8 beat B8 consistently, in at least four seeds, on 10 images; the reverse happens on 3.
+- **Bottom row.** The models share the same mistakes, mostly between similar-looking classes such as willow vs maple, road vs plain and mouse vs cockroach. On the 1,826 images that every model misses in every seed, mean confidence is 23.6% for B8, 28.9% for C8 and 29.9% for H8. The shared models are wrong just as often on these images, only more sure of themselves.
 
 In every pair we measured, the more accurate model was also the more overconfident: C8/H8 vs B8 on test, and END vs INNER on validation. Pick H8 for accuracy, C8 when parameters are scarce, and B8 when predicted probabilities must be trustworthy.
 
@@ -162,6 +183,12 @@ python benchmarks/minimal-generalization-20261015/analyze_study.py \
 
 # Regenerate the four figures and the result tables.
 python scripts/make_figures.py --output-dir assets
+
+# Generalization figures. The learning curves use the committed logs; the
+# calibration and example figures need validation predictions from the
+# private checkpoints (official test set never opened).
+python scripts/infer_validation_examples.py --checkpoints CKPT_DIR --data-root LOCAL_CIFAR100_ROOT --output PRED_DIR
+python scripts/make_generalization_figures.py --predictions PRED_DIR --meta LOCAL_CIFAR100_ROOT/cifar-100-python/meta
 
 # Prepare an inert, freshly owned root for a GPU replication.
 python scripts/prepare_replication.py --root NEW_ROOT --training-root LOCAL_CIFAR100_ROOT
