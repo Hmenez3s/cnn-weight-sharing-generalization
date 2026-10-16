@@ -147,6 +147,10 @@ def test_complete_cli_probe_is_synthetic_isolated_and_zero_guard_counters(tmp_pa
     model_file.write_bytes(original_model)
     result=subprocess.run(cmd,cwd=root,env=env,text=True,capture_output=True,timeout=180,check=False)
     assert result.returncode==0,result.stdout+result.stderr
+    events=[json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
+    runtime=next(item for item in events if item.get("event")=="runtime_configured")
+    assert runtime["source_head"]=="a"*40 and type(runtime["pid"]) is int
+    assert runtime["phase"]=="probe" and runtime["device"]=="cpu" and runtime["cpu_threads"]==1
     receipt=json.loads((root/"probe/probe_receipt.json").read_text())
     assert receipt["scientific"] is False and receipt["updates_per_arm"]==2
     assert receipt["models"]["parameters"]==59844 and receipt["models"]["forward_macs"]==37973120

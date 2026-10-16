@@ -387,14 +387,22 @@ def main(argv=None):
         if args.phase=="probe":
             device=args.device or "cpu"
             if device!="cpu": raise PermissionError("position probe is synthetic CPU-only")
+            torch.set_num_threads(1)
+            event("runtime_configured",started,source_head=args.source_head,pid=os.getpid(),phase=args.phase,
+                  device="cpu",cpu_threads=torch.get_num_threads())
             _probe(root,args.source_head,source,helper,source_hashes,protocol_hash,proof,np,torch,data,engine,models,TrainConfig,position,device)
         elif args.phase=="train":
             threads=proof.get("cpu_threads"); ncpu=os.cpu_count()
             if type(threads) is not int or ncpu is None or not 1<=threads<=math.floor(ncpu*.8): raise PermissionError("resource proof cpu_threads exceeds 80% CPU budget")
             if proof.get("cuda_memory_fraction")!=0.5 or not torch.cuda.is_available(): raise PermissionError("train requires proven 50% CUDA memory and available CUDA")
             torch.set_num_threads(threads); torch.cuda.set_per_process_memory_fraction(.5,0)
+            event("runtime_configured",started,source_head=args.source_head,pid=os.getpid(),phase=args.phase,
+                  device="cuda",cpu_threads=torch.get_num_threads(),cuda_memory_fraction=.5,
+                  torch_version=str(torch.__version__),cuda_version=torch.version.cuda,gpu_name=torch.cuda.get_device_name(0))
             _train(root,args.source_head,helper,source_hashes,protocol,protocol_hash,proof_hash,np,torch,data,engine,models,TrainConfig,position)
         else:
+            event("runtime_configured",started,source_head=args.source_head,pid=os.getpid(),phase=args.phase,
+                  device="cpu",cpu_threads=torch.get_num_threads())
             freeze_path=study/"freeze.json"
             prereg_path=study/"preregistration.json"
             validation_path=study/"validation.json"
