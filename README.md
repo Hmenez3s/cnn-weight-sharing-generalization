@@ -160,6 +160,28 @@ K = 32 and validation-split intervals are descriptive diagnostics, not additiona
 
 Full analysis: [mechanism report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md) · [study README and data](benchmarks/position-ablation-20261016/README.md) · [continuation provenance](benchmarks/position-ablation-20261016/provenance/README.md).
 
+**C4B4 vs B4C4: sharing early or late (validation only).** Both models split the trunk in half: C4B4 applies one shared block at updates 1–4 and four distinct blocks at updates 5–8; B4C4 is the reverse. Both have five unique blocks (96,964 parameters) and the same compute as B8/C8/H8, use the same recipe, data subsets and seeds, and start from native independent initialization (blocks drawn exactly as B8's first five). B8, C8 and H8 are the existing runs.
+
+<p align="center">
+  <img src="assets/split-sharing.svg" alt="Left: training and validation accuracy over training for C4B4 and B4C4. Validation curves overlap near 20–21%, but B4C4's training accuracy climbs to 56% (35.9 pp gap) while C4B4's stops at 34% (13.7 pp gap). Right: end-of-training training accuracy and selected validation accuracy for B8, C8, H8, C4B4 and B4C4" width="100%">
+</p>
+
+| Model | Unique blocks | Validation accuracy | Validation CE | Train accuracy, end | Gap, end |
+|---|---:|---:|---:|---:|---:|
+| B8 | 8 | 18.80% | 3.59 | 41.4% | 23.0 pp |
+| C8 | 1 | 21.25% | 3.53 | 38.8% | 17.6 pp |
+| H8 | 3 | **21.75%** | 3.54 | 42.9% | 21.4 pp |
+| C4B4 | 5 | 20.64% | **3.41** | 34.1% | **13.7 pp** |
+| B4C4 | 5 | 20.89% | 3.77 | **56.0%** | **35.9 pp** |
+
+Means over five paired seeds; accuracy and cross-entropy (CE) at the checkpoint selected on validation. Paired contrasts, 95% CI (t, df = 4): C4B4 − B4C4 −0.25 pp [−0.99, 0.49]; vs B8 +1.84 and +2.09 pp (5/5 seeds each); vs C8 −0.61 and −0.36 pp (1/5 seeds each, intervals include zero); vs H8 −1.11 and −0.86 pp.
+
+- **Where the shared half sits barely changes accuracy.** C4B4 and B4C4 are within 0.25 pp, with no consistent winner across seeds.
+- **It strongly changes memorization.** With identical parameters and compute, B4C4 ends at 56% training accuracy, the highest of any model in the study, and a 35.9 pp gap. C4B4 ends at 34% with a 13.7 pp gap, the smallest among the models that learn well. B4C4's extra memorization buys no validation accuracy and gives the worst cross-entropy; C4B4 has the best cross-entropy of all five models despite lower accuracy than C8 and H8.
+- **More distinct blocks is not better.** Both have 4.3× the parameters of C8 and neither beats it. H8, which unties only the first and last updates, stays best. Together with END/INNER, this points to *which* updates get their own weights mattering more than *how many* do.
+
+Data and analysis: [`benchmarks/split-sharing-20261017/`](benchmarks/split-sharing-20261017/README.md).
+
 ## Post-training adjustments: C8 and H8
 
 Can the two best models be improved after training, without retraining them? We applied four standard adjustments to the frozen five-seed C8 and H8 checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
@@ -233,7 +255,7 @@ Details and reproduction: [H8 full-data report](docs/H8_FULL_DATA.md) · data in
 ## Caveats
 
 - **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Only H8 was retrained on 100% of the data, on validation; B8 and C8 were not. Wider models, longer training and other tasks were not tested.
-- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER and the post-training adjustments were designed after the first results; END/INNER and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
+- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER, C4B4/B4C4 and the post-training adjustments were designed after the first results; END/INNER, C4B4/B4C4 and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
 - **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
 ## Running the code
@@ -284,6 +306,7 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── h8-posttraining-validation/        H8 post-training results
 │   ├── posttraining-generalization-validation/  train/validation gaps after post-training
 │   ├── h8-full-data-20261017/             H8 retrained on 100% of the training data, with post-training
+│   ├── split-sharing-20261017/            validation-only C4B4 vs B4C4 (shared half first or last)
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/

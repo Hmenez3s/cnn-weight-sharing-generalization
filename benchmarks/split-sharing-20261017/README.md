@@ -22,3 +22,25 @@ Example: `python benchmarks/split-sharing-20261017/run_split.py --data-root DATA
 
 Analyze a complete five-seed cohort with:
 `python benchmarks/split-sharing-20261017/analyze_split.py --cohort OUT/cohort.json --output ANALYSIS`
+
+## Results
+
+The five-seed cohort ran on one RTX 5090 with five concurrent worker processes
+(two threads each): 10 runs in 1,228 s, about 3× faster than sequential. The
+committed B8/C8/H8 control means reproduce the published values. Repeated
+sequential probes show last-digit floating-point differences of the same size
+as parallel versus sequential runs, so concurrency does not change results
+beyond normal GPU nondeterminism.
+
+| Model | Validation accuracy | Validation CE | Train, selected | Train, end | Gap, end |
+|---|---:|---:|---:|---:|---:|
+| B8 | 18.80 ± 0.64 | 3.59 | 35.5 | 41.4 | 23.0 |
+| C8 | 21.25 ± 0.41 | 3.53 | 38.2 | 38.8 | 17.6 |
+| H8 | 21.75 ± 1.25 | 3.54 | 41.4 | 42.9 | 21.4 |
+| C4B4 | 20.64 ± 0.52 | 3.41 | 32.8 | 34.1 | 13.7 |
+| B4C4 | 20.89 ± 0.29 | 3.77 | 46.0 | 56.0 | 35.9 |
+
+Per-seed values and paired contrasts: [`results/analysis.md`](results/analysis.md)
+([JSON](results/analysis.json)). Cohort manifest: [`results/cohort.json`](results/cohort.json);
+per-run `run.json` and compressed training logs in [`results/runs/`](results/runs/).
+Checkpoints are not distributed. Figure: `scripts/make_split_sharing_figure.py`.
