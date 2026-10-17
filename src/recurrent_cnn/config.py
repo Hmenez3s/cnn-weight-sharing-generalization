@@ -48,7 +48,8 @@ class TrainConfig:
             value = getattr(self, key)
             if type(value) is not int:
                 raise ValueError(f"{key} must be an integer")
-        if self.depth not in (1, 2, 4, 8) or (self.family == "A" and self.depth != 1) or (self.family == "H" and self.depth != 8):
+        if (self.depth not in (1, 2, 3, 4, 8) or (self.depth == 3 and self.family != "C")
+                or (self.family == "A" and self.depth != 1) or (self.family == "H" and self.depth != 8)):
             raise ValueError("invalid family/depth combination")
         if self.width < 1 or self.num_classes < 1 or self.batch_size < 1 or self.total_updates < 1:
             raise ValueError("width, classes, batch_size and total_updates must be positive")

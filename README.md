@@ -249,6 +249,19 @@ C4W45 reaches **1.82x C8's batch-1 inference speed, 1.37x its batch-128 inferenc
 
 These are **synchronized resident-input step measurements**, not end-to-end data-loader or deployment throughput. SGD includes forward, loss, backward and optimizer work; input transfer, augmentation, evaluation and checkpoint I/O are excluded. **C4W32 and B4W45 were not included in this speed benchmark**; their concurrent training durations are not substitute latency measurements. CUDA-event timings, p95, round variability, raw observations, hardware/software policies and reproducibility instructions are in the [full speed report](benchmarks/rtx5090-speed-20261017/README.md). No dataset or trained checkpoint was staged; the official test set stayed closed.
 
+### One-convolution recurrence: `A × 3` versus `[A→B] × 2`
+
+A new validation-only package comparison holds GroupNorm at **one group in both arms** and approximately matches MACs by using widths 37 and 32, respectively. These are newly trained, shallower models—not C8 checkpoints. Five paired seeds use the unchanged 4,500/5,000 train/validation split and 10,000-update recipe.
+
+| Package | Width | Parameters | MACs / image | Validation top-1 (%) |
+|---|---:|---:|---:|---:|
+| `[A→B] × 2` (`AB2W32G1`) | 32 | 22,724 | 9,661,568 | **17.528 ± 0.823** |
+| `A × 3` (`A3W37G1`) | 37 | 17,194 | 9,721,972 | 15.272 ± 0.775 |
+
+**The two-convolution package wins this accuracy comparison.** A3 − AB2 is **−2.256 pp**, nominal paired 95% CI **[−3.161, −1.351]**, with A3 lower in all five seeds. A3 has 24.34% fewer parameters and 0.6252% more counted MACs. Its smaller train–validation gap accompanies lower training **and** validation accuracy; it is not evidence of better generalization here.
+
+In a separate isolated RTX 5090 benchmark, A3 reaches **1.258×** AB2's batch-1 inference speed, but **0.891×** batch-128 inference speed and **0.969×** batch-128 SGD speed. These are resident-input point estimates, not end-to-end throughput or a reliable ranking of small timing differences. Width, unique parameters, convolution count and residual-update count change together; this does not isolate the causal effect of one convolution. The official test stayed closed. [Protocol, results, raw logs and execution evidence](benchmarks/conv-granularity-20261017/README.md).
+
 ## Post-training adjustments: C8 and H8
 
 Can C8 and H8, the two leading models in the original eight-step test comparison, be improved after training without retraining them? We applied four standard adjustments to their frozen five-seed checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.

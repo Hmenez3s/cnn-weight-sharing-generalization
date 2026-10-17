@@ -18,7 +18,7 @@ if str(SRC) not in sys.path:
 HERE = Path(__file__).resolve().parent
 SEEDS = (11, 23, 37, 53, 71)
 ARMS = ("C4B4", "B4C4")
-ALL_ARMS = ("C4B4", "B4C4", "C7B1", "C4W45", "C4W32", "B4W45")
+ALL_ARMS = ("C4B4", "B4C4", "C7B1", "C4W45", "C4W32", "B4W45", "AB2W32G1", "A3W37G1")
 SPLIT_SEED = 1729
 PARAMETERS = 96_964
 MACS = 37_973_120
