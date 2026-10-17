@@ -111,6 +111,19 @@ def test_seed_table_filters_family_before_seed(tmp_path, monkeypatch):
     assert all(len(digest) == 64 for digest, _ in h_frozen.values())
 
 
+def test_probe_cohort_requires_explicit_override(tmp_path):
+    cohort = tmp_path / "cohort.json"
+    cohort.write_text(json.dumps({"schema": "h8-full-data-cohort-v1", "family": "H", "probe": True,
+                                  "scientific": False, "runs": {}}), encoding="utf-8")
+    images = tmp_path / "images.npy"
+    baseline = tmp_path / "baseline.npz"
+    np.save(images, np.zeros((1, 32, 32, 3), dtype=np.uint8))
+    np.savez(baseline, labels=np.zeros(5000, dtype=np.int64), validation_indices=np.arange(5000))
+    with pytest.raises(ValueError, match="requires --allow-probe-cohort"):
+        inference.main(["--images", str(images), "--baseline", str(baseline), "--checkpoints", str(tmp_path),
+                        "--last-checkpoints", str(tmp_path), "--output", str(tmp_path / "out"), "--cohort", str(cohort)])
+
+
 def test_checkpoint_identity_rejects_cross_family():
     state = {"x": torch.ones(1)}
     checkpoint = {"model_spec": inference.SPECS["H"], "model_state": state, "model": state,
@@ -173,6 +186,32 @@ def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, 
     assert "model forward only" in summary["forward_wall_seconds_scope"]
     assert summary["total_elapsed_wall_seconds"] >= 0
     assert "tmp_path" not in json.dumps(summary)
+
+    if family == "H":
+        cohort = tmp_path / "cohort.json"
+        cohort_runs = {str(seed): {"selected_sha256": "selected-hash", "last_sha256": "digest",
+                                   "validation_accuracy_percent": 100.0} for seed in inference.SEEDS}
+        cohort.write_text(json.dumps({"schema": "h8-full-data-cohort-v1", "family": "H", "fraction": 1.0,
+                                      "probe": False, "scientific": True, "runs": cohort_runs}))
+        cohort_baseline = tmp_path / "cohort-baseline.npz"
+        np.savez(cohort_baseline, labels=labels, validation_indices=indices)
+        cohort_output = tmp_path / "cohort-out"
+        inference.main(["--images", str(images_path), "--baseline", str(cohort_baseline), "--checkpoints", str(selected_dir),
+                        "--last-checkpoints", str(final_dir), "--output", str(cohort_output), "--cohort", str(cohort),
+                        "--seeds", "11", "--limit-images", "1", "--threads", "1", "--batch-size", "1"])
+        cohort_summary = json.loads((cohort_output / "summary.json").read_text())
+        diagnostic = cohort_summary["models"]["H-s11"]["models"]["baseline_comparison"]
+        assert diagnostic["reference"] == "cohort training-time validation accuracy"
+        assert diagnostic["argmax_mismatch_count"] is None
+        assert cohort_summary["cohort"]["fraction"] == 1.0
+        bad_last_sha = tmp_path / "bad-last-out"
+        cohort_runs["11"]["last_sha256"] = "wrong-last-hash"
+        cohort.write_text(json.dumps({"schema": "h8-full-data-cohort-v1", "family": "H", "fraction": 1.0,
+                                      "probe": False, "scientific": True, "runs": cohort_runs}))
+        with pytest.raises(ValueError, match="last checkpoint SHA256"):
+            inference.main(["--images", str(images_path), "--baseline", str(cohort_baseline), "--checkpoints", str(selected_dir),
+                            "--last-checkpoints", str(final_dir), "--output", str(bad_last_sha), "--cohort", str(cohort),
+                            "--seeds", "11", "--limit-images", "1", "--threads", "1", "--batch-size", "1"])
 
     bad_labels = labels.copy()
     bad_labels[0] = (bad_labels[0] + 1) % 100

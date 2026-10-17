@@ -213,6 +213,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--memory-fraction", type=float, default=0.04, help="per-process PyTorch CUDA allocator cap; not a total-process memory guarantee")
     parser.add_argument("--seeds", type=int, nargs="+", choices=SEEDS, default=SEEDS)
     parser.add_argument("--limit-images", type=int)
+    parser.add_argument("--cohort", type=Path)
+    parser.add_argument("--allow-probe-cohort", action="store_true")
     args = parser.parse_args(argv)
     run_started = time.perf_counter()
     if args.batch_size < 1 or args.threads < 1 or (args.limit_images is not None and args.limit_images < 1):
@@ -238,9 +240,23 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("baseline must include labels and validation_indices")
     family = args.family
     model_spec = SPECS[family]
-    frozen = expected_h8(family)
-    if not set(SEEDS).issubset(frozen):
-        raise ValueError(f"frozen table is missing a {family} validation seed")
+    cohort = None
+    if args.cohort is not None:
+        if family != "H":
+            raise ValueError("--cohort is only valid with family H")
+        cohort = json.loads(args.cohort.read_text(encoding="utf-8"))
+        if cohort.get("schema") != "h8-full-data-cohort-v1" or cohort.get("family") != "H":
+            raise ValueError("unsupported H8 cohort manifest")
+        if (cohort.get("probe") or not cohort.get("scientific")) and not args.allow_probe_cohort:
+            raise ValueError("probe/non-scientific cohort requires --allow-probe-cohort")
+        frozen = {int(seed): (record["selected_sha256"], float(record["validation_accuracy_percent"]))
+                  for seed, record in cohort.get("runs", {}).items()}
+        if not set(SEEDS).issubset(frozen):
+            raise ValueError("cohort manifest is missing an H8 validation seed")
+    else:
+        frozen = expected_h8(family)
+        if not set(SEEDS).issubset(frozen):
+            raise ValueError(f"frozen table is missing a {family} validation seed")
     archive_labels = baseline["labels"]
     archive_indices = baseline["validation_indices"]
     if archive_labels.shape != (5000,) or archive_indices.shape != (5000,):
@@ -249,15 +265,16 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("baseline labels must be integer class IDs in 0..99")
     if not np.issubdtype(archive_indices.dtype, np.integer):
         raise ValueError("baseline validation_indices must be integers")
-    for seed in SEEDS:
-        key = f"{family}{seed}"
-        if key not in baseline:
-            raise ValueError(f"baseline is missing {key}")
-        probabilities = baseline[key]
-        _validate_probability_array(key, probabilities, 5000)
-        top1 = float((probabilities.argmax(axis=1) == archive_labels).mean() * 100)
-        if abs(top1 - frozen[seed][1]) > 1e-9:
-            raise ValueError(f"baseline {key}: archived top-1 {top1} does not match frozen {frozen[seed][1]}")
+    if cohort is None:
+        for seed in SEEDS:
+            key = f"{family}{seed}"
+            if key not in baseline:
+                raise ValueError(f"baseline is missing {key}")
+            probabilities = baseline[key]
+            _validate_probability_array(key, probabilities, 5000)
+            top1 = float((probabilities.argmax(axis=1) == archive_labels).mean() * 100)
+            if abs(top1 - frozen[seed][1]) > 1e-9:
+                raise ValueError(f"baseline {key}: archived top-1 {top1} does not match frozen {frozen[seed][1]}")
 
     count = len(images) if args.limit_images is None else min(len(images), args.limit_images)
     if count != 5000 and args.limit_images is None:
@@ -276,7 +293,9 @@ def main(argv: list[str] | None = None) -> int:
         final_path = args.last_checkpoints / f"{name}.pt"
         selected_digest, final_digest = sha256(selected_path), sha256(final_path)
         if selected_digest != frozen[seed][0]:
-            raise ValueError(f"{name}: selected checkpoint SHA256 differs from frozen {family} validation table")
+            raise ValueError(f"{name}: selected checkpoint SHA256 differs from frozen {family} validation table/cohort")
+        if cohort is not None and final_digest != cohort["runs"][str(seed)]["last_sha256"]:
+            raise ValueError(f"{name}: last checkpoint SHA256 differs from cohort")
         selected = torch.load(selected_path, map_location="cpu", weights_only=True)
         final = torch.load(final_path, map_location="cpu", weights_only=True)
         selected_state, final_state = _check_identity(selected, final, seed, family)
@@ -293,16 +312,26 @@ def main(argv: list[str] | None = None) -> int:
             probs, seconds = infer(model, images, device, args.batch_size, tta=tta, progress=progress)
             if kind == "identity":
                 top1 = float((probs.argmax(1) == labels).mean() * 100)
-                archived_prefix = baseline[f"{family}{seed}"][:count]
-                archived_prefix_top1 = float((archived_prefix.argmax(axis=1) == labels).mean() * 100)
-                records["baseline_comparison"] = {
-                    "archived_top1_percent": archived_prefix_top1,
-                    "fresh_top1_percent": top1,
-                    "delta_pp": top1 - archived_prefix_top1,
-                    "max_abs_probability_difference": float(np.max(np.abs(probs.astype(np.float64) - archived_prefix.astype(np.float64)))),
-                    "argmax_mismatch_count": int(np.count_nonzero(probs.argmax(axis=1) != archived_prefix.argmax(axis=1))),
-                    "baseline_backend_different": device.type != "cuda",
-                }
+                if cohort is not None:
+                    recorded = frozen[seed][1]
+                    records["baseline_comparison"] = {
+                        "reference": "cohort training-time validation accuracy",
+                        "recorded_top1_percent": recorded,
+                        "fresh_top1_percent": top1,
+                        "delta_pp": top1 - recorded,
+                        "argmax_mismatch_count": None,
+                    }
+                else:
+                    archived_prefix = baseline[f"{family}{seed}"][:count]
+                    archived_prefix_top1 = float((archived_prefix.argmax(axis=1) == labels).mean() * 100)
+                    records["baseline_comparison"] = {
+                        "archived_top1_percent": archived_prefix_top1,
+                        "fresh_top1_percent": top1,
+                        "delta_pp": top1 - archived_prefix_top1,
+                        "max_abs_probability_difference": float(np.max(np.abs(probs.astype(np.float64) - archived_prefix.astype(np.float64)))),
+                        "argmax_mismatch_count": int(np.count_nonzero(probs.argmax(axis=1) != archived_prefix.argmax(axis=1))),
+                        "baseline_backend_different": device.type != "cuda",
+                    }
                 records["selected_validation_top1_percent"] = top1
             output[model_name] = probs
             records[model_name] = {"forward_wall_seconds": seconds, "weights": "selected" if kind in ("identity", "tta") else "two-checkpoint arithmetic midpoint"}
@@ -324,6 +353,8 @@ def main(argv: list[str] | None = None) -> int:
                "forward_wall_seconds_scope": "model forward only; excludes normalization, transfers, and other end-to-end work",
                "total_elapsed_wall_seconds": time.perf_counter() - run_started,
                "peak_process_rss_bytes": _rss_bytes(), "models": entries}
+    if cohort is not None:
+        summary["cohort"] = {"schema": cohort["schema"], "sha256": sha256(args.cohort), "fraction": cohort["fraction"]}
     if device.type == "cuda":
         summary["cuda_peak_allocated_bytes"] = torch.cuda.max_memory_allocated(device)
         summary["cuda_peak_reserved_bytes"] = torch.cuda.max_memory_reserved(device)

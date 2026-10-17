@@ -63,7 +63,8 @@ def _method_accuracy(entry: dict) -> tuple[float, dict[str, float] | None]:
 def _prepare(args):
     arrays = _train_pickle(args.train_pickle)
     train_indices, val_indices = data.make_split(arrays.labels, SPLIT_SEED)
-    subsets = {seed: data.make_subsets(arrays.labels, train_indices, seed)[FRACTION] for seed in SEEDS}
+    fraction = args.fraction
+    subsets = {seed: data.make_subsets(arrays.labels, train_indices, seed)[fraction] for seed in SEEDS}
     union = np.unique(np.concatenate(list(subsets.values())))
     baseline = inference._load_npz(args.validation_baseline)
     val_images = np.load(args.validation_images, mmap_mode="r", allow_pickle=False)
@@ -75,17 +76,19 @@ def _prepare(args):
         raise ValueError("validation images do not match original training pickle validation slice")
     if np.intersect1d(union, val_indices).size:
         raise ValueError("training subsets overlap validation indices")
-    if len(train_indices) != 45_000 or len(val_indices) != 5_000 or any(len(v) != 4500 for v in subsets.values()):
+    if len(train_indices) != 45_000 or len(val_indices) != 5_000 or any(len(v) != round(45_000 * fraction) for v in subsets.values()):
         raise ValueError("derived official split/subsets have unexpected counts")
     return arrays, train_indices, val_indices, subsets, union, baseline
 
 
-def _load_models(family, seed, selected_path, last_path):
-    expected = inference.expected_h8(family)
+def _load_models(family, seed, selected_path, last_path, cohort=None):
+    expected = inference.expected_h8(family) if cohort is None else None
     name = f"{family}-s{seed}"
     selected_sha, final_sha = inference.sha256(selected_path), inference.sha256(last_path)
-    if selected_sha != expected[seed][0]:
+    if cohort is None and selected_sha != expected[seed][0]:
         raise ValueError(f"{name}: selected SHA256 differs from frozen H8/C8 table")
+    if cohort is not None and (selected_sha != cohort["runs"][str(seed)]["selected_sha256"] or final_sha != cohort["runs"][str(seed)]["last_sha256"]):
+        raise ValueError(f"{name}: selected/last SHA differs from cohort")
     selected = torch.load(selected_path, map_location="cpu", weights_only=True)
     final = torch.load(last_path, map_location="cpu", weights_only=True)
     selected_state, final_state = inference._check_identity(selected, final, seed, family)
@@ -132,6 +135,18 @@ def run(args) -> dict:
     if args.output.exists():
         raise FileExistsError(f"output directory already exists: {args.output}")
     arrays, train_indices, val_indices, subsets, union, baseline = _prepare(args)
+    families = args.families.split(",")
+    cohort = None
+    if args.cohort is not None:
+        if families != ["H"]:
+            raise ValueError("--cohort is only valid with --families H")
+        cohort = json.loads(args.cohort.read_text(encoding="utf-8"))
+        if cohort.get("schema") != "h8-full-data-cohort-v1" or cohort.get("family") != "H":
+            raise ValueError("unsupported H8 cohort manifest")
+        if args.fraction != cohort.get("fraction"):
+            raise ValueError("--fraction must equal cohort fraction")
+        if (cohort.get("probe") or not cohort.get("scientific")) and not args.allow_probe_cohort:
+            raise ValueError("probe/non-scientific cohort requires --allow-probe-cohort")
     print(json.dumps({"event": "identity_verified", "train_count": len(train_indices), "validation_count": len(val_indices), "union_count": len(union)}), flush=True)
     device = torch.device(args.device)
     if device.type != "cuda" or not torch.cuda.is_available():
@@ -142,16 +157,18 @@ def run(args) -> dict:
     train_images = arrays.images[union]
     train_labels = arrays.labels[union]
     train_data_hash = _array_identity(arrays)
-    output = {"study": {"families": ["C8", "H8"], "seeds": list(SEEDS), "validation_only_exploratory": True, "official_test_opened": False}, "methods": {}, "identity": {"split_seed": SPLIT_SEED, "fraction": FRACTION, "train_data_hash": train_data_hash, "train_count": len(train_indices), "validation_count": len(val_indices), "union_count": len(union), "subset_counts": {str(s): len(subsets[s]) for s in SEEDS}, "subset_hashes": {}, "validation_indices_sha256": hashlib.sha256(val_indices.tobytes()).hexdigest(), "union_indices_sha256": hashlib.sha256(union.tobytes()).hexdigest(), "validation_images_sha256": inference.sha256(args.validation_images), "validation_baseline_sha256": inference.sha256(args.validation_baseline)}, "runtime": {"device": str(device), "batch_size": args.batch_size, "threads": args.threads, "memory_fraction": args.memory_fraction}}
+    output = {"study": {"families": [f"{family}8" for family in families], "seeds": list(SEEDS), "validation_only_exploratory": True, "official_test_opened": False}, "methods": {}, "identity": {"split_seed": SPLIT_SEED, "fraction": args.fraction, "train_data_hash": train_data_hash, "train_count": len(train_indices), "validation_count": len(val_indices), "union_count": len(union), "subset_counts": {str(s): len(subsets[s]) for s in SEEDS}, "subset_hashes": {}, "validation_indices_sha256": hashlib.sha256(val_indices.tobytes()).hexdigest(), "union_indices_sha256": hashlib.sha256(union.tobytes()).hexdigest(), "validation_images_sha256": inference.sha256(args.validation_images), "validation_baseline_sha256": inference.sha256(args.validation_baseline)}, "runtime": {"device": str(device), "batch_size": args.batch_size, "threads": args.threads, "memory_fraction": args.memory_fraction}}
     run_started = time.perf_counter()
     paired_subset_hashes = {}
-    for family, selected_dir, last_dir, reference_path in (("C", args.c_checkpoints, args.c_last_checkpoints, args.c_reference), ("H", args.h_checkpoints, args.h_last_checkpoints, args.h_reference)):
+    directory_args = {"C": (args.c_checkpoints, args.c_last_checkpoints, args.c_reference), "H": (args.h_checkpoints, args.h_last_checkpoints, args.h_reference)}
+    for family in families:
+        selected_dir, last_dir, reference_path = directory_args[family]
         states = {}
         selected_hashes = {}
         for seed in SEEDS:
             selected_path = selected_dir / f"{family}-s{seed}.pt"
             last_path = last_dir / f"{family}-s{seed}.pt"
-            selected_state, final_state, selected_hash, final_hash, selected_payload = _load_models(family, seed, selected_path, last_path)
+            selected_state, final_state, selected_hash, final_hash, selected_payload = _load_models(family, seed, selected_path, last_path, cohort if family == "H" else None)
             _verify_checkpoint(selected_payload, train_data_hash, train_indices, val_indices, subsets[seed], len(arrays.labels))
             subset_hash = training_identity_hashes(len(arrays.labels), subsets[seed], val_indices)[1]
             output["identity"]["subset_hashes"][f"{family}{seed}"] = subset_hash
@@ -194,23 +211,40 @@ def run(args) -> dict:
             else:
                 train_rows = per_seed[method]
                 train_pct = float(np.mean(list(train_rows.values())))
-                scope, n_train = "own_seed_0.1_subset", 4500
+                scope, n_train = f"own_seed_{args.fraction:g}_subset", len(subsets[SEEDS[0]])
             means[method] = {"training_accuracy_percent": train_pct, "validation_accuracy_percent": val_mean, "gap_pp": gap(train_pct, val_mean), "training_scope": scope, "n_train": n_train, "per_seed_training_accuracy_percent": train_rows, "per_seed_validation_accuracy_percent": val_seed}
         output["methods"][family] = means
         del pooled
-    if any(paired_subset_hashes[("C", seed)] != paired_subset_hashes[("H", seed)] for seed in SEEDS):
+    if len(families) == 2 and any(paired_subset_hashes[("C", seed)] != paired_subset_hashes[("H", seed)] for seed in SEEDS):
         raise ValueError("paired C/H same-seed subset identity mismatch")
     output["runtime"].update({"elapsed_seconds": time.perf_counter() - run_started, "peak_memory_bytes": inference._rss_bytes(), "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(device)})
-    output["note"] = "Single-model training rows use each model's own 4,500-example subset; ensemble rows use the union seen by at least one member. Their gaps have different training cohorts/exposure and are not directly interpretable as pure memorization reduction. Accuracy only; exploratory validation-only; official test was never opened."
+    if cohort is not None:
+        output["study"].update({"cohort_schema": cohort["schema"], "fraction": cohort["fraction"], "train_examples_per_run": cohort["train_examples_per_run"]})
+    if len(union) != len(subsets[SEEDS[0]]):
+        output["note"] = ("Single-model training rows use each model's own 4,500-example subset; ensemble rows use the union seen by at least one member. Their gaps have different training cohorts/exposure and are not directly interpretable as pure memorization reduction. Accuracy only; exploratory validation-only; official test was never opened." if args.fraction == FRACTION else "Single-model training rows use each model's own seed-specific subset; ensemble rows use the union seen by at least one member. Their gaps have different training cohorts/exposure and are not directly interpretable as pure memorization reduction. Accuracy only; exploratory validation-only; official test was never opened.")
+    else:
+        output["note"] = "Single-model and ensemble rows share the same training cohort; the ensemble aggregates five predictors trained on the same examples. Accuracy only; exploratory validation-only; official test was never opened."
     return output
 
 
 def render(result):
-    lines = ["# C8/H8 training–validation generalization gaps", "", "Exploratory validation-only comparison; no official-test data was opened. Gaps are training accuracy minus existing same-backend validation accuracy, in percentage points.", "", result["note"], "", "| Method | C train % | C validation % | C gap pp | H train % | H validation % | H gap pp | H−C validation pp | H−C train pp | Training scope / n |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
-    for method in METHODS:
-        c, h = result["methods"]["C"][method], result["methods"]["H"][method]
-        lines.append(f"| {method} | {c['training_accuracy_percent']:.3f} | {c['validation_accuracy_percent']:.3f} | {c['gap_pp']:+.3f} | {h['training_accuracy_percent']:.3f} | {h['validation_accuracy_percent']:.3f} | {h['gap_pp']:+.3f} | {h['validation_accuracy_percent']-c['validation_accuracy_percent']:+.3f} | {h['training_accuracy_percent']-c['training_accuracy_percent']:+.3f} | {c['training_scope']} / {c['n_train']}* |")
-    lines += ["", "*For ensemble rows, n is the union of all five subsets, not 4,500. Single-model per-seed training accuracies are recorded in the JSON.", ""]
+    families = result["study"]["families"]
+    if len(families) == 1:
+        family = families[0][0]
+        lines = [f"# {family} training–validation generalization gaps", "", "Exploratory validation-only comparison; no official-test data was opened. Gaps are training accuracy minus existing same-backend validation accuracy, in percentage points.", "", result["note"], "", f"| Method | {family} train % | {family} validation % | {family} gap pp | Training scope / n |", "|---|---:|---:|---:|---|"]
+        for method in METHODS:
+            row = result["methods"][family][method]
+            lines.append(f"| {method} | {row['training_accuracy_percent']:.3f} | {row['validation_accuracy_percent']:.3f} | {row['gap_pp']:+.3f} | {row['training_scope']} / {row['n_train']}* |")
+    else:
+        lines = ["# C8/H8 training–validation generalization gaps", "", "Exploratory validation-only comparison; no official-test data was opened. Gaps are training accuracy minus existing same-backend validation accuracy, in percentage points.", "", result["note"], "", "| Method | C train % | C validation % | C gap pp | H train % | H validation % | H gap pp | H−C validation pp | H−C train pp | Training scope / n |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
+        for method in METHODS:
+            c, h = result["methods"]["C"][method], result["methods"]["H"][method]
+            lines.append(f"| {method} | {c['training_accuracy_percent']:.3f} | {c['validation_accuracy_percent']:.3f} | {c['gap_pp']:+.3f} | {h['training_accuracy_percent']:.3f} | {h['validation_accuracy_percent']:.3f} | {h['gap_pp']:+.3f} | {h['validation_accuracy_percent']-c['validation_accuracy_percent']:+.3f} | {h['training_accuracy_percent']-c['training_accuracy_percent']:+.3f} | {c['training_scope']} / {c['n_train']}* |")
+    if result["identity"]["union_count"] != next(iter(result["identity"]["subset_counts"].values())):
+        footnote = ("*For ensemble rows, n is the union of all five subsets, not 4,500. Single-model per-seed training accuracies are recorded in the JSON." if result["identity"]["subset_counts"][str(SEEDS[0])] == 4500 else "*For ensemble rows, n is the union of all five subsets. Single-model per-seed training accuracies are recorded in the JSON.")
+    else:
+        footnote = "*Single-model per-seed training accuracies are recorded in the JSON."
+    lines += ["", footnote, ""]
     return "\n".join(lines)
 
 
@@ -224,12 +258,16 @@ def main(argv=None):
     parser.add_argument("--train-pickle", type=Path, required=True)
     parser.add_argument("--validation-images", type=Path, required=True)
     parser.add_argument("--validation-baseline", type=Path, required=True)
-    parser.add_argument("--c-checkpoints", type=Path, required=True)
-    parser.add_argument("--h-checkpoints", type=Path, required=True)
-    parser.add_argument("--c-last-checkpoints", type=Path, required=True)
-    parser.add_argument("--h-last-checkpoints", type=Path, required=True)
-    parser.add_argument("--c-reference", type=Path, required=True)
-    parser.add_argument("--h-reference", type=Path, required=True)
+    parser.add_argument("--families", default="C,H")
+    parser.add_argument("--fraction", type=float, default=FRACTION)
+    parser.add_argument("--cohort", type=Path)
+    parser.add_argument("--allow-probe-cohort", action="store_true")
+    parser.add_argument("--c-checkpoints", type=Path)
+    parser.add_argument("--h-checkpoints", type=Path)
+    parser.add_argument("--c-last-checkpoints", type=Path)
+    parser.add_argument("--h-last-checkpoints", type=Path)
+    parser.add_argument("--c-reference", type=Path)
+    parser.add_argument("--h-reference", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--batch-size", type=int, default=128)
@@ -237,10 +275,31 @@ def main(argv=None):
     parser.add_argument("--memory-fraction", type=float, default=0.04)
     parser.add_argument("--probe", action="store_true")
     args = parser.parse_args(argv)
+    families = args.families.split(",")
+    if not families or any(f not in ("C", "H") for f in families) or len(set(families)) != len(families):
+        parser.error("--families must be C, H, or C,H")
+    if not 0 < args.fraction <= 1:
+        parser.error("--fraction must be in (0, 1]")
+    for family in families:
+        for option in (f"{family.lower()}_checkpoints", f"{family.lower()}_last_checkpoints", f"{family.lower()}_reference"):
+            if getattr(args, option) is None:
+                parser.error(f"--{option.replace('_', '-')} is required when {family} is selected")
     if args.batch_size < 1 or args.threads < 1 or not 0 < args.memory_fraction <= 1:
         parser.error("batch-size/threads must be positive and memory-fraction in (0, 1]")
     if args.output.exists():
         raise FileExistsError(f"output directory already exists: {args.output}")
+    if args.cohort is not None:
+        if families != ["H"]:
+            parser.error("--cohort is only valid with --families H")
+        cohort = json.loads(args.cohort.read_text(encoding="utf-8"))
+        if cohort.get("schema") != "h8-full-data-cohort-v1" or cohort.get("family") != "H":
+            raise ValueError("unsupported H8 cohort manifest")
+        if args.fraction != cohort.get("fraction"):
+            raise ValueError("--fraction must equal cohort fraction")
+        if (cohort.get("probe") or not cohort.get("scientific")) and not args.allow_probe_cohort:
+            raise ValueError("probe/non-scientific cohort requires --allow-probe-cohort")
+    else:
+        cohort = None
     if args.probe:
         arrays, train_indices, val_indices, subsets, union, _ = _prepare(args)
         print(json.dumps({"event": "identity_verified", "union_count": len(union)}), flush=True)
@@ -249,12 +308,14 @@ def main(argv=None):
             raise ValueError("probe requires available CUDA")
         torch.set_num_threads(args.threads)
         torch.cuda.set_per_process_memory_fraction(args.memory_fraction, device.index or 0)
-        state, final_state, _, _, payload = _load_models("C", 11, args.c_checkpoints / "C-s11.pt", args.c_last_checkpoints / "C-s11.pt")
+        family = families[0]
+        selected_dir, last_dir, _ = {"C": (args.c_checkpoints, args.c_last_checkpoints, args.c_reference), "H": (args.h_checkpoints, args.h_last_checkpoints, args.h_reference)}[family]
+        state, final_state, _, _, payload = _load_models(family, 11, selected_dir / f"{family}-s11.pt", last_dir / f"{family}-s11.pt", cohort if family == "H" else None)
         _verify_checkpoint(payload, _array_identity(arrays), train_indices, val_indices, subsets[11], len(arrays.labels))
         images = arrays.images[subsets[11][:128]]
         results = {}
         for view in ("identity", "tta"):
-            p, seconds = _model_probs("C", state, images, device, args.batch_size, view)
+            p, seconds = _model_probs(family, state, images, device, args.batch_size, view)
             results[view] = {"count": len(p), "accuracy_percent": _accuracy(arrays.labels[subsets[11][:128]], p), "seconds": seconds}
         _write_probe(args.output, {"device": str(device), "full_run": False, "official_test_opened": False, "results": results, "memory_bytes": inference._rss_bytes()})
         return 0

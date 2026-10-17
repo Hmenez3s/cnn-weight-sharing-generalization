@@ -84,6 +84,31 @@ def test_equal_probability_ensemble_and_baseline_comparison_report(tmp_path):
         assert text in report
 
 
+def test_full_cohort_analysis_uses_training_time_accuracy_without_archival_arrays(tmp_path):
+    labels = _labels()
+    indices = np.arange(5000, 10000, dtype=np.int64)
+    inference = {"labels": labels.copy(), "validation_indices": indices.copy()}
+    runs = {}
+    for seed in analysis.SEEDS:
+        p = _probs(labels, 1100)
+        for method in ("identity", "average", "tta", "average_tta"):
+            inference[f"{method}_H{seed}"] = p.copy()
+        runs[str(seed)] = {"validation_accuracy_percent": 25.0}
+    bp, ip, sp = tmp_path / "base.npz", tmp_path / "inference.npz", tmp_path / "summary.json"
+    np.savez(bp, labels=labels, validation_indices=indices)
+    np.savez(ip, **inference)
+    sp.write_text("{}")
+    cohort = tmp_path / "cohort.json"
+    cohort.write_text(json.dumps({"schema": "h8-full-data-cohort-v1", "family": "H", "fraction": 1.0,
+                                  "train_examples_per_run": 45000, "runs": runs}))
+    result = analysis.analyze(bp, ip, sp, cohort=cohort)
+    assert result["study"]["cohort_schema"] == "h8-full-data-cohort-v1"
+    assert result["study"]["fraction"] == 1.0
+    assert result["archival_baseline_provenance"]["accuracy_percent_by_seed"]["11"] == 25.0
+    assert result["archival_baseline_provenance"]["accuracy_source"] == "training-time validation accuracy"
+    assert "100% training data" in analysis.render_markdown(result)
+
+
 def test_c8_analysis_uses_frozen_c_baseline_and_parameter_count(tmp_path):
     labels = _labels()
     indices = np.arange(5000, 10000, dtype=np.int64)

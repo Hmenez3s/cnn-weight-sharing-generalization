@@ -56,6 +56,25 @@ def test_verify_checkpoint_rejects_wrong_data_or_subset_hash():
         comparison._verify_checkpoint({**valid, "subset_hash": wrong_subset}, "right-data", train, validation, subset, 4)
 
 
+def test_full_fraction_identical_subsets_have_identical_union_and_single_family_render():
+    subsets = {seed: np.arange(45_000, dtype=np.int64) for seed in comparison.SEEDS}
+    union = np.unique(np.concatenate(list(subsets.values())))
+    assert len(union) == len(subsets[11]) == 45_000
+    result = {
+        "study": {"families": ["H8"]},
+        "identity": {"union_count": len(union), "subset_counts": {str(seed): len(subsets[seed]) for seed in subsets}},
+        "note": "Single-model and ensemble rows share the same training cohort.",
+        "methods": {"H": {method: {"training_accuracy_percent": 10.0, "validation_accuracy_percent": 9.0,
+                                      "gap_pp": 1.0, "training_scope": "full", "n_train": 45000}
+                            for method in comparison.METHODS}},
+    }
+    report = comparison.render(result)
+    assert "H−C" not in report
+    assert "C train %" not in report
+    assert "different training cohorts" not in report
+    assert "same training cohort" in report
+
+
 def test_probe_writer_emits_no_final_comparison(tmp_path):
     output = tmp_path / "probe"
     comparison._write_probe(output, {"full_run": False, "official_test_opened": False})

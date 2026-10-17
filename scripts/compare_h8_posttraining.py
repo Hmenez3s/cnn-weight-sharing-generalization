@@ -174,17 +174,25 @@ def _load_npz(path: Path, keys: tuple[str, ...]) -> dict[str, np.ndarray]:
         return {key: archive[key] for key in keys}
 
 
-def analyze(baseline_path: Path, inference_path: Path, summary_path: Path, family: str = "H") -> dict[str, Any]:
+def analyze(baseline_path: Path, inference_path: Path, summary_path: Path, family: str = "H", cohort: Path | None = None) -> dict[str, Any]:
     if family not in FAMILY_BASELINES:
         raise ValueError("family must be H or C")
-    baseline_keys = ("labels", "validation_indices", *(f"{family}{s}" for s in SEEDS))
+    cohort_data = None
+    if cohort is not None:
+        if family != "H":
+            raise ValueError("--cohort is only valid for family H")
+        cohort_data = json.loads(cohort.read_text(encoding="utf-8"))
+        if cohort_data.get("schema") != "h8-full-data-cohort-v1" or cohort_data.get("family") != "H":
+            raise ValueError("unsupported H8 cohort manifest")
+    baseline_keys = ("labels", "validation_indices") if cohort_data is not None else ("labels", "validation_indices", *(f"{family}{s}" for s in SEEDS))
     inferred_keys = ("labels", "validation_indices", *(f"{method}_{family}{s}" for s in SEEDS for method in ("identity", "average", "tta", "average_tta")))
     base = _load_npz(baseline_path, baseline_keys)
     inferred = _load_npz(inference_path, inferred_keys)
-    for seed in SEEDS:
-        p = base[f"{family}{seed}"]
-        if p.dtype != np.float32 or np.any(p <= 0):
-            raise ValueError(f"{family}{seed}: frozen baseline probabilities must be strictly positive float32")
+    if cohort_data is None:
+        for seed in SEEDS:
+            p = base[f"{family}{seed}"]
+            if p.dtype != np.float32 or np.any(p <= 0):
+                raise ValueError(f"{family}{seed}: frozen baseline probabilities must be strictly positive float32")
     if not np.array_equal(base["labels"], inferred["labels"]) or not np.array_equal(base["validation_indices"], inferred["validation_indices"]):
         raise ValueError("baseline and inference labels/validation_indices do not match")
     predictions = {k: base[k] for k in baseline_keys[2:]}
@@ -193,17 +201,23 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path, famil
     labels = base["labels"].astype(np.int64)
     identity_diagnostics = {}
     for seed in SEEDS:
-        key = f"{family}{seed}"
-        archival_accuracy = metrics(labels, base[key])["accuracy_percent"]
-        if not np.isclose(archival_accuracy, FAMILY_BASELINES[family][seed], atol=1e-8, rtol=0):
-            raise ValueError(f"{family}{seed}: saved archival baseline does not reproduce its frozen accuracy")
-        archived, identity = base[key].astype(np.float64), inferred[f"identity_{family}{seed}"].astype(np.float64)
-        identity_diagnostics[str(seed)] = {
-            "archival_accuracy_percent": archival_accuracy,
-            "same_backend_identity_accuracy_percent": metrics(labels, identity)["accuracy_percent"],
-            "max_absolute_probability_difference": float(np.max(np.abs(archived - identity))),
-            "argmax_flip_count": int(np.count_nonzero(archived.argmax(axis=1) != identity.argmax(axis=1))),
-        }
+        if cohort_data is not None:
+            identity_diagnostics[str(seed)] = {
+                "training_time_validation_accuracy_percent": float(cohort_data["runs"][str(seed)]["validation_accuracy_percent"]),
+                "fresh_same_backend_identity_accuracy_percent": metrics(labels, inferred[f"identity_{family}{seed}"])["accuracy_percent"],
+            }
+        else:
+            key = f"{family}{seed}"
+            archival_accuracy = metrics(labels, base[key])["accuracy_percent"]
+            if not np.isclose(archival_accuracy, FAMILY_BASELINES[family][seed], atol=1e-8, rtol=0):
+                raise ValueError(f"{family}{seed}: saved archival baseline does not reproduce its frozen accuracy")
+            archived, identity = base[key].astype(np.float64), inferred[f"identity_{family}{seed}"].astype(np.float64)
+            identity_diagnostics[str(seed)] = {
+                "archival_accuracy_percent": archival_accuracy,
+                "same_backend_identity_accuracy_percent": metrics(labels, identity)["accuracy_percent"],
+                "max_absolute_probability_difference": float(np.max(np.abs(archived - identity))),
+                "argmax_flip_count": int(np.count_nonzero(archived.argmax(axis=1) != identity.argmax(axis=1))),
+            }
     records: dict[str, Any] = {}
     seed_specs = {
         "baseline": lambda s: inferred[f"identity_{family}{s}"],
@@ -236,9 +250,17 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path, famil
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"could not read inference summary JSON: {exc}") from exc
-    return {"study": {"family": f"{family}8", "depth": 8, "width": 32, "alpha": 0.1, "classes": 100, "seeds": list(SEEDS), "validation_examples": N_EXAMPLES, "validation_only_exploratory": True, "known_selection_on_this_validation": True},
+    study = {"family": f"{family}8", "depth": 8, "width": 32, "alpha": 0.1, "classes": 100, "seeds": list(SEEDS), "validation_examples": N_EXAMPLES, "validation_only_exploratory": True, "known_selection_on_this_validation": True}
+    if cohort_data is not None:
+        study.update({"fraction": cohort_data["fraction"], "train_examples_per_run": cohort_data["train_examples_per_run"], "cohort_schema": cohort_data["schema"]})
+    provenance_accuracy = ({str(seed): float(cohort_data["runs"][str(seed)]["validation_accuracy_percent"]) for seed in SEEDS}
+                           if cohort_data is not None else {str(seed): FAMILY_BASELINES[family][seed] for seed in SEEDS})
+    provenance = {"accuracy_percent_by_seed": provenance_accuracy, "mean_accuracy_percent": float(np.mean(list(provenance_accuracy.values()))), "same_backend_identity_comparison": identity_diagnostics, "note": "Before/after rows use fresh same-backend identity probabilities; frozen archival accuracy remains separately checked and reported. Identity probability and argmax diagnostics are retained versus archival CUDA; historical archival results are unchanged." if cohort_data is None else "Cohort training-time validation accuracies are provenance only; fresh same-backend identity probabilities are used for every post-training before/after comparison."}
+    if cohort_data is not None:
+        provenance["accuracy_source"] = "training-time validation accuracy"
+    return {"study": study,
             "methods": records,
-            "archival_baseline_provenance": {"accuracy_percent_by_seed": {str(seed): FAMILY_BASELINES[family][seed] for seed in SEEDS}, "mean_accuracy_percent": float(np.mean(list(FAMILY_BASELINES[family].values()))), "same_backend_identity_comparison": identity_diagnostics, "note": "Before/after rows use fresh same-backend identity probabilities; frozen archival accuracy remains separately checked and reported. Identity probability and argmax diagnostics are retained versus archival CUDA; historical archival results are unchanged."},
+            "archival_baseline_provenance": provenance,
             "cost_interpretation": {"parameters": FAMILY_PARAMETERS[family], "macs_per_view": 37973120, "weight_average": "one-model size; selected+last same-trajectory midpoint, not EMA or classical multi-snapshot SWA", "five_seed_ensemble": "five models; sequential execution possible", "tta": "10 passes", "all_four_combination": "50 passes", "note": "Arithmetic counted costs, not measured speedups; no deployment-latency inference."},
             "inference_metadata": {"summary_file": summary_path.name, "summary": _safe_metadata(summary)}}
 
@@ -255,7 +277,10 @@ def render_markdown(result: dict[str, Any]) -> str:
         ("All four combined", methods["all_four_combined"], "mean probability of five average+TTA predictors; cross-fitted temperature"),
     ]
     base = methods["baseline"]["mean"]["metrics"]
-    lines = [f"# {family} post-training probability analysis", "", "Validation-only exploratory analysis; these models were already selected using this validation set.", "", "| Method | Aggregation | Accuracy % (Δ pp) | NLL (Δ) | Brier (Δ) | ECE % (Δ pp) |", "|---|---|---:|---:|---:|---:|"]
+    title = f"{family} post-training probability analysis"
+    if "fraction" in result["study"]:
+        title = f"{family} post-training probability analysis (100% training data)"
+    lines = [f"# {title}", "", "Validation-only exploratory analysis; these models were already selected using this validation set.", "", "| Method | Aggregation | Accuracy % (Δ pp) | NLL (Δ) | Brier (Δ) | ECE % (Δ pp) |", "|---|---|---:|---:|---:|---:|"]
     for name, value, aggregation in rows:
         if "mean" in value and "metrics" in value["mean"]:
             current = {k: value["mean"]["metrics"][k]["mean"] for k in base}
@@ -354,10 +379,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True, help="new output directory")
     parser.add_argument("--family", choices=("H", "C"), default="H", help="study family; defaults to the historical H8 analysis")
     parser.add_argument("--reference-h8", type=Path, help="completed H8 analysis JSON to compare against (C8 only)")
+    parser.add_argument("--cohort", type=Path, help="H8 full-data cohort manifest")
     args = parser.parse_args(argv)
     if args.reference_h8 is not None and args.family != "C":
         parser.error("--reference-h8 is only valid with --family C")
-    result = analyze(args.baseline, args.inference, args.inference_summary, family=args.family)
+    if args.cohort is not None and args.family != "H":
+        parser.error("--cohort is only valid with --family H")
+    result = analyze(args.baseline, args.inference, args.inference_summary, family=args.family, cohort=args.cohort)
     comparison = None
     if args.reference_h8 is not None:
         try:
@@ -366,7 +394,7 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"could not read H8 reference JSON: {exc}") from exc
         comparison = compare_with_h8(result, reference)
     args.output.mkdir(parents=True, exist_ok=False)
-    stem = f"{args.family.lower()}8-posttraining-analysis"
+    stem = "h8-full-posttraining-analysis" if args.cohort is not None else f"{args.family.lower()}8-posttraining-analysis"
     (args.output / f"{stem}.json").write_text(json.dumps(_json_safe(result), indent=2, allow_nan=False) + "\n", encoding="utf-8")
     (args.output / f"{stem}.md").write_text(render_markdown(result), encoding="utf-8")
     if comparison is not None:
