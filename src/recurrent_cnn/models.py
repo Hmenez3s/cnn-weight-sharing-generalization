@@ -11,7 +11,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 
 Family = Literal["A", "B", "C", "D", "E", "F", "H"]
-_SUPPORTED_DEPTHS = (1, 2, 4, 8)
+_SUPPORTED_DEPTHS = (1, 2, 3, 4, 8)
 _RECURRENT_FAMILIES = ("C", "E", "F")
 
 
@@ -32,8 +32,9 @@ class ModelSpec:
         for name, value in (("depth", self.depth), ("width", self.width), ("num_classes", self.num_classes)):
             if type(value) is not int:
                 raise ValueError(f"{name} must be an integer (booleans are not accepted)")
-        if self.depth not in _SUPPORTED_DEPTHS:
-            raise ValueError(f"depth must be one of {_SUPPORTED_DEPTHS}")
+        if self.depth not in _SUPPORTED_DEPTHS or (self.depth == 3 and self.family != "C"):
+            supported = _SUPPORTED_DEPTHS if self.family == "C" else tuple(depth for depth in _SUPPORTED_DEPTHS if depth != 3)
+            raise ValueError(f"depth must be one of {supported}")
         if self.family == "H" and self.depth != 8:
             raise ValueError("family H requires depth=8")
         if self.family == "A" and self.depth != 1:

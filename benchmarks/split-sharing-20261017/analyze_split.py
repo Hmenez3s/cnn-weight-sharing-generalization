@@ -15,7 +15,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 SEEDS = (11, 23, 37, 53, 71)
 LEGACY_ARMS = ("C4B4", "B4C4")
-NEW_CONTRASTS = (("C7B1", "H8"), ("C7B1", "C8"), ("C7B1", "B8"), ("C4W45", "C8"), ("C4W45", "H8"), ("C4W45", "B8"), ("C7B1", "C4W45"))
+NEW_CONTRASTS = (("C7B1", "H8"), ("C7B1", "C8"), ("C7B1", "B8"), ("C4W45", "C8"), ("C4W45", "H8"), ("C4W45", "B8"), ("C7B1", "C4W45"), ("A3W37G1", "AB2W32G1"))
 ARCHIVED_RECIPE = {"alpha": 0.1, "total_updates": 10000, "batch_size": 128,
                    "learning_rate": 0.03, "momentum": 0.9, "weight_decay": 0.0005,
                    "cosine_horizon": 10000, "validation_cadence": 200, "amp": False,
