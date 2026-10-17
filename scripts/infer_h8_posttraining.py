@@ -25,9 +25,16 @@ sys.path.insert(0, str(ROOT / "src"))
 from recurrent_cnn import models  # noqa: E402
 
 SEEDS = (11, 23, 37, 53, 71)
-SPEC = {"family": "H", "depth": 8, "width": 32, "alpha": 0.1, "num_classes": 100}
+SPECS = {
+    family: {"family": family, "depth": 8, "width": 32, "alpha": 0.1, "num_classes": 100}
+    for family in ("H", "C")
+}
+SPEC = SPECS["H"]
 VIEWS = ((0, 0), (0, 8), (8, 0), (8, 8), (4, 4))
-TABLE = ROOT / "benchmarks/hybrid-generalization-20261015/analysis/table.csv"
+TABLES = {
+    "H": ROOT / "benchmarks/hybrid-generalization-20261015/analysis/table.csv",
+    "C": ROOT / "benchmarks/minimal-generalization-20261015/analysis/table.csv",
+}
 
 
 def sha256(path: Path) -> str:
@@ -38,17 +45,20 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def expected_h8() -> dict[int, tuple[str, float]]:
-    """Read only H validation entries (the hybrid table also contains B/C)."""
+def expected_h8(family: str = "H") -> dict[int, tuple[str, float]]:
+    """Read the frozen validation entries for this family and exact depth."""
+    if family not in SPECS:
+        raise ValueError(f"unsupported family: {family}")
     result: dict[int, tuple[str, float]] = {}
-    with TABLE.open(newline="", encoding="utf-8") as stream:
+    with TABLES[family].open(newline="", encoding="utf-8") as stream:
         for row in csv.DictReader(stream):
-            if row.get("family") != "H" or row.get("split") != "validation":
+            if row.get("family") != family or row.get("split") != "validation":
                 continue
-            if "k" in row and row["k"] != "8":
+            if family == "C" and row.get("k") != "8":
                 continue
+            accuracy_column = "accuracy_percent" if family == "H" else "top1_percent"
             seed = int(row["seed"])
-            result[seed] = (row["checkpoint_sha256"], float(row.get("accuracy_percent") or row["top1_percent"]))
+            result[seed] = (row["checkpoint_sha256"], float(row[accuracy_column]))
     return result
 
 
@@ -127,27 +137,29 @@ def _validate_probability_array(name: str, values: np.ndarray, count: int) -> No
         raise ValueError(f"baseline {name} probabilities are not normalized")
 
 
-def _check_identity(selected: dict, final: dict, seed: int) -> tuple[dict, dict]:
+def _check_identity(selected: dict, final: dict, seed: int, family: str = "H") -> tuple[dict, dict]:
+    expected_spec = SPECS[family]
+    checkpoint_name = f"{family}-s{seed}"
     for key in ("model_spec", "config_hash", "data_hash", "split_hash", "subset_hash"):
         if key not in selected or key not in final:
-            raise ValueError(f"H-s{seed}: missing checkpoint identity field {key}")
+            raise ValueError(f"{checkpoint_name}: missing checkpoint identity field {key}")
     spec = selected["model_spec"]
-    if spec != SPEC or final["model_spec"] != SPEC:
-        raise ValueError(f"H-s{seed}: checkpoint is not the fixed H8 ModelSpec")
+    if spec != expected_spec or final["model_spec"] != expected_spec:
+        raise ValueError(f"{checkpoint_name}: checkpoint is not the fixed {family}8 ModelSpec")
     for key in ("config_hash", "data_hash", "split_hash", "subset_hash"):
         if selected[key] != final[key]:
-            raise ValueError(f"H-s{seed}: selected/final {key} mismatch")
+            raise ValueError(f"{checkpoint_name}: selected/final {key} mismatch")
     if int(final.get("update", -1)) < int(selected.get("update", 0)):
-        raise ValueError(f"H-s{seed}: final checkpoint precedes selected update")
+        raise ValueError(f"{checkpoint_name}: final checkpoint precedes selected update")
     state = selected.get("model_state")
     final_state = final.get("model")
     if not isinstance(state, dict) or not isinstance(final_state, dict):
-        raise ValueError(f"H-s{seed}: malformed model state")
+        raise ValueError(f"{checkpoint_name}: malformed model state")
     best = final.get("best_payload")
     if isinstance(best, dict) and isinstance(best.get("model_state"), dict):
         midpoint_state(state, best["model_state"])
         if any(not torch.equal(state[key], best["model_state"][key]) for key in state):
-            raise ValueError(f"H-s{seed}: final best payload is not the selected trajectory checkpoint")
+            raise ValueError(f"{checkpoint_name}: final best payload is not the selected trajectory checkpoint")
     return state, final_state
 
 
@@ -189,6 +201,7 @@ def _rss_bytes() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--family", choices=tuple(SPECS), default="H")
     parser.add_argument("--images", type=Path, required=True)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--checkpoints", type=Path, required=True)
@@ -223,9 +236,11 @@ def main(argv: list[str] | None = None) -> int:
     baseline = _load_npz(args.baseline)
     if "labels" not in baseline or "validation_indices" not in baseline:
         raise ValueError("baseline must include labels and validation_indices")
-    frozen = expected_h8()
+    family = args.family
+    model_spec = SPECS[family]
+    frozen = expected_h8(family)
     if not set(SEEDS).issubset(frozen):
-        raise ValueError("frozen table is missing an H validation seed")
+        raise ValueError(f"frozen table is missing a {family} validation seed")
     archive_labels = baseline["labels"]
     archive_indices = baseline["validation_indices"]
     if archive_labels.shape != (5000,) or archive_indices.shape != (5000,):
@@ -235,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
     if not np.issubdtype(archive_indices.dtype, np.integer):
         raise ValueError("baseline validation_indices must be integers")
     for seed in SEEDS:
-        key = f"H{seed}"
+        key = f"{family}{seed}"
         if key not in baseline:
             raise ValueError(f"baseline is missing {key}")
         probabilities = baseline[key]
@@ -256,29 +271,29 @@ def main(argv: list[str] | None = None) -> int:
     output: dict[str, np.ndarray] = {"labels": labels, "validation_indices": indices}
     entries: dict[str, dict] = {}
     for seed in args.seeds:
-        name = f"H-s{seed}"
+        name = f"{family}-s{seed}"
         selected_path = args.checkpoints / f"{name}.pt"
         final_path = args.last_checkpoints / f"{name}.pt"
         selected_digest, final_digest = sha256(selected_path), sha256(final_path)
         if selected_digest != frozen[seed][0]:
-            raise ValueError(f"{name}: selected checkpoint SHA256 differs from frozen H validation table")
+            raise ValueError(f"{name}: selected checkpoint SHA256 differs from frozen {family} validation table")
         selected = torch.load(selected_path, map_location="cpu", weights_only=True)
         final = torch.load(final_path, map_location="cpu", weights_only=True)
-        selected_state, final_state = _check_identity(selected, final, seed)
+        selected_state, final_state = _check_identity(selected, final, seed, family)
         midpoint = midpoint_state(selected_state, final_state)
         records: dict[str, dict] = {}
         models_by_kind = (("identity", selected_state, False), ("tta", selected_state, True), ("average", midpoint, False), ("average_tta", midpoint, True))
         for kind, state, tta in models_by_kind:
-            model_name = f"{kind}_H{seed}"
+            model_name = f"{kind}_{family}{seed}"
             print(json.dumps({"event": "model_start", "model": model_name, "device": str(device)}), flush=True)
-            model = models.build_model(models.ModelSpec(**SPEC), seed=0)
+            model = models.build_model(models.ModelSpec(**model_spec), seed=0)
             model.load_state_dict(state, strict=True)
             model.to(device).eval()
             progress = lambda event, n=model_name: print(json.dumps({"event": "view_complete", "model": n, **event}), flush=True)
             probs, seconds = infer(model, images, device, args.batch_size, tta=tta, progress=progress)
             if kind == "identity":
                 top1 = float((probs.argmax(1) == labels).mean() * 100)
-                archived_prefix = baseline[f"H{seed}"][:count]
+                archived_prefix = baseline[f"{family}{seed}"][:count]
                 archived_prefix_top1 = float((archived_prefix.argmax(axis=1) == labels).mean() * 100)
                 records["baseline_comparison"] = {
                     "archived_top1_percent": archived_prefix_top1,
@@ -294,11 +309,11 @@ def main(argv: list[str] | None = None) -> int:
             del model
             if device.type == "cuda":
                 torch.cuda.empty_cache()
-        entries[name] = {"selected_sha256": selected_digest, "final_sha256": final_digest,
+        entries[name] = {"family": family, "selected_sha256": selected_digest, "final_sha256": final_digest,
                          "selected_update": int(selected["update"]), "final_update": int(final["update"]),
-                         "model_spec": SPEC, "models": records}
+                         "model_spec": model_spec, "models": records}
     np.savez_compressed(args.output / "validation_predictions.npz", **output)
-    summary = {"input_sha256": {"images": sha256(args.images), "baseline": sha256(args.baseline)},
+    summary = {"family": family, "input_sha256": {"images": sha256(args.images), "baseline": sha256(args.baseline)},
                "checkpoint_sha256": {name: value for name, info in entries.items() for name, value in ((f"{name}_selected", info["selected_sha256"]), (f"{name}_final", info["final_sha256"]))},
                "seeds": list(args.seeds), "image_count": count, "full_validation": args.limit_images is None and count == 5000 and tuple(args.seeds) == SEEDS,
                "view_policy": {"identity": "raw validation image", "tta": "reflect pad 4; crops (0,0),(0,8),(8,0),(8,8),(4,4), each and horizontal flip; average probabilities"},

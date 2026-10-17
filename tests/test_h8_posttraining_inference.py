@@ -94,13 +94,33 @@ def test_checkpoint_identity_requires_matching_trajectory_and_fixed_spec():
         inference._check_identity(bad, common, 11)
 
 
-def test_seed_table_filters_family_before_seed():
-    frozen = inference.expected_h8()
-    assert set(frozen) == set(inference.SEEDS)
-    assert all(len(digest) == 64 for digest, _ in frozen.values())
+def test_seed_table_filters_family_before_seed(tmp_path, monkeypatch):
+    table = tmp_path / "table.csv"
+    table.write_text(
+        "split,family,seed,k,top1_percent,checkpoint_sha256\n"
+        "validation,C,11,8,20.78,hash-k8\n"
+        "validation,C,11,32,9.72,hash-k32\n"
+        "test,C,11,8,99.0,test-hash\n"
+        "validation,H,11,8,50.0,h-hash\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setitem(inference.TABLES, "C", table)
+    assert inference.expected_h8("C") == {11: ("hash-k8", 20.78)}
+    h_frozen = inference.expected_h8("H")
+    assert set(h_frozen) == set(inference.SEEDS)
+    assert all(len(digest) == 64 for digest, _ in h_frozen.values())
 
 
-def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, capsys):
+def test_checkpoint_identity_rejects_cross_family():
+    state = {"x": torch.ones(1)}
+    checkpoint = {"model_spec": inference.SPECS["H"], "model_state": state, "model": state,
+                  "config_hash": "c", "data_hash": "d", "split_hash": "s", "subset_hash": "u", "update": 3}
+    with pytest.raises(ValueError, match="fixed C8"):
+        inference._check_identity(checkpoint, checkpoint, 11, "C")
+
+
+@pytest.mark.parametrize("family", ("H", "C"))
+def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, capsys, family):
     from recurrent_cnn.models import ModelSpec, build_model
 
     selected_dir, final_dir = tmp_path / "selected", tmp_path / "final"
@@ -109,7 +129,8 @@ def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, 
     images_path, baseline_path, output = tmp_path / "images.npy", tmp_path / "baseline.npz", tmp_path / "out"
     images = np.zeros((1, 32, 32, 3), dtype=np.uint8)
     np.save(images_path, images)
-    model = build_model(ModelSpec(**inference.SPEC), seed=7).eval()
+    model_spec = inference.SPECS[family]
+    model = build_model(ModelSpec(**model_spec), seed=7).eval()
     with torch.no_grad():
         logits = model(inference.normalize(images, torch.device("cpu")))
         baseline_probs = torch.softmax(logits, dim=1).numpy()
@@ -118,30 +139,31 @@ def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, 
     archived_probs = np.repeat(baseline_probs, 5000, axis=0)
     archived_probs = archived_probs * (1 - 1e-5) + (1e-5 / 100)
     np.savez(baseline_path, labels=labels, validation_indices=indices,
-             **{f"H{seed}": archived_probs.copy() for seed in inference.SEEDS})
-    selected = {"model_spec": inference.SPEC, "model_state": model.state_dict(), "config_hash": "c", "data_hash": "d",
+             **{f"{family}{seed}": archived_probs.copy() for seed in inference.SEEDS})
+    selected = {"model_spec": model_spec, "model_state": model.state_dict(), "config_hash": "c", "data_hash": "d",
                 "split_hash": "s", "subset_hash": "u", "update": 2}
-    final = {"model_spec": inference.SPEC, "model": model.state_dict(), "config_hash": "c", "data_hash": "d",
+    final = {"model_spec": model_spec, "model": model.state_dict(), "config_hash": "c", "data_hash": "d",
              "split_hash": "s", "subset_hash": "u", "update": 3, "best_payload": selected}
-    torch.save(selected, selected_dir / "H-s11.pt")
-    torch.save(final, final_dir / "H-s11.pt")
+    torch.save(selected, selected_dir / f"{family}-s11.pt")
+    torch.save(final, final_dir / f"{family}-s11.pt")
     expected_top1 = 100.0
-    monkeypatch.setattr(inference, "expected_h8", lambda: {seed: ("selected-hash", expected_top1) for seed in inference.SEEDS})
-    monkeypatch.setattr(inference, "sha256", lambda path: "selected-hash" if path == selected_dir / "H-s11.pt" else "digest")
-    assert inference.main(["--images", str(images_path), "--baseline", str(baseline_path), "--checkpoints", str(selected_dir),
+    monkeypatch.setattr(inference, "expected_h8", lambda selected_family="H": {seed: ("selected-hash", expected_top1) for seed in inference.SEEDS})
+    monkeypatch.setattr(inference, "sha256", lambda path: "selected-hash" if path == selected_dir / f"{family}-s11.pt" else "digest")
+    assert inference.main(["--family", family, "--images", str(images_path), "--baseline", str(baseline_path), "--checkpoints", str(selected_dir),
                            "--last-checkpoints", str(final_dir), "--output", str(output), "--seeds", "11", "--limit-images", "1",
                            "--threads", "1", "--batch-size", "1"]) == 0
     logs = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     assert logs[0]["event"] == "model_start"
-    assert logs[0]["model"] == "identity_H11"
+    assert logs[0]["model"] == f"identity_{family}11"
     assert any(line["event"] == "view_complete" for line in logs)
     with np.load(output / "validation_predictions.npz") as saved:
-        assert set(saved.files) == {"labels", "validation_indices", "identity_H11", "average_H11", "tta_H11", "average_tta_H11"}
-        assert saved["identity_H11"].shape == (1, 100)
+        assert set(saved.files) == {"labels", "validation_indices", *(f"{kind}_{family}11" for kind in ("identity", "average", "tta", "average_tta"))}
+        assert saved[f"identity_{family}11"].shape == (1, 100)
     summary = json.loads((output / "summary.json").read_text())
     assert summary["full_validation"] is False
-    assert summary["models"]["H-s11"]["selected_update"] == 2
-    diagnostic = summary["models"]["H-s11"]["models"]["baseline_comparison"]
+    assert summary["family"] == family
+    assert summary["models"][f"{family}-s11"]["selected_update"] == 2
+    diagnostic = summary["models"][f"{family}-s11"]["models"]["baseline_comparison"]
     assert diagnostic["archived_top1_percent"] == 100.0
     assert diagnostic["fresh_top1_percent"] == 100.0
     assert diagnostic["delta_pp"] == 0.0
@@ -156,13 +178,13 @@ def test_synthetic_cli_emits_progress_and_scoped_outputs(tmp_path, monkeypatch, 
     bad_labels[0] = (bad_labels[0] + 1) % 100
     bad_baseline_path = tmp_path / "bad-baseline.npz"
     np.savez(bad_baseline_path, labels=bad_labels, validation_indices=indices,
-             **{f"H{seed}": archived_probs.copy() for seed in inference.SEEDS})
+             **{f"{family}{seed}": archived_probs.copy() for seed in inference.SEEDS})
     with pytest.raises(ValueError, match="archived top-1"):
-        inference.main(["--images", str(images_path), "--baseline", str(bad_baseline_path), "--checkpoints", str(selected_dir),
+        inference.main(["--family", family, "--images", str(images_path), "--baseline", str(bad_baseline_path), "--checkpoints", str(selected_dir),
                         "--last-checkpoints", str(final_dir), "--output", str(tmp_path / "bad-archive-out"),
                         "--seeds", "11", "--limit-images", "1", "--threads", "1", "--batch-size", "1"])
-    monkeypatch.setattr(inference, "expected_h8", lambda: {seed: ("wrong-selected-hash", expected_top1) for seed in inference.SEEDS})
+    monkeypatch.setattr(inference, "expected_h8", lambda selected_family="H": {seed: ("wrong-selected-hash", expected_top1) for seed in inference.SEEDS})
     with pytest.raises(ValueError, match="checkpoint SHA256"):
-        inference.main(["--images", str(images_path), "--baseline", str(baseline_path), "--checkpoints", str(selected_dir),
+        inference.main(["--family", family, "--images", str(images_path), "--baseline", str(baseline_path), "--checkpoints", str(selected_dir),
                         "--last-checkpoints", str(final_dir), "--output", str(tmp_path / "bad-hash-out"),
                         "--seeds", "11", "--limit-images", "1", "--threads", "1", "--batch-size", "1"])
