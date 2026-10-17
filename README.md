@@ -12,6 +12,8 @@ A controlled study of weight sharing in residual convolutional networks for imag
 
 B8, C8 and H8 share the same stem, classifier, eight-update residual trunk at width 32, training recipe and seeds; they differ only in how the trunk's weights are shared. A fourth model, E8, adds recurrence mechanisms on top of C8 and is reported as a reference.
 
+**Follow-up with all the training data:** trained on 45,000 instead of 4,500 images, H8 rises from 21.7% to **29.4%** validation accuracy and nearly stops memorizing (train/validation gap 19.6 → 0.4 pp). See [H8 with 100% of the training data](#h8-with-100-of-the-training-data).
+
 ## Result at a glance
 
 Official CIFAR-100 test set, top-1 accuracy, five paired seeds, eight iterations (K = 8), 4,500 training images per run.
@@ -200,9 +202,37 @@ What this shows:
 
 Details, NLL/Brier scores and reproduction commands: [C8 vs H8 post-training report](docs/C8_POSTTRAINING.md) · [H8 post-training report](docs/H8_POSTTRAINING.md) · data in [`benchmarks/c8-posttraining-validation/`](benchmarks/c8-posttraining-validation/), [`benchmarks/h8-posttraining-validation/`](benchmarks/h8-posttraining-validation/) and [`benchmarks/posttraining-generalization-validation/`](benchmarks/posttraining-generalization-validation/).
 
+## H8 with 100% of the training data
+
+Every result above uses 10% of the CIFAR-100 training data (4,500 images per run). Was that the limit? We retrained H8 with the **same recipe, seeds and 10,000 updates on all 45,000 training images**, then repeated the post-training adjustments. **Validation only:** the official test set was not reopened.
+
+<p align="center">
+  <img src="assets/h8-full-data.svg" alt="Left: H8 training and validation accuracy over 10,000 updates. With 10% of the data, training accuracy climbs to about 43% while validation stalls near 21.5%, a 21.4 pp gap; with 100% of the data, training and validation rise together to about 29–30%, a 0.6 pp gap. Right: validation accuracy after each post-training adjustment, higher with 100% of the data in every case, from 29.3% to 33.3%" width="100%">
+</p>
+
+| Adjustment | Accuracy, 10% → 100% data | ECE, 10% → 100% | Train/validation gap, 10% → 100% |
+|---|---:|---:|---:|
+| None | 21.74% → **29.41%** | 13.0% → 2.4% | 19.6 → **0.4** pp |
+| Temperature scaling | 21.74% → 29.41% | 3.5% → 2.5% | 19.6 → 0.4 pp |
+| Weight average | 21.72% → 29.34% | 13.5% → 2.3% | 20.7 → 0.5 pp |
+| TTA | 21.65% → 29.52% | 7.3% → 5.7% | 19.3 → 0.6 pp |
+| Five-seed ensemble | 29.32% → **33.28%** | 5.2% → 8.5% | 6.8 † → 0.4 pp |
+| All four | 29.88% → 32.76% | 4.2% → **2.0%** | 6.1 † → 0.7 pp |
+
+† At 10%, measured on the union of the five training subsets (see above). At 100%, all members trained on the same 45,000 images.
+
+What this shows:
+
+- **Data was the main bottleneck.** One H8 trained on all the data (29.41%) matches the ensemble of five 10%-data H8 models (29.32%) at one fifth of the inference cost.
+- **Memorization is gone; the model is now underfit.** Training and validation accuracy are almost equal (about 30%), and every seed selected a checkpoint at the end of training (updates 9,200–10,000). With 10% of the data, the same model reached 43% on its training images; on 45,000 images it reaches only 30%. Capacity (59,844 parameters, width 32) and training length (≈ 28 passes over the data) are now the limits. Neither was tested here.
+- **Calibration no longer needs fixing.** The plain model already has 2.4% ECE, so temperature scaling has nothing left to correct.
+- **Only the ensemble still adds accuracy:** +3.9 pp, but averaging the five probability outputs raises ECE to 8.5%. Combining all four adjustments recovers the best calibration (2.0%) at 0.5 pp less accuracy and 10× the passes. Weight averaging and TTA change accuracy by less than 0.2 pp.
+
+Details and reproduction: [H8 full-data report](docs/H8_FULL_DATA.md) · data in [`benchmarks/h8-full-data-20261017/`](benchmarks/h8-full-data-20261017/results/).
+
 ## Caveats
 
-- **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Larger data, wider models and other tasks were not tested.
+- **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Only H8 was retrained on 100% of the data, on validation; B8 and C8 were not. Wider models, longer training and other tasks were not tested.
 - **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER and the post-training adjustments were designed after the first results; END/INNER and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
 - **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
@@ -253,10 +283,12 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── c8-posttraining-validation/        C8 post-training results and C8 vs H8 comparison
 │   ├── h8-posttraining-validation/        H8 post-training results
 │   ├── posttraining-generalization-validation/  train/validation gaps after post-training
+│   ├── h8-full-data-20261017/             H8 retrained on 100% of the training data, with post-training
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
 │   ├── C8_POSTTRAINING.md                 C8 vs H8 post-training and gap report
+│   ├── H8_FULL_DATA.md                    H8 on 100% of the training data
 │   ├── H8_POSTTRAINING.md                 H8 post-training report
 │   ├── HYBRID_GENERALIZATION.md           generated H8 report
 │   ├── MINIMAL_GENERALIZATION.md          fixed protocol and what was completed
