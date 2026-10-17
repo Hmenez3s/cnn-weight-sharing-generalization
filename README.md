@@ -182,6 +182,31 @@ Means over five paired seeds; accuracy and cross-entropy (CE) at the checkpoint 
 
 Data and analysis: [`benchmarks/split-sharing-20261017/`](benchmarks/split-sharing-20261017/README.md).
 
+### C7B1 and a wider C4: which part of H8 helps?
+
+Two further arms use the same **10% training subsets, five seeds and 10,000 updates**, with B8/C8/H8 reused as controls. **Validation only; the official test set remains closed.**
+
+- **C7B1** applies S seven times and an independent Z once: `[S,S,S,S,S,S,S,Z]`. Its S, Z, stem and classifier start bit-identical to the same-seed H8. Only H8's first update changes: its independent A is replaced with S. This tests the extra first block without changing the other initial tensors.
+- **C4W45** applies one shared block four times, widened from 32 to 45 channels. Its **37.64M MACs are 0.88% below** C8/H8's 37.97M, the closest integer-width match. Native GroupNorm changes from 8 groups to 1 at this width, so this tests the native depth/width trade-off, not depth alone.
+
+<p align="center">
+  <img src="assets/endpoint-width.svg" alt="Left: mean training and validation curves for C7B1 and C4 width45. The wider C4 has lower training accuracy but higher validation accuracy and a smaller gap. Right: five per-seed validation accuracies and mean plus or minus SD for B8, C8, H8, C7B1 and wider C4; wider C4 has the highest mean at 22.42%" width="100%">
+</p>
+
+| Model | Parameters | MACs/image | Validation accuracy | Validation CE | Gap, selected |
+|---|---:|---:|---:|---:|---:|
+| B8 | 152,644 | 37.97M | 18.80% | 3.59 | 16.74 pp |
+| C8 | 22,724 | 37.97M | 21.25% | 3.53 | 16.97 pp |
+| H8 | 59,844 | 37.97M | 21.75% | 3.54 | 19.64 pp |
+| **C7B1** | 41,284 | 37.97M | **21.36%** | 3.46 | 16.37 pp |
+| **C4, width 45** | 42,445 | 37.64M | **22.42%** | **3.37** | **12.91 pp** |
+
+- **A separate final step does not establish the H8 gain.** C7B1 is almost level with C8 (+0.11 pp, nominal paired 95% CI [−0.39, +0.61]). H8 is ahead of C7B1 by 0.39 pp on average, but C7B1 − H8 has CI [−1.92, +1.15], too wide to establish a benefit from H8's extra first block or equivalence. A first-only arm is not included, so endpoint interactions remain open.
+- **The wider four-step model beats C8 in all five seeds:** +1.17 pp [0.66, 1.68] at slightly fewer counted MACs. It also beats C7B1 in all five seeds (+1.06 pp [0.38, 1.75]) and has lower CE and less memorization. Its +0.68 pp mean advantage over H8 is not clearly separated (CI [−0.78, +2.13]).
+- **Eight recurrent updates are not required for the best mean accuracy here.** Spending the budget on width instead improved on C8, but this comparison jointly changes depth, width, parameter count and normalization grouping. These are exploratory, nominal intervals across multiple comparisons, not a new confirmatory result.
+
+The 10 runs finished in **13.3 minutes**, with five concurrent processes on the RTX 5090. [Full report, protocol and evidence](benchmarks/endpoint-width-20261017/README.md).
+
 ## Post-training adjustments: C8 and H8
 
 Can the two best models be improved after training, without retraining them? We applied four standard adjustments to the frozen five-seed C8 and H8 checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
@@ -255,7 +280,7 @@ Details and reproduction: [H8 full-data report](docs/H8_FULL_DATA.md) · data in
 ## Caveats
 
 - **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Only H8 was retrained on 100% of the data, on validation; B8 and C8 were not. Wider models, longer training and other tasks were not tested.
-- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER, C4B4/B4C4 and the post-training adjustments were designed after the first results; END/INNER, C4B4/B4C4 and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
+- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER, C4B4/B4C4, C7B1, wider C4 and the post-training adjustments were designed after the first results; all follow-ups except the original H8 were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
 - **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
 ## Running the code
@@ -306,7 +331,8 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── h8-posttraining-validation/        H8 post-training results
 │   ├── posttraining-generalization-validation/  train/validation gaps after post-training
 │   ├── h8-full-data-20261017/             H8 retrained on 100% of the training data, with post-training
-│   ├── split-sharing-20261017/            validation-only C4B4 vs B4C4 (shared half first or last)
+│   ├── split-sharing-20261017/            C4B4/B4C4 results and the shared ablation operator
+│   ├── endpoint-width-20261017/           C7B1 and wider four-step C4, validation only
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/

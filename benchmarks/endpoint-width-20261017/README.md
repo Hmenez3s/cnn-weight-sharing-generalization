@@ -48,6 +48,66 @@ residual arithmetic, pooling and memory traffic; equal MACs do not imply equal l
 
 The fixed pre-training specification is [`protocol.json`](protocol.json).
 
+## Results
+
+| Model | Validation accuracy, mean ± SD | Validation CE | Clean train, selected | Gap, selected | Gap, end |
+|---|---:|---:|---:|---:|---:|
+| B8 | 18.80 ± 0.64% | 3.59 | 35.53% | 16.74 pp | 22.99 pp |
+| C8 | 21.25 ± 0.41% | 3.53 | 38.22% | 16.97 pp | 17.61 pp |
+| H8 | 21.75 ± 1.25% | 3.54 | 41.39% | 19.64 pp | 21.36 pp |
+| **C7B1** | **21.36 ± 0.46%** | 3.46 | 37.73% | 16.37 pp | 16.96 pp |
+| **C4W45** | **22.42 ± 0.71%** | **3.37** | 35.33% | **12.91 pp** | **13.06 pp** |
+
+Selected = each run's validation-selected checkpoint; end = update 10,000.
+Gap = clean training accuracy minus validation accuracy at the same checkpoint.
+
+### Does a separate final block explain H8?
+
+Not established. C7B1 is almost level with C8: **+0.108 pp**, nominal paired
+95% CI **[−0.389, +0.605]**, ahead in 3/5 seeds. Removing H8's separate first
+block gives **C7B1 − H8 = −0.388 pp [−1.924, +1.148]**: 1 positive seed,
+3 negative and 1 tied. The mean favors H8 but the uncertainty is too large to
+establish a benefit from its extra first block or equivalence between the models.
+C7B1 also has a smaller gap and lower CE than H8. This does not isolate an
+interaction between the endpoints; a first-only control is absent.
+
+### Can width beat more recurrence at similar MACs?
+
+The native wider four-update model beats C8 in **all five seeds**:
+**+1.172 pp [+0.661, +1.683]**, while counting 0.876% fewer forward MACs.
+It also beats C7B1 in all five seeds (**+1.064 pp [+0.383, +1.745]**).
+Its mean is higher than H8 by **+0.676 pp [−0.776, +2.128]**, but that
+comparison is not clearly separated (3/5 positive seeds). It has the best
+mean accuracy and CE and the smallest gap in this comparison.
+
+This makes the wider, shallower native model a better measured use of this
+MAC budget than C8 under this recipe. It does **not** prove that halving depth
+alone is better: width, parameter count, and GroupNorm grouping change together.
+There is no official-test confirmation, hyperparameter retuning, or post-training
+adjustment in this experiment.
+
+## Execution and integrity
+
+- Fourteen focused tests passed on the Windows PC: 3 test workers, 18.73 s wall
+  time. Tests include exact H8/C7B1 initialization matching, routing, batch MAC
+  accounting, checkpoint replay, serial/parallel synthetic reproducibility,
+  control reproduction and malformed-cohort rejection.
+- A 400-update-per-run GPU launcher proof completed all 10 runs in 41.33 s,
+  explicitly marked non-scientific.
+- The real 10 × 10,000-update cohort completed in **798.29 s (13.3 min)** with
+  5 workers × 2 CPU threads; analysis took 4.67 s. Peak sampled GPU use was 84%
+  and total device memory 5,619 MiB (including desktop/background allocation).
+- All 100,000 metric rows are finite and present; selected/final checkpoint copies
+  match the original run hashes; every data/split/subset identity matches its
+  archived paired H8 control. Both staged and original training/meta file hashes
+  remained unchanged. No official test file was staged and no historical result
+  was modified.
+
+Evidence: [analysis](results/analysis.md) · [analysis JSON](results/analysis.json) ·
+[cohort manifest](results/cohort.json) · [execution receipt](results/execution-receipt.json) ·
+[integrity receipt](results/integrity-receipt.json) · [training logs](results/runs/).
+Private checkpoints remain on the training machine and are not redistributed.
+
 ## Reproduction
 
 Use a fresh output directory and a data root containing only CIFAR-100 `train`
