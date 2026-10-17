@@ -1,0 +1,71 @@
+﻿{
+    "cpu_threads":  2,
+    "git_head":  "7f504fb",
+    "launcher_proof":  {
+                           "scientific_results":  false,
+                           "warmup":  3,
+                           "samples":  5,
+                           "rounds":  1,
+                           "wall_seconds":  3.521413,
+                           "status":  "complete",
+                           "models":  [
+                                          "C8",
+                                          "C4W45"
+                                      ]
+                       },
+    "isolation":  {
+                      "prior_status_hash_unchanged":  true,
+                      "resources":  "run-owned temporary directories and CUDA allocations; pre-existing interpreter read-only",
+                      "prior_source_hash_unchanged":  true,
+                      "filesystem_deletion":  false,
+                      "local_machine_numerical_execution":  false,
+                      "owned_python_remaining":  0,
+                      "new_unique_namespace":  true,
+                      "synthetic_inputs_only":  true,
+                      "dataset_modules_staged":  false,
+                      "official_test_access":  false,
+                      "official_test_staged":  false
+                  },
+    "validation":  {
+                       "checks":  [
+                                      "exact seven-model roster",
+                                      "all model-scenario-round identities unique and present",
+                                      "500 finite positive wall and event observations per model/scenario",
+                                      "aggregate mean/median/throughput/C8 ratios match raw arrays",
+                                      "executed source SHA-256 matches staged files",
+                                      "no dataset files staged",
+                                      "public metadata privacy check"
+                                  ],
+                       "status":  "PASS"
+                   },
+    "benchmark_processes":  1,
+    "logical_cpus":  16,
+    "device":  "NVIDIA GeForce RTX 5090",
+    "schema":  "rtx5090-architecture-speed-v1",
+    "source_sha256":  {
+                          "benchmarks/rtx5090-speed-20261017/benchmark_speed.py":  "baf801510c760b620bb9598e3ec70e093e1dfcf505ba6fb47c0dc4f7d66ae458",
+                          "src/recurrent_cnn/models.py":  "7d32cf648d75c06acd054beacfdc2d511d8b8cd42795de86916d17403013b28c",
+                          "src/recurrent_cnn/costs.py":  "f8fb550b2f65b5a6df61990b48ba0527badf5f6c0970df1da8cb1b2742513abb",
+                          "benchmarks/split-sharing-20261017/split_model.py":  "f357ec959c5f83600728452e60bc5dd9e02d542e00c911fbc9f8507b725add03"
+                      },
+    "tests":  {
+                  "workers":  3,
+                  "sha256":  "cb2e8e7a1d80b92837dae8dbd4ae993ca4e9916a5f2ec9075ae3cb8cf40c115a",
+                  "file":  "tests/test_architecture_speed.py",
+                  "wall_seconds":  3.1853815,
+                  "passed":  3
+              },
+    "full":  {
+                 "benchmark_wall_seconds":  40.66875720000826,
+                 "timed_observations":  10500,
+                 "rounds":  5,
+                 "wrapper_exit_code":  null,
+                 "warmup_per_case":  30,
+                 "producer_status":  "complete",
+                 "wrapper_state":  "failed",
+                 "wrapper_wall_seconds":  42.747037899999995,
+                 "samples_per_case":  100,
+                 "wrapper_note":  "The wrapper exit-code property was null and its state flag therefore said failed. The producer completed all cases and wrote complete output. Success was independently established from the complete raw arrays, source hashes and aggregate checks; no benchmark rerun.",
+                 "cases":  105
+             }
+}

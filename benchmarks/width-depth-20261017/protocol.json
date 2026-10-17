@@ -1,0 +1,88 @@
+{
+  "study": "width-depth-20261017",
+  "status": "frozen pre-training validation-only exploratory study",
+  "official_test_access": "forbidden",
+  "question": "Compare native width/depth and sharing configurations under the fixed paired validation recipe; these are not pure isolated effects.",
+  "arms": {
+    "C4W32": {
+      "family": "C",
+      "depth": 4,
+      "width": 32,
+      "alpha": 0.1,
+      "num_classes": 100,
+      "initialization": "Native C initialization through build_model; branch_map=null and init_source_indices=null.",
+      "parameters": 22724,
+      "forward_macs_per_image": 19098752,
+      "groupnorm_groups": 8,
+      "unique_blocks": 1
+    },
+    "B4W45": {
+      "family": "B",
+      "depth": 4,
+      "width": 45,
+      "alpha": 0.1,
+      "num_classes": 100,
+      "initialization": "Native B initialization through build_model; branch_map=null and init_source_indices=null.",
+      "parameters": 152335,
+      "forward_macs_per_image": 37640340,
+      "groupnorm_groups": 1,
+      "unique_blocks": 4
+    },
+    "C4W45": {
+      "family": "C",
+      "depth": 4,
+      "width": 45,
+      "alpha": 0.1,
+      "num_classes": 100,
+      "initialization": "Native C initialization through build_model; reuse the existing archived endpoint-width study cohort; do not retrain this arm.",
+      "parameters": 42445,
+      "forward_macs_per_image": 37640340,
+      "groupnorm_groups": 1,
+      "unique_blocks": 1,
+      "source": "benchmarks/endpoint-width-20261017/results/cohort.json"
+    }
+  },
+  "seeds": [11, 23, 37, 53, 71],
+  "recipe": {
+    "training_fraction": 0.1,
+    "training_images_per_seed": 4500,
+    "validation_images": 5000,
+    "split_seed": 1729,
+    "updates": 10000,
+    "batch_size": 128,
+    "optimizer": "SGD",
+    "learning_rate": 0.03,
+    "momentum": 0.9,
+    "weight_decay": 0.0005,
+    "schedule": "cosine, horizon 10000",
+    "residual_alpha": 0.1,
+    "validation_cadence": 200,
+    "selection_identity": "amended_v2",
+    "amp": false,
+    "pairing": "Preserve the existing data, split, subset, and SHA identity guards; require matching archived identities for reused controls. Train new arms from the existing paired-seed recipe."
+  },
+  "comparisons": {
+    "C4W45-C4W32": "Native shared family C at depth 4, wider width 45 versus 32. This also changes GroupNorm from 8 groups to 1; it is not an isolated width effect.",
+    "B4W45-C4W45": "Native untied family B versus shared family C at depth 4 and width 45. Parameter counts differ; both use GroupNorm with 1 group.",
+    "C4W32-C8": "Native shared family C, depth 4 versus archived C8 at width 32. This is not MAC-matched."
+  },
+  "controls": "Reuse archived B8, C8, and H8 controls and the existing C4W45 cohort; do not retrain old controls or claim new C4W45 training.",
+  "outcomes": [
+    "per-seed selected-validation accuracy and cross-entropy",
+    "clean training accuracy",
+    "train-validation gap at selected and final checkpoints"
+  ],
+  "analysis": {
+    "intervals": "Nominal paired Student-t 95% intervals, df=4; exploratory and not multiplicity-corrected.",
+    "interpretation": "The comparisons are descriptive native-arm contrasts. C4W45-C4W32 retains the GroupNorm confound; no additional GroupNorm arms or retuning are authorized."
+  },
+  "execution": {
+    "host": "RTX 5090 PC only",
+    "maximum_workers": 5,
+    "cpu_threads_per_worker": 2,
+    "gpu_memory_fraction_per_worker": 0.15,
+    "isolation": "Use a fresh unique run-owned namespace; stage training data and metadata by ordinary copy with SHA verification, never links. Do not stage official test data. Write outputs, checkpoints, caches, and logs only in the new namespace.",
+    "guards": "Retain the existing run refusal, source/data/subset/SHA identity guards, explicit data root, download disabled, and official-test refusal. Parent owns PC execution and all external operations."
+  },
+  "results": null
+}

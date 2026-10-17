@@ -1,0 +1,270 @@
+{
+  "analysis_source_commit": "7dc010f",
+  "archive_control": {
+    "control_reused": true,
+    "input_hashes": {
+      "C4W45-s11": {
+        "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+        "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+        "subset_hash": "57611e72e94ed362feb3621a3e79ec0269b1e1e093cadcdf314f46f246966257"
+      },
+      "C4W45-s23": {
+        "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+        "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+        "subset_hash": "e51a3dc9d4f1005c1f57477e8d68c9c15a73c29d77afbb652f9f67e10b8c169c"
+      },
+      "C4W45-s37": {
+        "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+        "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+        "subset_hash": "505fe12243d4a4f14cbb046964f6f15bd47f02d7ec5b8c0b609d4765b7f15281"
+      },
+      "C4W45-s53": {
+        "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+        "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+        "subset_hash": "6a16558340586a15753c485c936fa1dee6662003ee784933285e32fe39ae225b"
+      },
+      "C4W45-s71": {
+        "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+        "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+        "subset_hash": "71fc99244cb0a5981d5cb513d2e7c2088dff20466a72f97fb9b809473d78afa9"
+      }
+    },
+    "run_ids": [
+      "C4W45-s11",
+      "C4W45-s23",
+      "C4W45-s37",
+      "C4W45-s53",
+      "C4W45-s71"
+    ],
+    "source": "benchmarks/endpoint-width-20261017/results/cohort.json",
+    "source_cohort_sha256": "8ae9a62c5606ec12caf1e497b72166a35c69cbc20e7eb831730ea378bcdf1c46"
+  },
+  "artifact_sha256": {
+    "analysis.json": "062731d8b9a088ed3cbabf6b1815f449deffc48e727f3313dd72a49887a64b13",
+    "analysis.md": "6cd64b243d2f9ef86dee4e387491acc84f2f401bef9783cf53711f336c7ab685",
+    "cohort.json": "69b9200ae38753ba24faf4904ec4f0a0104cb94e57aa4eea256bae784e54230c"
+  },
+  "cpu_threads_per_training_worker": 2,
+  "execution_host": "Windows RTX 5090 PC",
+  "export_wall_seconds": 2.063497900002403,
+  "export_workers": 9,
+  "exports": [
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 0.30882130001555197,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "6878dd48f71bd940e0b56204ecde13e4e246bf847919013b8cd821715e098f6b",
+      "raw_log_sha256": "e8cef1678d02d947c1836e782c34379003d72ac7a16d83dc85414548a34a8adf",
+      "run_id": "B4W45-s11",
+      "run_metadata_sha256": "f13e1fd6d675f879ad0c961250fb8f885f77c8145d0a3f98728f69c66af3073c",
+      "selected_update": 10000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7025639000057708,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "9f1e8ab8796705b9f3674ee6bf4092ece1192435d5a849fde5861a6bbfd38650",
+      "raw_log_sha256": "8762577eb814443fc08efb12c9ea689c19500d728161811af7937a7a0436c457",
+      "run_id": "B4W45-s23",
+      "run_metadata_sha256": "b753cd985c1fb9faf019ce02f3d26e446f07f154a4308ce8063a1e529d4057d4",
+      "selected_update": 8400
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7117852999945171,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "645a4a0b096cdd2d6b17cc7b15576333e3749b05b1c80a8d4ae24bb8bc19f11a",
+      "raw_log_sha256": "34cecd8258b81dbafe6fec6ac75d864a5127723aac80098ab9b57d9eceacbfdc",
+      "run_id": "B4W45-s37",
+      "run_metadata_sha256": "77f978cd62842c7b8836907c9f82882406564c1ef07f384f6c565dd60db2be47",
+      "selected_update": 9000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7156114999961574,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "d1878c2caf39eb04a477a48473241def24549233abebb982dd6e0fe72741e373",
+      "raw_log_sha256": "735696daef295bda885df23515267e7b4f03c8443416e076c0ffb92caa8e2928",
+      "run_id": "B4W45-s53",
+      "run_metadata_sha256": "34283d4b421457cb4385b0304f4cad1e5ccb093e5d846a8f8f67d9bf3c553d9c",
+      "selected_update": 9000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7147812000184786,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "2bf4d1effc0053694ecc81f7ac610a021a4127d3dcc328b3f373b2de71baf4c3",
+      "raw_log_sha256": "925e70bf58548e6a250ed3cbc4ffae27e1c30b0593e8432a8dc8b385f845e437",
+      "run_id": "B4W45-s71",
+      "run_metadata_sha256": "1bdffb0414382147e7367bfcf7609850b9dc5159b099a7071a1297053729cf09",
+      "selected_update": 9600
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7303030000184663,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "64d5586d10d3169543ba010ef969a5c499a48a971b6de1a27345fb5911de5b13",
+      "raw_log_sha256": "74e83e7d6fa7d87eb22084bb2b6e2c04f102469a964fdfd661e88f67e679e2c9",
+      "run_id": "C4W32-s11",
+      "run_metadata_sha256": "803594f4932363aba12dd55abe5e63eb4b8a92c5e315510bac7792ad824116da",
+      "selected_update": 8200
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7188303000002634,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "bda73da9e72772d8241b5bc221c269005ab11e5e2ccba19f06f588db88c50333",
+      "raw_log_sha256": "af527af178dde3e3a4e0f7c0f0a3703235a6fedec4a0f30032b51586a2b0c730",
+      "run_id": "C4W32-s23",
+      "run_metadata_sha256": "cc4d805235fc0ea4c60f20e465211f4b4b47d5c81a3f3feda54dc13d3a9c0813",
+      "selected_update": 7800
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7233746999991126,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "130acbf17d507f81601f44985e67800bdb9ed85606275c23f28c3def4316bb70",
+      "raw_log_sha256": "19ca601ddb62821c1f3e35f28b97d13de149295ac23af0c8942c739fc2ebfe5e",
+      "run_id": "C4W32-s37",
+      "run_metadata_sha256": "8f0d8edff9ab5e06527a22440a5116db1efa85ecf425c7f8fadcf0db7bc24bd3",
+      "selected_update": 7400
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7158558999944944,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "cc93da33a71ec22ff8ba023482cc012db9e3173f769349c839349f0ca9b4c8ce",
+      "raw_log_sha256": "b572372bb9dc6950f679342a160e481408406300094a0b4292526697cb00a002",
+      "run_id": "C4W32-s53",
+      "run_metadata_sha256": "524577ddbaa987aba5e572b76efd3ced67f4d78f6fc0fb3752b48afbfe881262",
+      "selected_update": 8000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7100328000087757,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "48ec7e188ae76e7a9b531a632c9eaa92a0994d335cfb492919179bb59bf8ecaf",
+      "raw_log_sha256": "44046a37e348b6cfd0c9cfa068f8d922d7c5d31ec57936171f8b374326511c82",
+      "run_id": "C4W32-s71",
+      "run_metadata_sha256": "e620b73ef6998bb833c1a45c059cf45256fd6f6c3b959bd424567fb941010a1a",
+      "selected_update": 9600
+    }
+  ],
+  "figure": {
+    "asset": "assets/width-depth.svg",
+    "backend": "Agg",
+    "render_host": "Windows RTX 5090 PC",
+    "sha256": "dffe7297f06f5f75a74b4cf9778b3de868d1bc57ee108b3dba423732f9f6684e",
+    "source": "scripts/make_width_depth_figure.py",
+    "source_inputs": "new-run logs, archived C4W45 logs and verified six-model analysis"
+  },
+  "gpu_memory_fraction_per_worker": 0.15,
+  "logical_cpu_count": 16,
+  "maximum_workers": 5,
+  "monitor_sample_seconds": 5,
+  "official_test_opened": false,
+  "postprocessing_complete": true,
+  "postprocessing_phases": [
+    {
+      "exit_code": 0,
+      "phase": "analysis",
+      "wall_seconds": 5.3168826
+    },
+    {
+      "exit_code": 0,
+      "phase": "export",
+      "wall_seconds": 2.3858789
+    },
+    {
+      "exit_code": 0,
+      "phase": "figure",
+      "wall_seconds": 2.1969414
+    }
+  ],
+  "resource_audit": {
+    "download_enabled": false,
+    "input_files": [
+      {
+        "bytes": 155249918,
+        "name": "train",
+        "sha256": "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      },
+      {
+        "bytes": 1473,
+        "name": "meta",
+        "sha256": "a5d4786345c961390f865e93b434dbd5c6904ce880667e0cb888c97d449f28b9"
+      }
+    ],
+    "links_used": false,
+    "original_input_hashes_unchanged": true,
+    "owned_copy_hashes_unchanged": true,
+    "protected": "source data, prior studies and installed interpreter were not write targets",
+    "scientific_data_root_entries": [
+      "meta",
+      "train"
+    ],
+    "teardown": "none; evidence retained",
+    "write_boundary": "new run-owned outputs, checkpoints, caches and test temporary roots"
+  },
+  "run_count": 10,
+  "schema": "width-depth-execution-receipt-v1",
+  "short_execution_probe": {
+    "run_count": 10,
+    "scientific": false,
+    "status": "complete",
+    "threads_per_worker": 2,
+    "updates_per_run": 400,
+    "wall_seconds": 40.0169377,
+    "workers": 5
+  },
+  "source_sha256": {
+    "benchmarks/split-sharing-20261017/analyze_split.py": "1449af3ec99f5b3f754e2c3bbd8e5e84894e1513cde50394ff306378f1028679",
+    "benchmarks/split-sharing-20261017/run_split.py": "7616e36cca76398e28c94cb20532cdc8a437ecdb8af1a60e80206fd1f74802fc",
+    "benchmarks/split-sharing-20261017/split_model.py": "289d0452a6acea5a831888b2be6a25c51873005ceaf186839463f86d1a95ebe8",
+    "benchmarks/width-depth-20261017/protocol.json": "dfddcbb4497b183f1db8376f896a91c6f1d4f48fac3e8e8d31d5862da15a4318",
+    "scripts/make_generalization_figures.py": "be2714866c695784997265e74b00d54a9a2f2e230d650f544a345e60682904a5",
+    "scripts/make_width_depth_figure.py": "81d94a981ad57ef97a819ffc7dd78a3cd27abdba5772002deb422c0797fd425f",
+    "src/recurrent_cnn/data.py": "7cf4a43db7d367bf41da6e4a63976818c022d7eae0efee796ac0bf8f097888d5",
+    "src/recurrent_cnn/engine.py": "6dccb5b9898bf584812ceb28a886566d14cbecb0ef545b78a9f57564c38dc164",
+    "src/recurrent_cnn/models.py": "7d32cf648d75c06acd054beacfdc2d511d8b8cd42795de86916d17403013b28c"
+  },
+  "status": "complete",
+  "timing_scope": "training phase includes evaluation, checkpointing and concurrent contention; not an isolated speed benchmark",
+  "training_phase": {
+    "exit_code": 0,
+    "peak_gpu_memory_mib": 5568,
+    "peak_gpu_percent": 81,
+    "phase": "train",
+    "wall_seconds": 754.8142444
+  },
+  "training_source_commit": "b6fc4ac5a14160ef15754facd30253c665f8dfcb",
+  "updates_per_run": 10000,
+  "validation": {
+    "actual_archive_analysis": "passed",
+    "archive_analysis_tests": {
+      "passed": 14,
+      "wall_seconds": 14.7120403,
+      "workers": 2
+    },
+    "endpoint_dynamics_tests": {
+      "passed": 3,
+      "wall_seconds": 0.1550243,
+      "workers": 1
+    },
+    "mac_numeric_execution": false,
+    "producer_regression_tests": {
+      "passed": 18,
+      "workers": 3
+    }
+  }
+}

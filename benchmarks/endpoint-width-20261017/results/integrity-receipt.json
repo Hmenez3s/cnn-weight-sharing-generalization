@@ -1,0 +1,112 @@
+{
+  "schema": "endpoint-width-integrity-v1",
+  "scientific": true,
+  "official_test_staged": false,
+  "protected_inputs": [
+    {
+      "name": "train",
+      "sha256": "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b",
+      "staged_and_original_unchanged": true
+    },
+    {
+      "name": "meta",
+      "sha256": "a5d4786345c961390f865e93b434dbd5c6904ce880667e0cb888c97d449f28b9",
+      "staged_and_original_unchanged": true
+    }
+  ],
+  "run_count": 10,
+  "runs": [
+    {
+      "run_id": "C4W45-s11",
+      "updates": 10000,
+      "selected_update": 9400,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "3ce5da44afb2e313986cec2bb727c319e95c9be6cc4b998857dacd047a3aeac0",
+      "last_sha256": "14a451084c936dc8906564d31a16be0a247b3578ec332c87f3edd6f66b673299",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C4W45-s23",
+      "updates": 10000,
+      "selected_update": 9800,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "2dbee3fdcebc780d6a48de614709a24090756c64a6faffa0dc119c3a143efeca",
+      "last_sha256": "573ac052c264a42f89b46c4ababb455acb8815ec823f601493606ef541187630",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C4W45-s37",
+      "updates": 10000,
+      "selected_update": 9800,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "ef6c08b2403883cf98dfb556a42e928c1374d964b98d19ba446e5cb7f8d4b13f",
+      "last_sha256": "71135d73df6399a2d55977132a1f43039ea03c4467692b8075fb741920046e59",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C4W45-s53",
+      "updates": 10000,
+      "selected_update": 10000,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "95dcd3a16f6a4d3b9813d388816de1d2496941ab2d7dd09dd4bf983e99fb3e0b",
+      "last_sha256": "e8c97afa08c3f7eb9ff862137db734b32c7b2dc118c9d9f09b886eba645a19b3",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C4W45-s71",
+      "updates": 10000,
+      "selected_update": 9600,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "50971c1d1ac561e63e41d0006930f1fdca301382dc3564d0cb5873438359b2ba",
+      "last_sha256": "6b10b5b72248e18517408336247c1f80e336225d11cb8a0fdacd6860e0ee2f59",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C7B1-s11",
+      "updates": 10000,
+      "selected_update": 9000,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "d0fbe30c1b786a062c7720cfe26a5c1f335ef851cb7d554dfacb30665dd6d41a",
+      "last_sha256": "6c547ab353e7a09cbcaa43417a20b534d8f8ad1806fa8942c21d73e9fd8e1b6e",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C7B1-s23",
+      "updates": 10000,
+      "selected_update": 7600,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "ae99af5be34695be6bde7067ba4c868c4b61f88b5805b7f6e115d049f0c90d7c",
+      "last_sha256": "7caa9fe80eaa3193e557a8a39db70153d1ae3e6bb59c0bf52d39bac42d26c5f1",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C7B1-s37",
+      "updates": 10000,
+      "selected_update": 10000,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "c0c22a61eaba84b6447d7ea98b3dc4ee0b4d6e94d765cbac5561ad031b9a8259",
+      "last_sha256": "3b202e47be345e3d518fb5e056e7a7ca7a2e281596713eb7209d002028bcb60e",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C7B1-s53",
+      "updates": 10000,
+      "selected_update": 10000,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "c2ea65a3d8a3e6f49d89a43d3119baf84eed161c956769e7bbd4e8a938c0871c",
+      "last_sha256": "3085bd5015b24d7840778020cbe3794d80008788a46153719814ab600a66318f",
+      "metrics_finite_and_complete": true
+    },
+    {
+      "run_id": "C7B1-s71",
+      "updates": 10000,
+      "selected_update": 9400,
+      "identity_hashes_match_historical": true,
+      "selected_sha256": "bc9b47755be08436011ff80bd60beee370215fea351c9bb1c2cdc71d4b073b7c",
+      "last_sha256": "384e42225199133f7ce4b065f90bfcb00a4284320e1ea0cc12489a6be20f9e5b",
+      "metrics_finite_and_complete": true
+    }
+  ],
+  "cleanup": "none; historical and current run evidence retained",
+  "validation_scope": "selected and final validation metrics; no official-test access"
+}

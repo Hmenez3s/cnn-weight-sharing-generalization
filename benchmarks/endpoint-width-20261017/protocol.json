@@ -1,0 +1,65 @@
+{
+  "study": "endpoint-width-20261017",
+  "status": "exploratory validation-only follow-up",
+  "official_test_access": "forbidden",
+  "question_1": "Does H8 benefit from an independent first block when its shared and final blocks retain the same initialization?",
+  "question_2": "How does a wider four-update shared trunk compare at approximately the same counted forward MACs?",
+  "seeds": [11, 23, 37, 53, 71],
+  "arms": {
+    "C7B1": {
+      "depth": 8,
+      "width": 32,
+      "branch_map": [0, 0, 0, 0, 0, 0, 0, 1],
+      "initialization": "Reuse same-seed native H8 stem/head/shared S/final Z; replace its independent first A with S. In native B8 draw order, retain branch indices 1 and 2.",
+      "parameters": 41284,
+      "forward_macs_per_image": 37973120
+    },
+    "C4W45": {
+      "family": "C",
+      "depth": 4,
+      "width": 45,
+      "initialization": "Native C initialization at width 45; not tensor-matched to narrower models.",
+      "parameters": 42445,
+      "forward_macs_per_image": 37640340,
+      "width_selection": "Minimize absolute MAC error to C8 width32 depth8 among integer widths 1 through 128 using recurrent_cnn.costs.mac_breakdown, before training.",
+      "compute_target": 37973120,
+      "relative_mismatch_percent": -0.8763567491952173,
+      "groupnorm_groups": 1,
+      "caveat": "Native GroupNorm uses gcd(8,width): 1 group at width45 versus 8 at width32. This is a native depth/width trade-off, not an isolated depth intervention or an exact all-operation compute match."
+    }
+  },
+  "recipe": {
+    "training_fraction": 0.1,
+    "training_images_per_seed": 4500,
+    "validation_images": 5000,
+    "split_seed": 1729,
+    "updates": 10000,
+    "batch_size": 128,
+    "optimizer": "SGD",
+    "learning_rate": 0.03,
+    "momentum": 0.9,
+    "weight_decay": 0.0005,
+    "schedule": "cosine, horizon 10000",
+    "residual_alpha": 0.1,
+    "validation_cadence": 200,
+    "selection_identity": "amended_v2",
+    "amp": false,
+    "pairing": "Exact data/split/per-seed subset hashes must match the archived H8 run identities."
+  },
+  "controls": "Archived selected-validation B8, C8 and H8 runs; no retraining or official-test inference.",
+  "analysis": {
+    "primary_contrast": "C7B1-H8 selected-validation accuracy",
+    "additional_contrasts": ["C7B1-C8", "C7B1-B8", "C4W45-C8", "C4W45-H8", "C4W45-B8", "C7B1-C4W45"],
+    "outcomes": ["per-seed accuracy", "validation cross-entropy", "clean training accuracy", "train-validation gap at selected and final checkpoints"],
+    "intervals": "Nominal paired Student-t 95% intervals, df=4; exploratory, no multiplicity correction.",
+    "interpretation": "C7B1 tests removing H8's separate first block with its other initial tensors held fixed. It alone cannot prove that the final block is the source of all H8 gains; a first-only control is not part of this request."
+  },
+  "execution": {
+    "host": "RTX 5090 PC only",
+    "maximum_workers": 5,
+    "cpu_threads_per_worker": 2,
+    "gpu_memory_fraction_per_worker": 0.15,
+    "isolation": "One process and run directory per model/seed; all outputs/cache/temp paths in a fresh run-owned namespace; no test file staged; no input deletion or overwrite.",
+    "guards": "Short launcher proof before the full run; stop own process tree on timeout, no progress or insufficient free RAM."
+  }
+}

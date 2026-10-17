@@ -1,4 +1,4 @@
-"""Train paired C4B4/B4C4 validation-only cohorts without opening CIFAR-100 test data."""
+"""Train validation-only split-sharing or native width/depth cohorts without test data."""
 from __future__ import annotations
 
 import argparse
@@ -18,6 +18,7 @@ if str(SRC) not in sys.path:
 HERE = Path(__file__).resolve().parent
 SEEDS = (11, 23, 37, 53, 71)
 ARMS = ("C4B4", "B4C4")
+ALL_ARMS = ("C4B4", "B4C4", "C7B1", "C4W45", "C4W32", "B4W45")
 SPLIT_SEED = 1729
 PARAMETERS = 96_964
 MACS = 37_973_120
@@ -51,6 +52,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--memory-fraction", type=float, default=0.25)
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
+    parser.add_argument("--arms", nargs="+", choices=ALL_ARMS, default=list(ARMS))
     parser.add_argument("--expected-data-hash")
     parser.add_argument("--probe", action="store_true")
     parser.add_argument("--synthetic-per-class", type=int)
@@ -60,7 +62,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _prepared(args, seed: int):
+def _prepared(args, seed: int, arm: str = "C4B4"):
     import numpy as np
     from recurrent_cnn import data, engine
     from recurrent_cnn.config import TrainConfig
@@ -92,10 +94,11 @@ def _prepared(args, seed: int):
             raise ValueError("expected 4,500 training examples and 5,000 validation examples")
     updates = args.updates if args.updates is not None else (20 if args.probe else 10000)
     cadence = args.cadence if args.cadence is not None else (10 if args.probe else 200)
+    from split_model import ARM_METADATA
+    model = ARM_METADATA[arm]
     config = TrainConfig.from_mapping(dict(
-        # B is intentional: native B init draws the same family-independent init seed
-        # as B8 and C8, while preserving the first five independent B8 branch draws.
-        family="B", depth=8, width=32, alpha=0.1, fraction=0.1, paired_seed=seed,
+        # Mapped B arms and native arms use their declared family for initialization seeds.
+        family=model["family"], depth=model["depth"], width=model["width"], alpha=0.1, fraction=0.1, paired_seed=seed,
         data_hash=data_hash, split_hash=split_hash, subset_hash=subset_hash, role="research",
         synthetic=synthetic, total_updates=updates, batch_size=128, learning_rate=0.03,
         momentum=0.9, weight_decay=0.0005, cosine_horizon=updates,
@@ -111,7 +114,7 @@ def _train_one(args, run_id: str) -> dict:
 
     arm, seed_text = run_id.rsplit("-s", 1)
     seed = int(seed_text)
-    arrays, subset, validation, config, data_hash, split_hash, subset_hash = _prepared(args, seed)
+    arrays, subset, validation, config, data_hash, split_hash, subset_hash = _prepared(args, seed, arm)
     torch.set_num_threads(args.threads)
     if config.device == "cuda":
         torch.cuda.set_per_process_memory_fraction(args.memory_fraction)
@@ -128,8 +131,12 @@ def _train_one(args, run_id: str) -> dict:
     record_path = run_dir / "run.json"
     record = json.loads(record_path.read_text(encoding="utf-8"))
     record["arm"] = arm
-    record["branch_map"] = list(__import__("split_model").BRANCH_MAPS[arm])
-    record["parameter_count"] = PARAMETERS
+    from split_model import ARM_METADATA
+    metadata = ARM_METADATA[arm]
+    record["arm_spec"] = dict(metadata)
+    record["branch_map"] = list(metadata["branch_map"]) if metadata["branch_map"] is not None else None
+    record["parameter_count"] = metadata["parameter_count"]
+    record["macs"] = metadata["macs"]
     record_path.write_text(json.dumps(record, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     rows = _records(run_dir / "metrics.jsonl")
     if len(rows) != config.total_updates or any(row.get("finite") is not True for row in rows):
@@ -160,7 +167,8 @@ def _train_one(args, run_id: str) -> dict:
                   "final_validation_accuracy_percent": final["validation_accuracy"] * 100,
                   "final_clean_train_accuracy_percent": final["clean_train_accuracy"] * 100,
                   "config_hash": config.config_hash, "data_hash": data_hash, "split_hash": split_hash,
-                  "subset_hash": subset_hash, "parameter_count": PARAMETERS, "macs": MACS,
+                  "subset_hash": subset_hash, "parameter_count": metadata["parameter_count"], "macs": metadata["macs"],
+                  "arm_spec": dict(metadata),
                   "train_examples": len(subset), "validation_examples": len(validation),
                   "wall_seconds": wall}
     result_file = args.output / "worker-results" / f"{run_id}.json"
@@ -175,20 +183,26 @@ def _write_cohort(args, run_results: dict, seeds: tuple[int, ...], data_hash: st
     synthetic = args.synthetic_per_class is not None
     updates = args.updates if args.updates is not None else (20 if args.probe else 10000)
     cadence = args.cadence if args.cadence is not None else (10 if args.probe else 200)
+    from split_model import ARM_METADATA
+    arm_metadata = {arm: ARM_METADATA[arm] for arm in args.arms}
+    architecture = {(item["family"], item["depth"], item["width"]) for item in arm_metadata.values()}
     cohort = {"schema": "split-sharing-cohort-v1", "study": "validation-only exploratory",
               "probe": bool(args.probe), "scientific": not synthetic and not args.probe,
-              "arms": {arm: {"branch_map": list(__import__("split_model").BRANCH_MAPS[arm]),
-                             "unique_blocks": 5, "parameter_count": PARAMETERS} for arm in ARMS},
-              "family": "B", "fraction": 0.1,
+              "arms": {arm: dict(ARM_METADATA[arm]) for arm in args.arms},
+              "arm_order": list(args.arms), "fraction": 0.1,
               "train_examples_per_run": first["train_examples"],
               "validation_examples": first["validation_examples"], "split_seed": SPLIT_SEED,
               "seeds": list(seeds), "data_hash": data_hash, "official_test_opened": False,
               "workers": args.workers,
-              "recipe": {"depth": 8, "width": 32, "alpha": 0.1, "total_updates": updates,
+              "recipe": {"alpha": 0.1, "total_updates": updates,
                          "batch_size": 128, "learning_rate": 0.03, "momentum": 0.9,
                          "weight_decay": 0.0005, "cosine_horizon": updates,
                          "validation_cadence": cadence, "amp": False, "split_seed": SPLIT_SEED,
                          "selection_identity": "amended_v2"}, "runs": run_results}
+    if len(architecture) == 1:
+        family, depth, width = next(iter(architecture))
+        cohort["family"] = family
+        cohort["recipe"].update({"depth": depth, "width": width})
     with (args.output / "cohort.json").open("x", encoding="utf-8", newline="\n") as stream:
         json.dump(cohort, stream, sort_keys=True, indent=2, allow_nan=False)
         stream.write("\n")
@@ -200,7 +214,7 @@ def main(argv=None) -> int:
     if args.output.exists() and not args._worker_run_id:
         raise FileExistsError(f"output directory already exists: {args.output}")
     if args._worker_run_id:
-        if args._worker_run_id not in {f"{a}-s{s}" for a in ARMS for s in SEEDS}:
+        if args._worker_run_id not in {f"{a}-s{s}" for a in ALL_ARMS for s in SEEDS}:
             raise ValueError("invalid worker run id")
         _train_one(args, args._worker_run_id)
         return 0
@@ -214,6 +228,8 @@ def main(argv=None) -> int:
         raise ValueError("threads/workers must be positive and memory fraction in (0, 1]")
     if args.workers * args.memory_fraction > 0.9:
         raise ValueError("workers multiplied by memory fraction must not exceed 0.9")
+    if len(set(args.arms)) != len(args.arms):
+        raise ValueError("--arms must be a unique subset of supported arms")
     if len(set(args.seeds)) != len(args.seeds) or any(s not in SEEDS for s in args.seeds):
         raise ValueError(f"--seeds must be a unique subset of {SEEDS}")
     seeds = tuple(s for s in SEEDS if s in args.seeds)
@@ -229,7 +245,7 @@ def main(argv=None) -> int:
     args.output.mkdir(parents=True, exist_ok=False)
     for directory in ("runs", "selected", "last", "logs", "worker-results"):
         (args.output / directory).mkdir(exist_ok=False)
-    run_ids = [f"{arm}-s{seed}" for seed in seeds for arm in ARMS]
+    run_ids = [f"{arm}-s{seed}" for seed in seeds for arm in args.arms]
     run_results = {}
     failures = []
     pending = iter(run_ids)
@@ -241,10 +257,11 @@ def main(argv=None) -> int:
             if run_id is None:
                 break
             log = (args.output / "logs" / f"{run_id}.log").open("wb")
+            arm = run_id.rsplit("-s", 1)[0]
             cmd = [sys.executable, str(HERE / "run_split.py"), "--data-root", str(args.data_root),
                    "--output", str(args.output), "--device", args.device, "--threads", str(args.threads),
                    "--memory-fraction", str(args.memory_fraction), "--workers", str(args.workers),
-                   "--seeds", str(int(run_id.rsplit("-s", 1)[1]))]
+                   "--seeds", str(int(run_id.rsplit("-s", 1)[1])), "--arms", arm]
             if args.synthetic_per_class is not None:
                 cmd += ["--synthetic-per-class", str(args.synthetic_per_class)]
             if args.expected_data_hash:

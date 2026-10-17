@@ -1,0 +1,61 @@
+{
+  "schema": "endpoint-width-execution-v1",
+  "device": "NVIDIA GeForce RTX 5090",
+  "logical_cpus": 16,
+  "training_workers": 5,
+  "cpu_threads_per_worker": 2,
+  "source": {
+    "git_head": "bee67606cfc3ad87f25e42acdde21f216ccbee8a",
+    "test_workers": 3,
+    "test_wall_seconds": 18.7274498,
+    "tests_passed": 14,
+    "tested_files": [
+      {
+        "sha256": "f357ec959c5f83600728452e60bc5dd9e02d542e00c911fbc9f8507b725add03",
+        "path": "benchmarks/split-sharing-20261017/split_model.py"
+      },
+      {
+        "sha256": "78fa77a91703d2ea99d668f7d62d86c81bf01c368ac5732e3b7bff508bef3318",
+        "path": "benchmarks/split-sharing-20261017/run_split.py"
+      },
+      {
+        "sha256": "ade3b0edcda70077e84902b05200ac9194d2b2b1696aa82a9de61707882e1244",
+        "path": "benchmarks/split-sharing-20261017/analyze_split.py"
+      },
+      {
+        "sha256": "99a50e7e8e6ceed1372a138591490e66b16719892eaba9618888f0e49b262e73",
+        "path": "benchmarks/endpoint-width-20261017/protocol.json"
+      }
+    ],
+    "training_workers": 5,
+    "threads_per_worker": 2,
+    "official_test_staged": false
+  },
+  "launcher_probe": {
+    "updates_per_run": 400,
+    "workers": 5,
+    "peak_gpu_percent": 82,
+    "threads_per_worker": 2,
+    "scientific": false,
+    "wall_seconds": 41.328031599999996,
+    "probe": true
+  },
+  "phases": [
+    {
+      "phase": "train",
+      "peak_gpu_percent": 84,
+      "peak_gpu_memory_mib": 5619,
+      "wall_seconds": 798.293087,
+      "exit_code": 0
+    },
+    {
+      "phase": "analyze",
+      "peak_gpu_percent": 0,
+      "peak_gpu_memory_mib": 0,
+      "wall_seconds": 4.6748543,
+      "exit_code": 0
+    }
+  ],
+  "local_machine_numerical_execution": false,
+  "official_test_access": false
+}

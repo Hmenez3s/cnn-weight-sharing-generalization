@@ -8,9 +8,11 @@
 ![Dataset: CIFAR-100](https://img.shields.io/badge/dataset-CIFAR--100-334155)
 ![Paired seeds: 5](https://img.shields.io/badge/paired%20seeds-5-0f766e)
 
-A controlled study of weight sharing in residual convolutional networks for image classification. At equal compute, reusing a single convolutional block across all eight residual updates (**C8**) generalizes better than eight independent blocks (**B8**) on CIFAR-100 with limited training data: **+2.07 pp test top-1 across five paired seeds, with 6.7× fewer parameters**. A hybrid that gives only the first and last updates their own weights (**H8**) achieves the highest accuracy, 21.28%.
+A controlled study of weight sharing in residual convolutional networks for image classification. At equal compute, reusing a single convolutional block across all eight residual updates (**C8**) generalizes better than eight independent blocks (**B8**) on CIFAR-100 with limited training data: **+2.07 pp test top-1 across five paired seeds, with 6.7× fewer parameters**. A hybrid that gives only the first and last updates their own weights (**H8**) achieves the highest mean among the original test-evaluated models, 21.28%.
 
 B8, C8 and H8 share the same stem, classifier, eight-update residual trunk at width 32, training recipe and seeds; they differ only in how the trunk's weights are shared. A fourth model, E8, adds recurrence mechanisms on top of C8 and is reported as a reference.
+
+**Architecture follow-ups (validation only):** freeing early weights can increase overfitting without a clear accuracy gain. A four-step, width-45 shared model (**C4W45**) reaches **22.42% validation accuracy** and is faster in the resident-input RTX 5090 benchmark. These exploratory results are [interpreted together below](#what-the-results-say), not mixed into the original test ranking.
 
 **Follow-up with all the training data:** trained on 45,000 instead of 4,500 images, H8 rises from 21.7% to **29.4%** validation accuracy and nearly stops memorizing (train/validation gap 19.6 → 0.4 pp). See [H8 with 100% of the training data](#h8-with-100-of-the-training-data).
 
@@ -31,7 +33,7 @@ Official CIFAR-100 test set, top-1 accuracy, five paired seeds, eight iterations
 - **Secondary contrast, E8 − B8: −2.71 pp** (95% CI [−3.63, −1.80]); 0 of 5 seeds are positive. E8 is a negative addition, not part of the main pair.
 - **Follow-up H8 is the most accurate model.** H8 − B8 is +2.90 pp (95% CI [2.04, 3.76], 5 of 5 seeds). H8 − C8 is +0.82 pp (95% CI [−0.27, 1.91], 4 of 5 seeds): ahead, but not yet clearly separated from C8.
 - **Running 32 iterations at test time hurts.** With no retraining, accuracy falls by 13.24 pp for C (C32 − C8, CI [−15.20, −11.29]) and by 7.60 pp for E (E32 − E8, CI [−8.70, −6.50]). These models were trained at eight iterations and do not extrapolate to more.
-- **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. No latency or wall-clock saving is claimed.
+- **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. A separate [RTX 5090 speed benchmark](benchmarks/rtx5090-speed-20261017/README.md) finds similar speeds for these eight-update models; fewer stored weights do not establish a latency saving.
 
 The table is a display copy computed from [`benchmarks/minimal-generalization-20261015/analysis/table.csv`](benchmarks/minimal-generalization-20261015/analysis/table.csv) and [`contrasts.csv`](benchmarks/minimal-generalization-20261015/analysis/contrasts.csv); the H8 row and contrasts come from [`benchmarks/hybrid-generalization-20261015/analysis/`](benchmarks/hybrid-generalization-20261015/analysis/). The generated result tables, [`docs/RESULTS.md`](docs/RESULTS.md) and [`assets/results-table.md`](assets/results-table.md), are produced by `scripts/make_figures.py` and take precedence over this page.
 
@@ -46,46 +48,66 @@ Further figures, all generated from the same evidence:
 
 ## What the results say
 
-**1. One shared block beats eight separate blocks.** C8 was ahead of B8 on every seed (+2.07 pp) while storing 6.7× fewer parameters and running the same compute. It was not simply that B8 memorized more: at its selected checkpoint C8 also fit the *training* set better (38.2% vs 35.5% clean train accuracy) and the validation set better (21.3% vs 18.8%). Our reading is that the shared block learns from all eight positions at once. Every training step sums eight gradients into the same weights. Those gradients point mostly the same way: coherence ρ ≈ 0.80 at the selected checkpoint, with 0 of 28 position pairs in conflict. Each step is therefore a stronger, cleaner signal. B8 splits the same signal across eight blocks, which is a poor trade when there are only 4,500 training images. Late in training, B8's train accuracy kept rising (41.4%) while its validation accuracy slipped.
+The original B8/C8/E8 comparison and H8 follow-up have official-test results. Subsequent architecture ablations use validation only: five paired seeds, exploratory nominal 95% intervals, without multiplicity correction. A higher mean is not an established win when its paired interval includes zero.
 
-**2. Giving the first and last steps their own weights helps further.** H8 (`[A,S,S,S,S,S,S,Z]`) was the best model on the test set (21.28%). A controlled follow-up shows *where* untying pays. With parameters, compute and initialization held fixed, free blocks at the ends (END) beat free blocks in the interior (INNER) on all five seeds (+0.58 pp validation, 95% CI [0.22, 0.93]). The first and last steps have different jobs from the middle: one adapts the stem's features, the other prepares features for the classifier. The middle steps do repeated refinement, which suits one shared block. With the ends freed, the six shared middle steps also kept more aligned gradients (ρ ≈ 0.88 for END vs 0.77 for INNER).
+**1. Sharing can improve learning, not just restrict memorization.** C8 beat B8 on every test seed (+2.07 pp), with 6.7× fewer parameters and equal counted compute. At the selected checkpoint it also fit the *training* set better (38.2% vs 35.5%) and validation better (21.3% vs 18.8%). One possible explanation is how the learning signal is combined: all eight positions update the same weights, and their gradients are mostly aligned (coherence ρ ≈ 0.80, no conflicting pairs among 28). B8 distributes that signal across eight separate blocks. This is a mechanism supported by diagnostics, not an isolated causal proof; parameter count alone does not explain the fitting order.
 
-**3. Accuracy and calibration trade off.** B8 had the best-calibrated confidences (test ECE 8.8% vs 12.9% for C8 and 13.3% for H8), and INNER was better calibrated than END. The shared models are more accurate but more overconfident. Sharing alone does not make predicted probabilities more trustworthy.
+**2. Where weights are independent matters, but extra fitting need not buy accuracy.** At fixed parameters, compute and starting function, END beat INNER on all five validation seeds (+0.58 pp [0.22, 0.93]); its shared-middle gradients were more aligned (ρ ≈ 0.88 vs 0.77). Yet freeing early weights also shows a repeated overfitting pattern. B4C4 ends with a **22.27 pp larger gap** than C4B4 at the same parameter budget. H8 has a **4.39 pp larger final gap [3.81, 4.98]** than C7B1, with higher training accuracy in every seed. Neither comparison establishes a selected top-1 advantage for the more overfit model. Early specialization and added capacity are plausible explanations; H8 versus C7B1 does not separate those two causes.
 
-**4. Running more steps at test time breaks the models, and the extra mechanisms did not help.** Going from 8 to 32 steps without retraining costs C 13.2 pp and E 7.6 pp. The block learned an eight-step trajectory, not a stable fixed point it can keep iterating. E8's recall, variable depth and progressive loss left it underfit in this budget (22.5% train accuracy) and 2.71 pp behind B8.
+**3. Compute allocation matters more than simply choosing four or eight steps.** C4W45 (one shared block, four updates, width 45) reaches **22.42% validation accuracy**, ahead of C8 by +1.17 pp [0.66, 1.68] at slightly fewer counted MACs. At four steps, C4W45 also beats narrow C4W32 by **+2.05 pp [0.64, 3.47]**, in all five seeds; reducing depth alone therefore does not explain the result. The shallow/wide change helps the untied family too: B4W45 − B8 is **+2.62 pp [1.36, 3.89]**. Width 45 also changes GroupNorm from eight groups to one, so these gains belong to the native width/depth/normalization configurations, not to width alone. C4W45 has the highest mean in these small-data validation comparisons, but is not clearly separated from H8 or B4W45.
+
+**4. Equal MACs do not imply equal speed, and fewer weights do not guarantee it.** The eight-update models have closely clustered RTX 5090 step times despite different parameter counts. C4W45, with only 0.88% fewer MACs than C8, is **1.82× faster at batch-1 inference**, has **1.37× the batch-128 inference throughput** and **1.44× the SGD throughput**. These are isolated, resident-input measurements, not concurrent training durations or deployment throughput. Width, recurrence count and normalization change together; no single operation is identified as the cause.
+
+**5. Accuracy, probability quality and calibration are different outcomes.** Among B8/C8/H8, B8 has the lowest test ECE (8.8% vs 12.9% and 13.3%), despite lower accuracy; INNER is also better calibrated than END. H8 versus C7B1 adds another distinction: its mean top-1 is slightly higher but inconclusive, while its final validation cross-entropy is worse. Accuracy counts correct classes; cross-entropy also scores the probability assigned to the true class. Neither metric is interchangeable with ECE, and calibration was not measured for every new architecture.
+
+**6. More inference steps and added recurrence mechanisms are not automatic improvements.** Going from 8 to 32 steps without retraining costs C 13.2 pp and E 7.6 pp. The trained eight-step trajectory does not extrapolate to more iterations. E8's recall, variable depth and progressive loss left it underfit in this budget (22.5% train accuracy) and 2.71 pp behind B8; multiple settings changed, so the individual mechanisms are not isolated.
 
 ### Memorization versus generalization
 
-The *train/validation gap* is clean training accuracy minus validation accuracy. Clean training accuracy is measured on the training images without augmentation. A large gap means much of what the model learned only works on the images it trained on, i.e. memorization. A small gap is only good when validation accuracy is also high. A small gap with low accuracy means the model did not learn the training set either.
+The *train/validation gap* is clean training accuracy minus validation accuracy; training images are evaluated without augmentation. A larger gap is consistent with overfitting, not a direct count of memorized examples. A small gap is useful only alongside good validation accuracy: it can also result from underfitting.
 
-| Model | Train, selected checkpoint | Validation | Gap | Train, end of training | Validation, end | Gap, end |
-|---|--:|--:|--:|--:|--:|--:|
-| B8 | 35.5% | 18.8% | 16.7 pp | 41.4% | 18.4% | **23.0 pp** |
-| C8 | 38.2% | 21.3% | 17.0 pp | 38.8% | 21.2% | 17.6 pp |
-| H8 | 41.4% | 21.7% | **19.6 pp** | 42.9% | 21.5% | 21.4 pp |
-| E8 | 22.5% | 16.1% | 6.3 pp | 22.7% | 15.8% | 6.8 pp |
+| Model | Train, selected checkpoint | Validation, selected | Gap, selected | Gap, end |
+|---|--:|--:|--:|--:|
+| B8 | 35.53% | 18.80% | 16.74 pp | 22.99 pp |
+| C8 | 38.22% | 21.25% | 16.97 pp | 17.61 pp |
+| H8 | 41.39% | 21.75% | 19.64 pp | 21.36 pp |
+| E8 · reference | 22.5% | 16.1% | 6.3 pp | 6.8 pp |
+| C4B4 · shared first half | 32.80% | 20.64% | 12.16 pp | 13.66 pp |
+| B4C4 · shared last half | 45.97% | 20.89% | 25.09 pp | **35.93 pp** |
+| C7B1 · shared seven, own last | 37.73% | 21.36% | 16.37 pp | 16.96 pp |
+| C4W32 · narrow, shared four | 31.27% | 20.37% | 10.89 pp | 11.90 pp |
+| C4W45 · wide, shared four | 35.33% | **22.42%** | 12.91 pp | 13.06 pp |
+| B4W45 · wide, distinct four | 34.58% | 21.42% | 13.16 pp | 13.64 pp |
 
-Means over five seeds, from the per-run training logs (`runs/*/metrics.jsonl.gz`). "Selected" is the checkpoint chosen on validation; "end" is update 10,000.
+Rounded means over five seeds with 4,500 training images and 10,000 updates; E8 is the reference with a different recipe. Each model selects its own validation checkpoint; final gaps are all at update 10,000. These are **validation, not official-test scores**. B8/C8/H8 and C4W45 are reused controls, not new replications in each table. Sources: [original study](docs/MINIMAL_GENERALIZATION.md), [split-sharing](benchmarks/split-sharing-20261017/results/analysis.md), [endpoints/width](benchmarks/endpoint-width-20261017/results/analysis.md) and [native width/depth controls](benchmarks/width-depth-20261017/results/analysis.md).
 
 <p align="center">
   <img src="assets/learning-curves.svg" alt="Training and validation accuracy over 10,000 updates for B8, C8 and H8. B8's training accuracy keeps rising to about 41% while its validation accuracy flattens near 18%, ending with a 23 pp gap; C8's curves stay closer, ending with a 17.6 pp gap" width="100%">
 </p>
 
-- **B8 memorizes most by the end.** Training accuracy keeps rising (35.5% → 41.4%) while validation falls (18.8% → 18.4%). This is classic overfitting: its spare capacity goes into the training images.
-- **H8 memorizes more *and* generalizes best.** It has the largest gap at the selected checkpoint, yet the highest accuracy on unseen images. Its extra endpoint parameters learn both useful features and image-specific detail.
-- **C8 is the most contained of the models that learn well.** Its gap barely moves through training; one shared block has little spare capacity to memorize.
-- **E8's small gap is underfitting, not good generalization.** It reaches only 22.5% on its own training images.
+- **Position can change fitting far more than accuracy.** B4C4 reaches 56.04% final training accuracy versus C4B4's 34.08%, with the same parameters and compute, yet their selected validation means differ by only 0.25 pp and the interval includes zero. This is not a parameter-count effect.
+- **H8's extra first block has a similar, smaller pattern.** Relative to C7B1, selected training accuracy and gap are higher in all five seeds (+3.66 and +3.27 pp). At the same final update, H8 also has worse validation CE: +0.112 [0.035, 0.189]. This evidence of overfitting does not establish C7B1 as more accurate; H8 − C7B1 top-1 is +0.39 pp [−1.15, +1.92].
+- **More parameters do not necessarily fit more at this budget.** C8 fits training better than B8 at selection, and B4W45 finishes at 34.87% training accuracy versus C4W45's 35.37%, despite having 152,335 versus 42,445 parameters. Sharing affects how weights learn, not only how many there are.
+- **A smaller gap is not a sufficient model-selection rule.** C4W32 has a smaller gap than C4W45 but lower validation accuracy; E8's small gap accompanies only 22.5% training accuracy. C4W45 combines the highest validation mean here with less training fit than H8 or B4C4, but its accuracy advantage over H8 is inconclusive.
+- **Less overfitting does not establish earlier learning.** C7B1's selected checkpoint averages 9,200 updates versus H8's 8,440; both first reach 19% validation accuracy at a mean 4,520 updates. These sampled observations do not show that C7B1 needs less training or runs faster. [Matched-update and paired dynamics](benchmarks/width-depth-20261017/results/endpoint-dynamics.md) separate fitting, CE, gap and timing.
 
 ### Strengths and weaknesses by model
 
 *ECE* (expected calibration error) measures whether stated confidence matches the observed hit rate. Predictions are grouped into 15 confidence bins. ECE is the count-weighted average gap between mean confidence and accuracy in each bin. Lower is better; 0% would mean that "70% confident" is right 70% of the time.
 
-| Model | Strength | Weakness | Why |
+Test scores and ECE below refer only to the original test-evaluated models; all new architecture scores are validation only. The final column gives interpretations, not a general causal law about parameter count.
+
+| Model | Strength | Weakness | Reading |
 |---|---|---|---|
-| **B8** · eight independent blocks | Best calibrated (test ECE 8.8%). | Lowest accuracy of the three equal-compute models (18.39%) despite the most parameters (152,644), and the most late-training memorization. | Each block learns only from its own position's gradient, so the training signal is split eight ways. With 4,500 images it fits the training set worse than C8 at its best checkpoint, then spends spare capacity memorizing. |
-| **C8** · one block × 8 | Best accuracy per parameter: 20.46% with 22,724 parameters. Stable gap. | Overconfident (test ECE 12.9%). Collapses when run for more steps (−13.2 pp at 32 steps). No step can specialize. | Every step trains the same weights with eight largely aligned gradients. It learns an eight-step trajectory, not a stable fixed point, so extra iterations push it off course. |
-| **H8** · own first and last blocks, shared middle | Highest accuracy (21.28%), ahead of B8 on 5/5 seeds and C8 on 4/5. | Least calibrated (test ECE 13.3%). 2.6× C8's parameters, the largest selected gap, and the most seed-to-seed spread on validation (SD 1.25 vs 0.41 for C8). Lost to C8 on seed 71. | The first step adapts stem features and the last prepares features for the classifier, unlike the repeated refinement in the middle. The END vs INNER test shows untying pays at the ends rather than the interior. The extra parameters also add room to memorize. |
-| **E8** · C8 + recall, variable depth, progressive loss | Smallest gap; degrades least at 32 steps (−7.6 pp vs −13.2 pp for C8). | Lowest accuracy (15.67%, 2.71 pp below B8). The only model with extra compute (42.2M MACs). | The added mechanisms hold it back in a 10,000-update budget: it underfits. Training at varied depths makes it more tolerant of extra steps. Several settings changed at once (including learning rate and α), so no single mechanism can be credited. |
+| **B8** · eight independent blocks | Lowest test ECE among B8/C8/H8 (8.8%). | Lowest test accuracy of that trio (18.39%); large late-training gap despite 152,644 parameters. | Independent weights split the position-wise learning signal; additional fitting late in training does not improve validation. |
+| **C8** · one block × 8 | 20.46% test accuracy with only 22,724 parameters; relatively stable gap. | Test ECE 12.9%; loses 13.2 pp when run at 32 steps. | Reuse combines mostly aligned gradients, but the learned trajectory does not extrapolate to more steps. |
+| **H8** · own ends, shared middle | Highest original test mean (21.28%); END/INNER supports the endpoint layout. | No clear test separation from C8; larger gap than C8/C7B1 and test ECE 13.3%. | Endpoint specialization can help, while the extra first block also increases fitting without a clear validation gain over C7B1. |
+| **E8** · extra recurrence mechanisms | Smaller 32-step drop than C8 (−7.6 pp); small gap. | Underfits; 15.67% test accuracy at higher counted compute (42.2M MACs). | Several mechanisms and recipe settings changed together; their individual effects are not isolated. |
+| **C4B4 / B4C4** · shared first / last half | Same parameter/compute budget reveals a strong positional effect on fitting. | No established validation gain over C8; B4C4 has a much larger gap and worse CE than C4B4. | Moving the shared half changes overfitting much more than selected accuracy. |
+| **C7B1** · shared seven, own last | 21.36% validation with 41,284 parameters; lower gap and CE than H8. | No established accuracy gain over C8 or H8; not selected earlier on average. | Removing the independent first step changes capacity and specialization together, not accuracy alone. |
+| **C4W32** · narrow, shared four | 22,724 parameters and 19.10M MACs; small gap. | 20.37% validation; below wide C4 in every seed. No clear difference from C8. | Fewer recurrent steps alone do not recover the wide model's result. |
+| **C4W45** · wide, shared four | Highest mean in these small-data architecture validation comparisons (22.42%); measured speed gain over C8. | Not clearly separated from H8 or B4W45; widening also changes GroupNorm. No official-test or ECE result. | A promising compute allocation, not an isolated width effect or a new confirmed test winner. |
+| **B4W45** · wide, distinct four | 21.42% validation; +2.62 pp over B8, positive in every seed. | More parameters than C4W45 without greater mean training fit or an established accuracy gain. No separate speed or ECE measurement. | The shallow/wide configuration also helps without sharing; architecture shape matters alongside weight reuse. |
 
 <p align="center">
   <img src="assets/reliability.svg" alt="Calibration curves on validation images: all three models sit below the diagonal, meaning they are overconfident; B8 is closest to the diagonal (pooled ECE 8.6%), C8 and H8 are further below (12.4% and 13.0%)" width="60%">
@@ -104,9 +126,9 @@ Model predictions on CIFAR-100 validation images. The examples were picked by a 
 - **Top row.** Examples of the shared models generalizing where B8 does not. On the validation set, C8 and H8 beat B8 consistently, in at least four seeds, on 10 images; the reverse happens on 3.
 - **Bottom row.** The models share the same mistakes, mostly between similar-looking classes such as willow vs maple, road vs plain and mouse vs cockroach. On the 1,826 images that every model misses in every seed, mean confidence is 23.6% for B8, 28.9% for C8 and 29.9% for H8. The shared models are wrong just as often on these images, only more sure of themselves.
 
-In every pair we measured, the more accurate model was also the more overconfident: C8/H8 vs B8 on test, and END vs INNER on validation. Pick H8 for accuracy, C8 when parameters are scarce, and B8 when predicted probabilities must be trustworthy.
+The accuracy/calibration trade-off was measured for C8/H8 versus B8 on test and END versus INNER on validation; it is not established for every newer architecture. Among the original B8/C8/H8, H8 leads test accuracy, C8 uses the fewest parameters and B8 has the lowest ECE. Lower CE in a follow-up does not by itself establish better calibration.
 
-**In short:** for small-data image classification at this scale, reusing one convolutional block is a better use of parameters than stacking distinct ones. The best layout we found keeps a shared middle and gives the first and last steps their own weights.
+**In short:** how and where weights are reused matters more than parameter count alone. Sharing can improve training and validation together; extra independent early weights can mostly add overfitting; spending the compute budget on a shallow/wide configuration can improve validation and measured speed. H8 leads the original test comparison; C4W45 is a promising validation-only alternative, not a confirmed replacement. The width/normalization and early-capacity explanations remain partly unresolved.
 
 ## Architecture
 
@@ -150,6 +172,8 @@ K = 32 and validation-split intervals are descriptive diagnostics, not additiona
 
 ## Follow-up studies
 
+These are the designs behind the consolidated findings above. Except for the original H8 follow-up, they use validation only and do not change the official-test table. Archived controls are reused, not retrained for each comparison.
+
 **H8.** `[A,S,S,S,S,S,S,Z]` keeps the B8/C8 recipe and unties only the endpoint blocks: three unique blocks, 59,844 parameters, same compute. It reuses the frozen B8/C8 runs as controls. Seed-level results, calibration and confidence bands are in the [H8 report](docs/HYBRID_GENERALIZATION.md); protocol and evidence are in [`benchmarks/hybrid-generalization-20261015/`](benchmarks/hybrid-generalization-20261015/README.md).
 
 **END vs INNER position test (validation only).** Both arms have three unique blocks, 59,844 parameters, the same compute and the same C-initialized starting function. END frees updates 1 and 8 (`[A,S,S,S,S,S,S,Z]`); INNER frees updates 2 and 7 (`[S,A,S,S,S,S,Z,S]`). END reached 21.67% and INNER 21.10% selected-validation top-1, with END ahead on all five seeds; INNER had lower cross-entropy and ECE. These arms were never run on the test set, so they are not in the test chart above.
@@ -166,25 +190,68 @@ Full analysis: [mechanism report](benchmarks/position-ablation-20261016/analysis
   <img src="assets/split-sharing.svg" alt="Left: training and validation accuracy over training for C4B4 and B4C4. Validation curves overlap near 20–21%, but B4C4's training accuracy climbs to 56% (35.9 pp gap) while C4B4's stops at 34% (13.7 pp gap). Right: end-of-training training accuracy and selected validation accuracy for B8, C8, H8, C4B4 and B4C4" width="100%">
 </p>
 
-| Model | Unique blocks | Validation accuracy | Validation CE | Train accuracy, end | Gap, end |
-|---|---:|---:|---:|---:|---:|
-| B8 | 8 | 18.80% | 3.59 | 41.4% | 23.0 pp |
-| C8 | 1 | 21.25% | 3.53 | 38.8% | 17.6 pp |
-| H8 | 3 | **21.75%** | 3.54 | 42.9% | 21.4 pp |
-| C4B4 | 5 | 20.64% | **3.41** | 34.1% | **13.7 pp** |
-| B4C4 | 5 | 20.89% | 3.77 | **56.0%** | **35.9 pp** |
+Selected validation accuracy is 20.64% for C4B4 and 20.89% for B4C4: C4B4 − B4C4 is −0.25 pp [−0.99, 0.49], not a clear separation. The much larger difference is in fitting and probability quality: B4C4 has a 35.93 pp final gap versus 13.66 pp, and selected CE 3.77 versus 3.41. The consolidated table shows why more training fit is not automatically better generalization, even at identical parameter counts.
 
-Means over five paired seeds; accuracy and cross-entropy (CE) at the checkpoint selected on validation. Paired contrasts, 95% CI (t, df = 4): C4B4 − B4C4 −0.25 pp [−0.99, 0.49]; vs B8 +1.84 and +2.09 pp (5/5 seeds each); vs C8 −0.61 and −0.36 pp (1/5 seeds each, intervals include zero); vs H8 −1.11 and −0.86 pp.
+Data, full contrasts and analysis: [`benchmarks/split-sharing-20261017/`](benchmarks/split-sharing-20261017/README.md).
 
-- **Where the shared half sits barely changes accuracy.** C4B4 and B4C4 are within 0.25 pp, with no consistent winner across seeds.
-- **It strongly changes memorization.** With identical parameters and compute, B4C4 ends at 56% training accuracy, the highest of any model in the study, and a 35.9 pp gap. C4B4 ends at 34% with a 13.7 pp gap, the smallest among the models that learn well. B4C4's extra memorization buys no validation accuracy and gives the worst cross-entropy; C4B4 has the best cross-entropy of all five models despite lower accuracy than C8 and H8.
-- **More distinct blocks is not better.** Both have 4.3× the parameters of C8 and neither beats it. H8, which unties only the first and last updates, stays best. Together with END/INNER, this points to *which* updates get their own weights mattering more than *how many* do.
+### C7B1 and a wider C4: which part of H8 helps?
 
-Data and analysis: [`benchmarks/split-sharing-20261017/`](benchmarks/split-sharing-20261017/README.md).
+Two further arms use the same **10% training subsets, five seeds and 10,000 updates**, with B8/C8/H8 reused as controls. **Validation only; the official test set remains closed.**
+
+- **C7B1** applies S seven times and an independent Z once: `[S,S,S,S,S,S,S,Z]`. Its S, Z, stem and classifier start bit-identical to the same-seed H8. Only H8's first update changes: its independent A is replaced with S. This tests the extra first block without changing the other initial tensors.
+- **C4W45** applies one shared block four times, widened from 32 to 45 channels. Its **37.64M MACs are 0.88% below** C8/H8's 37.97M, the closest integer-width match. Native GroupNorm changes from 8 groups to 1 at this width, so this tests the native depth/width trade-off, not depth alone.
+
+<p align="center">
+  <img src="assets/endpoint-width.svg" alt="Left: mean training and validation curves for C7B1 and C4 width45. The wider C4 has lower training accuracy but higher validation accuracy and a smaller gap. Right: five per-seed validation accuracies and mean plus or minus SD for B8, C8, H8, C7B1 and wider C4; wider C4 has the highest mean at 22.42%" width="100%">
+</p>
+
+C7B1 reaches 21.36% validation, near C8's 21.25%; the difference is +0.11 pp [−0.39, +0.61]. H8's extra first block has a clear fitting/gap pattern but no established selected top-1 benefit over C7B1. A first-only arm is absent, so interactions between endpoints remain open. The [posthoc dynamics](benchmarks/width-depth-20261017/results/endpoint-dynamics.md) provide the matched-update, CE and timing evidence discussed above.
+
+C4W45 improves on C8 by +1.17 pp [0.66, 1.68] and C7B1 by +1.06 pp [0.38, 1.75], positive in all five seeds for both contrasts. Its +0.68 pp advantage over H8 is inconclusive [−0.78, +2.13]. The narrow-C4 and wide-B4 controls below clarify which architectural changes accompany that result.
+
+[Full report, protocol and evidence](benchmarks/endpoint-width-20261017/README.md).
+
+### Width/depth follow-up: narrow C4 and wide B4
+
+The follow-up trains native **C4W32** and **B4W45** from scratch: five paired seeds each, 10,000 updates, the same 4,500-image training subsets and 5,000-image validation split. **C4W45 is reused from the archived study, not retrained.**
+
+![Width/depth controls: training curves and validation accuracy](assets/width-depth.svg)
+
+Validation scores and gaps are consolidated above; these are the structural controls:
+
+| Model | Parameters | Forward MACs / image | GroupNorm groups |
+|---|---:|---:|---:|
+| C4W32 — narrow, shared | 22,724 | 19,098,752 | 8 |
+| C4W45 — wide, shared, archived | 42,445 | 37,640,340 | 1 |
+| B4W45 — wide, distinct | 152,335 | 37,640,340 | 1 |
+
+- **C4W32 versus C8:** same width and GroupNorm, fewer recurrent steps and MACs. The accuracy contrast is −0.88 pp [−1.89, +0.13], not an established difference or equivalence.
+- **C4W45 versus C4W32:** same depth and sharing, different width **and** GroupNorm. The +2.05 pp result cannot be assigned to width alone.
+- **B4W45 versus C4W45:** same depth, width, GroupNorm and MACs, different sharing and parameter count. C4W45 leads in every seed, but B4W45 − C4W45 is −1.00 pp [−2.25, +0.25], so superiority remains inconclusive.
+
+[Frozen protocol, complete paired results, historical endpoint diagnostics and execution evidence](benchmarks/width-depth-20261017/README.md). The official test was not staged or accessed.
+
+### Real speed on the RTX 5090
+
+**Similar MACs did not mean similar speed.** A separate, synthetic-input benchmark runs all seven architectures **one at a time**, rather than comparing their concurrent study durations. Each model/condition has 500 synchronized observations: five shuffled rounds, 30 warmups and 100 measured samples per round. Conditions use FP32 tensors (cuDNN TF32 allowed), PyTorch eager, two CPU threads and identical resident GPU inputs; AMP and compilation are off.
+
+| Model | Inference, batch 1 (ms) | Inference, batch 128 (images/s) | SGD, batch 128 (ms/step) | Training speed vs C8 |
+|---|---:|---:|---:|---:|
+| B8 | 1.645 | 104,278 | 5.195 | 1.00x |
+| C8 | 1.631 | 105,050 | 5.208 | 1.00x |
+| H8 | 1.682 | 106,085 | 5.201 | 1.00x |
+| C4B4 | 1.603 | 103,615 | 5.240 | 0.99x |
+| B4C4 | 1.641 | 103,260 | 5.171 | 1.01x |
+| C7B1 | 1.665 | 101,140 | 5.235 | 0.99x |
+| **C4, width 45** | **0.895** | **144,340** | **3.617** | **1.44x** |
+
+C4W45 reaches **1.82x C8's batch-1 inference speed, 1.37x its batch-128 inference throughput and 1.44x its batch-128 training throughput**, despite counting only 0.88% fewer MACs. The eight-update architectures cluster closely; their small differences should not be treated as a reliable ranking. Width, recurrence count and GroupNorm grouping change together, so the benchmark does not assign the speed difference to one operation.
+
+These are **synchronized resident-input step measurements**, not end-to-end data-loader or deployment throughput. SGD includes forward, loss, backward and optimizer work; input transfer, augmentation, evaluation and checkpoint I/O are excluded. **C4W32 and B4W45 were not included in this speed benchmark**; their concurrent training durations are not substitute latency measurements. CUDA-event timings, p95, round variability, raw observations, hardware/software policies and reproducibility instructions are in the [full speed report](benchmarks/rtx5090-speed-20261017/README.md). No dataset or trained checkpoint was staged; the official test set stayed closed.
 
 ## Post-training adjustments: C8 and H8
 
-Can the two best models be improved after training, without retraining them? We applied four standard adjustments to the frozen five-seed C8 and H8 checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
+Can C8 and H8, the two leading models in the original eight-step test comparison, be improved after training without retraining them? We applied four standard adjustments to their frozen five-seed checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
 
 - **Temperature scaling:** one positive scalar rescales the logits, fitted by five-fold cross-fitting so no image is scored with a temperature fitted on itself. It changes confidence, never the predicted class.
 - **Weight averaging:** the arithmetic midpoint of the selected checkpoint and the last checkpoint of the same run. This is not classical SWA or EMA, which would need intermediate snapshots.
@@ -226,7 +293,7 @@ Details, NLL/Brier scores and reproduction commands: [C8 vs H8 post-training rep
 
 ## H8 with 100% of the training data
 
-Every result above uses 10% of the CIFAR-100 training data (4,500 images per run). Was that the limit? We retrained H8 with the **same recipe, seeds and 10,000 updates on all 45,000 training images**, then repeated the post-training adjustments. **Validation only:** the official test set was not reopened.
+The small-data training comparisons above use 10% of the CIFAR-100 training data (4,500 images per run). Was that the limit? We retrained H8 with the **same recipe, seeds and 10,000 updates on all 45,000 training images**, then repeated the post-training adjustments. **Validation only:** the official test set was not reopened.
 
 <p align="center">
   <img src="assets/h8-full-data.svg" alt="Left: H8 training and validation accuracy over 10,000 updates. With 10% of the data, training accuracy climbs to about 43% while validation stalls near 21.5%, a 21.4 pp gap; with 100% of the data, training and validation rise together to about 29–30%, a 0.6 pp gap. Right: validation accuracy after each post-training adjustment, higher with 100% of the data in every case, from 29.3% to 33.3%" width="100%">
@@ -254,9 +321,9 @@ Details and reproduction: [H8 full-data report](docs/H8_FULL_DATA.md) · data in
 
 ## Caveats
 
-- **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Only H8 was retrained on 100% of the data, on validation; B8 and C8 were not. Wider models, longer training and other tasks were not tested.
-- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER, C4B4/B4C4 and the post-training adjustments were designed after the first results; END/INNER, C4B4/B4C4 and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
-- **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
+- **Scale.** One dataset, five seeds per architecture and a fixed 10,000-update budget. The base comparison uses width 32; native width-45 follow-ups also change normalization. Only H8 was retrained on all 45,000 training images. Longer training, per-model tuning and other tasks were not tested; small-data validation ordering does not establish full-data or official-test ordering.
+- **Order and reuse.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER, C4B4/B4C4, C7B1, C4W32/C4W45/B4W45 and the post-training adjustments were designed later. All except the original H8 were scored on validation only. Follow-up intervals are exploratory and nominal across multiple comparisons; reused controls are not independent new replications. C inherited B's learning rate instead of being tuned on its own.
+- **Explanations and stopping.** Gradient alignment, fitting and gap diagnostics constrain the hypotheses but do not isolate every cause. H8/C7B1 changes early independence and parameter count together; width 32/45 changes GroupNorm too. Checkpoint selection and first threshold crossings do not establish intrinsic convergence time or wall-clock speed. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
 ## Running the code
 
@@ -306,7 +373,10 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── h8-posttraining-validation/        H8 post-training results
 │   ├── posttraining-generalization-validation/  train/validation gaps after post-training
 │   ├── h8-full-data-20261017/             H8 retrained on 100% of the training data, with post-training
-│   ├── split-sharing-20261017/            validation-only C4B4 vs B4C4 (shared half first or last)
+│   ├── split-sharing-20261017/            C4B4/B4C4 results and the shared ablation operator
+│   ├── endpoint-width-20261017/           C7B1 and wider four-step C4, validation only
+│   ├── width-depth-20261017/              narrow C4, wide B4, archived controls and endpoint dynamics
+│   ├── rtx5090-speed-20261017/            isolated synthetic-input architecture speed and raw timings
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
