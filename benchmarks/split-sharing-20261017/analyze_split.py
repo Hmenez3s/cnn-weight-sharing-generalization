@@ -14,7 +14,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 SEEDS = (11, 23, 37, 53, 71)
-FAMILIES = ("B8", "C8", "H8", "C4B4", "B4C4")
+LEGACY_ARMS = ("C4B4", "B4C4")
+NEW_CONTRASTS = (("C7B1", "H8"), ("C7B1", "C8"), ("C7B1", "B8"), ("C4W45", "C8"), ("C4W45", "H8"), ("C4W45", "B8"), ("C7B1", "C4W45"))
 def _read_csv(path: Path) -> list[dict]:
     with path.open(newline="", encoding="utf-8") as stream:
         return list(csv.DictReader(stream))
@@ -86,16 +87,44 @@ def analyze(cohort_path: Path, output: Path) -> dict:
     seeds = tuple(cohort.get("seeds", ()))
     if seeds != SEEDS:
         raise ValueError("analysis requires all five paired seeds in canonical order")
+    declared = cohort.get("arms")
+    if declared is not None and not isinstance(declared, dict):
+        raise ValueError("cohort arms must be an object when present")
+    requested_order = cohort.get("arm_order")
+    if requested_order is not None and (not isinstance(requested_order, list)
+                                        or any(not isinstance(arm, str) for arm in requested_order)):
+        raise ValueError("cohort arm_order must be a list of arm ids")
+    arms = tuple(requested_order) if requested_order is not None else (tuple(declared) if isinstance(declared, dict) else LEGACY_ARMS)
+    from split_model import ARM_METADATA
+    if (not arms or len(set(arms)) != len(arms) or any(arm not in ARM_METADATA for arm in arms)
+            or (isinstance(declared, dict) and set(arms) != set(declared))):
+        raise ValueError("cohort has unknown, duplicate, or inconsistent arm inventory")
+    if isinstance(declared, dict):
+        from split_model import ARM_METADATA
+        for arm in arms:
+            if arm not in ARM_METADATA:
+                raise ValueError(f"unknown arm: {arm}")
+            if arm not in LEGACY_ARMS and declared.get(arm) != json.loads(json.dumps(ARM_METADATA[arm])):
+                raise ValueError(f"declared model metadata mismatch: {arm}")
     table = _historical_controls()
-    records: dict[str, dict[int, dict]] = {family: {} for family in FAMILIES}
+    families = ("B8", "C8", "H8", *arms)
+    records: dict[str, dict[int, dict]] = {family: {} for family in families}
     for family in ("B8", "C8", "H8"):
         records[family] = table[family]
+    expected_runs = {f"{arm}-s{seed}" for arm in arms for seed in SEEDS}
+    if not isinstance(cohort.get("runs"), dict) or set(cohort["runs"]) != expected_runs:
+        raise ValueError("cohort must contain exactly one run for each declared arm and seed")
     for run_id, record in cohort["runs"].items():
         family, seed_text = run_id.rsplit("-s", 1)
-        if family not in ("C4B4", "B4C4"):
+        if family not in arms:
             raise ValueError(f"unexpected arm {family}")
         seed = int(seed_text)
-        if record.get("arm") != family or record.get("parameter_count") != 96964:
+        metadata = ARM_METADATA[family]
+        expected_metadata = json.loads(json.dumps(metadata))
+        if (record.get("arm") != family or record.get("parameter_count") != metadata["parameter_count"]
+                or (record.get("macs") is not None and record.get("macs") != metadata["macs"])
+                or (family not in LEGACY_ARMS and (record.get("macs") != metadata["macs"]
+                    or record.get("arm_spec") != expected_metadata))):
             raise ValueError(f"run metadata mismatch: {run_id}")
         records[family][seed] = {
             "validation_accuracy_percent": float(record["validation_accuracy_percent"]),
@@ -105,11 +134,11 @@ def analyze(cohort_path: Path, output: Path) -> dict:
             "final_clean_train_accuracy_percent": float(record["final_clean_train_accuracy_percent"]),
             "final_validation_accuracy_percent": float(record["final_validation_accuracy_percent"]),
         }
-    if any(set(records[family]) != set(SEEDS) for family in FAMILIES):
+    if any(set(records[family]) != set(SEEDS) for family in families):
         raise ValueError("each family must have exactly one record for every seed")
-    per_seed = [{"seed": seed, **{family: records[family][seed] for family in FAMILIES}} for seed in SEEDS]
+    per_seed = [{"seed": seed, **{family: records[family][seed] for family in families}} for seed in SEEDS]
     summaries = {}
-    for family in FAMILIES:
+    for family in families:
         summaries[family] = {key: _summary([records[family][seed][key] for seed in SEEDS])
                              for key in ("validation_accuracy_percent", "validation_loss",
                                          "clean_train_accuracy_percent", "final_clean_train_accuracy_percent",
@@ -120,12 +149,19 @@ def analyze(cohort_path: Path, output: Path) -> dict:
             "end": _summary([records[family][s]["final_clean_train_accuracy_percent"] -
                               records[family][s]["final_validation_accuracy_percent"] for s in SEEDS])}
     contrasts = {}
-    for lhs, rhs in (("C4B4", "B4C4"), ("C4B4", "C8"), ("B4C4", "C8"),
-                     ("C4B4", "B8"), ("B4C4", "B8"), ("C4B4", "H8"), ("B4C4", "H8")):
+    contrast_pairs = [("C4B4", "B4C4"), ("C4B4", "C8"), ("B4C4", "C8"),
+                      ("C4B4", "B8"), ("B4C4", "B8"), ("C4B4", "H8"), ("B4C4", "H8")]
+    contrast_pairs.extend(pair for pair in NEW_CONTRASTS if pair[0] in arms)
+    for lhs, rhs in contrast_pairs:
+        if lhs not in records or rhs not in records:
+            continue
         contrasts[f"{lhs}-{rhs}"] = _contrast(
             {s: records[lhs][s]["validation_accuracy_percent"] for s in SEEDS},
             {s: records[rhs][s]["validation_accuracy_percent"] for s in SEEDS})
     result = {"title": "Validation-only exploratory split-sharing analysis",
+              "study": "validation-only exploratory; nominal intervals across multiple comparisons",
+              "scientific": bool(cohort.get("scientific", False)), "probe": bool(cohort.get("probe", False)),
+              "model_metadata": {arm: ARM_METADATA[arm] for arm in arms},
               "primary_metric": "validation accuracy (%)", "per_seed": per_seed,
               "summary": summaries, "paired_validation_accuracy_contrasts": contrasts,
               "control_reproduction_check": {
@@ -135,15 +171,15 @@ def analyze(cohort_path: Path, output: Path) -> dict:
     output.mkdir(parents=True, exist_ok=False)
     (output / "analysis.json").write_text(json.dumps(result, sort_keys=True, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     lines = ["# Split-sharing: validation-only exploratory analysis", "",
-             "No official-test outcomes are included. All intervals are paired Student-t 95% CIs (df=4).", "",
-             "## Per-seed validation accuracy (%)", "", "| Seed | B8 | C8 | H8 | C4B4 | B4C4 |", "|---:|---:|---:|---:|---:|---:|"]
+             "No official-test outcomes are included. All intervals are paired Student-t 95% CIs (df=4), nominal across multiple comparisons.", "",
+             "## Per-seed validation accuracy (%)", "", "| Seed | " + " | ".join(families) + " |", "|---:|" + "---:|" * len(families)]
     for row in per_seed:
-        lines.append("| {} | {} | {} | {} | {} | {} |".format(row["seed"], *(f"{row[f]['validation_accuracy_percent']:.2f}" for f in FAMILIES)))
+        lines.append("| {} | {} |".format(row["seed"], " | ".join(f"{row[f]['validation_accuracy_percent']:.2f}" for f in families)))
     lines += ["", "## Paired validation-accuracy contrasts", "", "| Contrast | Mean difference (pp) | 95% CI | Positive seeds |", "|---|---:|---:|---:|"]
     for name, item in contrasts.items():
         lines.append(f"| {name} | {item['mean_difference']:.3f} | [{item['ci95'][0]:.3f}, {item['ci95'][1]:.3f}] | {item['positive_seeds']}/5 |")
     lines += ["", "## Means and standard deviations", "", "| Model | Val accuracy | Val CE | Selected train accuracy | End train accuracy | Selected gap | End gap |", "|---|---:|---:|---:|---:|---:|---:|"]
-    for family in FAMILIES:
+    for family in families:
         s = summaries[family]
         fmt = lambda value: f"{value['mean']:.2f} ± {value['sd']:.2f}"
         lines.append(f"| {family} | {fmt(s['validation_accuracy_percent'])} | {fmt(s['validation_loss'])} | {fmt(s['clean_train_accuracy_percent'])} | {fmt(s['final_clean_train_accuracy_percent'])} | {fmt(s['gaps']['selected'])} | {fmt(s['gaps']['end'])} |")

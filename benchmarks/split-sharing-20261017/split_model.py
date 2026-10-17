@@ -2,19 +2,35 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from torch import nn
 
 BRANCH_MAPS = {
     "C4B4": (0, 0, 0, 0, 1, 2, 3, 4),
     "B4C4": (0, 1, 2, 3, 4, 4, 4, 4),
+    "C7B1": (0, 0, 0, 0, 0, 0, 0, 1),
+    "C4W45": None,
+}
+ARM_METADATA = {
+    "C4B4": {"family": "B", "depth": 8, "width": 32, "branch_map": BRANCH_MAPS["C4B4"], "init_source_indices": [0, 1, 2, 3, 4], "unique_blocks": 5, "parameter_count": 96_964, "macs": 37_973_120},
+    "B4C4": {"family": "B", "depth": 8, "width": 32, "branch_map": BRANCH_MAPS["B4C4"], "init_source_indices": [0, 1, 2, 3, 4], "unique_blocks": 5, "parameter_count": 96_964, "macs": 37_973_120},
+    "C7B1": {"family": "B", "depth": 8, "width": 32, "branch_map": BRANCH_MAPS["C7B1"], "init_source_indices": [1, 2], "unique_blocks": 2, "parameter_count": 41_284, "macs": 37_973_120, "init_convention": "H8-matched; native B8 branches 1 and 2 retained (H8 S,Z)"},
+    "C4W45": {"family": "C", "depth": 4, "width": 45, "branch_map": None, "init_source_indices": None, "unique_blocks": 1, "parameter_count": 42_445, "macs": 37_640_340, "target_macs": 37_973_120, "mac_relative_mismatch": -0.00876356749, "group_norm_groups": 1},
 }
 EXPECTED_PARAMETERS = 96_964
 
 
 def build_split_model(spec, *, seed=None, arm):
-    if arm not in BRANCH_MAPS:
-        raise ValueError("arm must be C4B4 or B4C4")
+    if arm not in ARM_METADATA:
+        raise ValueError(f"unknown arm: {arm}")
+    metadata = ARM_METADATA[arm]
+    if arm == "C4W45":
+        from recurrent_cnn.models import build_model
+        expected = ("C", 4, 45, 0.1, 100)
+        if (spec.family, spec.depth, spec.width, spec.alpha, spec.num_classes) != expected:
+            raise ValueError("C4W45 requires native C depth=4 width=45 alpha=0.1 classes=100")
+        return build_model(spec, seed=seed)
     if (spec.family, spec.depth, spec.width, spec.alpha, spec.num_classes) != ("B", 8, 32, 0.1, 100):
-        raise ValueError("split treatment requires native B depth=8 width=32 alpha=0.1 classes=100")
+        raise ValueError(f"{arm} requires native B depth=8 width=32 alpha=0.1 classes=100")
     if any(getattr(spec, key) is not None for key in ("recall", "variable_depth", "progressive_loss")):
         raise ValueError("split treatment does not support additional mechanisms")
     from recurrent_cnn.models import RecurrentCNN
@@ -22,9 +38,10 @@ def build_split_model(spec, *, seed=None, arm):
     class _SplitModel(RecurrentCNN):
         def __init__(self):
             super().__init__(spec, seed=seed)
-            del self.branches[5:]
+            indices = metadata["init_source_indices"]
+            self.branches = nn.ModuleList([self.branches[i] for i in indices])
             self.arm = arm
-            self.branch_map = BRANCH_MAPS[arm]
+            self.branch_map = metadata["branch_map"]
 
         def step(self, h, encoded=None, *, iteration=None):
             if iteration is None or type(iteration) is not int or not 0 <= iteration < 8:
@@ -37,27 +54,31 @@ def build_split_model(spec, *, seed=None, arm):
 @contextmanager
 def mapped_engine_factory(engine, arm: str):
     """Route native B factory through treatment and correct only analytic unique-block count."""
-    if arm not in BRANCH_MAPS:
-        raise ValueError("arm must be C4B4 or B4C4")
+    if arm not in ARM_METADATA:
+        raise ValueError(f"unknown arm: {arm}")
+    metadata = ARM_METADATA[arm]
     original_factory, original_cost = engine.build_model, engine.mac_breakdown
 
     def factory(spec, *, seed=None):
-        if spec.family == "B":
+        mapped_spec = (spec.family, spec.depth, spec.width, spec.alpha, spec.num_classes) == ("B", 8, 32, 0.1, 100)
+        if metadata["branch_map"] is not None and mapped_spec:
             model = build_split_model(spec, seed=seed, arm=arm)
-            if sum(p.numel() for p in model.parameters()) != EXPECTED_PARAMETERS:
-                raise AssertionError("split model parameter count mismatch")
+            actual = sum(p.numel() for p in model.parameters())
+            if actual != metadata["parameter_count"]:
+                raise AssertionError(f"{arm} parameter count mismatch: {actual}")
             return model
         return original_factory(spec, seed=seed)
 
     def split_cost(spec, input_shape=(1, 3, 32, 32), **kwargs):
         result = original_cost(spec, input_shape, **kwargs)
-        if spec.family == "B":
-            # mac_breakdown returns batch MACs; the split trunk executes the same eight
-            # block applications as native B8, i.e. 37,973,120 MACs per 32x32 image.
-            if tuple(input_shape[1:]) == (3, 32, 32) and result["mac_breakdown"]["total"] != 37_973_120 * input_shape[0]:
-                raise AssertionError("split model MAC count differs from native B8")
-            result["parameter_breakdown"]["unique_branch_copies"] = 5
-            result["parameter_breakdown"]["unique_total"] = EXPECTED_PARAMETERS
+        mapped_spec = (spec.family, spec.depth, spec.width, spec.alpha, spec.num_classes) == ("B", 8, 32, 0.1, 100)
+        if metadata["branch_map"] is not None and mapped_spec:
+            result["parameter_breakdown"]["unique_branch_copies"] = metadata["unique_blocks"]
+            result["parameter_breakdown"]["unique_total"] = metadata["parameter_count"]
+            if tuple(input_shape[1:]) == (3, 32, 32) and kwargs.get("inference_k", 8) == 8:
+                expected_macs = metadata["macs"] * input_shape[0]
+                if result["mac_breakdown"]["total"] != expected_macs:
+                    raise AssertionError(f"{arm} counted MAC mismatch: {result['mac_breakdown']['total']} != {expected_macs}")
         return result
 
     engine.build_model, engine.mac_breakdown = factory, split_cost

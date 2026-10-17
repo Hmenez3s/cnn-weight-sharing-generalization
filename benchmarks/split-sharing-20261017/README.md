@@ -44,3 +44,7 @@ Per-seed values and paired contrasts: [`results/analysis.md`](results/analysis.m
 ([JSON](results/analysis.json)). Cohort manifest: [`results/cohort.json`](results/cohort.json);
 per-run `run.json` and compressed training logs in [`results/runs/`](results/runs/).
 Checkpoints are not distributed. Figure: `scripts/make_split_sharing_figure.py`.
+
+## Optional ordered arms
+
+`--arms C7B1 C4W45` selects any unique ordered subset of `C4B4 B4C4 C7B1 C4W45`; omitting it preserves the historical two-arm cohort. Runs are scheduled seed-major, with arms in requested order. C7B1 uses map `(0,0,0,0,0,0,0,1)` and two branches retained from native B8 initialization: source branches `[1,2]`, matching H8's shared S and final Z branches while replacing only H8's first A update. It has 41,284 parameters and 37,973,120 MAC/image. C4W45 is native family C, depth 4, width 45, with one shared block and 42,445 parameters; its 37,640,340 MAC/image is approximately (not exactly) matched to the C8 forward-MAC target (−0.8764%). Native GroupNorm uses one group at width 45 versus eight at width 32, so depth, width, and normalization grouping jointly vary. This is exploratory validation-only work; paired nominal intervals span multiple comparisons, and historical B8/C8/H8 controls are reused rather than retrained.
