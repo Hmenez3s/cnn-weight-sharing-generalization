@@ -37,13 +37,57 @@ Accuracy and ECE are percentages; lower ECE is better. Single-model rows are the
 
 The new C8 same-backend baseline is 21.256%; its frozen archival mean remains **21.252%**. Per-seed probability/argmax differences are retained as diagnostics, not used to rewrite archival results. The H8 before/after reference remains its already-recorded fresh baseline, **21.744%**.
 
+## Generalization versus memorization after the adjustments
+
+The missing clean-training comparison was subsequently measured on the Windows RTX 5090 PC. **Gap = clean training accuracy − validation accuracy**, in percentage points. A smaller gap alone is not better generalization: held-out accuracy must also be considered.
+
+### Individual models: each seed's own 4,500 training images
+
+All rows below use the same original per-seed training subsets, without random augmentation during scoring. Training-subset hashes were reconstructed and matched to all ten frozen C8/H8 selected checkpoints. Validation scores are the unchanged references above.
+
+| Method | C8 train % | C8 validation % | C8 gap (pp) | H8 train % | H8 validation % | H8 gap (pp) |
+|---|---:|---:|---:|---:|---:|---:|
+| Baseline | 38.222 | 21.256 | 16.966 | 41.378 | 21.744 | 19.634 |
+| Temperature scaling | 38.222 | 21.256 | 16.966 | 41.378 | 21.744 | 19.634 |
+| Selected/last weight average | 38.547 | 21.200 | 17.347 | 42.382 | 21.720 | 20.662 |
+| 10-view TTA | 37.827 | 21.592 | 16.235 | 40.911 | 21.652 | 19.259 |
+
+### Ensembles: the union of the five training subsets
+
+Different seeds trained on different subsets. An ensemble therefore has no single 4,500-image training subset shared by every member. Its training score below uses the **18,446 distinct training images seen by at least one member**, identically for C8 and H8. None overlaps the 5,000 validation images.
+
+| Method | C8 union-train % | C8 validation % | C8 gap (pp) | H8 union-train % | H8 validation % | H8 gap (pp) |
+|---|---:|---:|---:|---:|---:|---:|
+| Five-seed ensemble | 34.766 | 28.460 | 6.306 | 36.154 | 29.320 | 6.834 |
+| All four combined | 34.604 | 29.160 | 5.444 | 36.013 | 29.880 | 6.133 |
+
+**Do not interpret the gap drop between the individual-model and ensemble tables as isolated memorization reduction:** their training cohorts and member exposure differ. The two ensemble rows do share a cohort, so their before/after comparison is directly descriptive.
+
+### What changed
+
+- **C8 has the smaller gap in every configuration; H8 retains higher validation accuracy in every configuration.** C8 is more contained in its in-sample advantage, not more accurate on unseen images.
+- **Temperature scaling changes no accuracy gap.** It changes confidence, not top-1 predictions. Training accuracy is inherited by the positive-scalar argmax invariant; no new temperatures were fitted.
+- **The checkpoint midpoint fits training better but not validation:** both gaps increase, and validation accuracy slightly decreases.
+- **TTA reduces both gaps, but improves validation accuracy only for C8.** H8 demonstrates why a smaller gap alone is insufficient.
+- **Adding the other adjustments to the ensemble raises validation accuracy and reduces the same-cohort gap:** C8 goes from 6.306 to 5.444 pp, and H8 from 6.834 to 6.133 pp.
+
+This supplemental evaluation completed in **154.45 s**; six focused Windows tests passed using **three workers in 5.74 s**. All **27 protected inputs** remained byte-identical. The original trusted CIFAR-100 training pickle was read directly; no torchvision acquisition/integrity routine or official-test file was opened. No additional training or checkpoint selection was performed. As before, these validation results are exploratory, not an independent official-test confirmation.
+
+The existing inference helpers remain authoritative for normalization, views and weight averaging. The training-gap entry point is `scripts/compare_posttraining_generalization.py`; run its `--probe` first with a separate fresh output directory. Full-run usage on the PC is:
+
+```text
+python -B scripts/compare_posttraining_generalization.py --train-pickle <original_cifar100_train_pickle> --validation-images <validation_images.npy> --validation-baseline <validation_predictions.npz> --c-checkpoints <selected_checkpoints> --h-checkpoints <selected_checkpoints> --c-last-checkpoints <c_last_checkpoints> --h-last-checkpoints <h_last_checkpoints> --c-reference benchmarks/c8-posttraining-validation/analysis.json --h-reference benchmarks/h8-posttraining-validation/analysis.json --output <new_gap_output_directory> --device cuda --batch-size 128 --threads 2 --memory-fraction 0.04
+```
+
+Evidence: [gap analysis JSON](../benchmarks/posttraining-generalization-validation/analysis.json), [generated table](../benchmarks/posttraining-generalization-validation/analysis.md), and [source-bound validation receipt](../benchmarks/posttraining-generalization-validation/validation-receipt.json).
+
 ## Cost and execution
 
 C8 has **22,724 parameters**, compared with **59,844** for H8. Both execute **37,973,120 MACs per view**: sharing reduces weight storage, not the counted forward arithmetic. Each five-seed ensemble uses five models; the all-four predictor uses 50 forward passes per image. These counts are not measured latency or speedup claims.
 
 All C8 inference, numerical analysis and tests ran on the **Windows RTX 5090 PC**, not the Mac. The shared GPU was used with batch size 128, two inference CPU threads and a 0.04 PyTorch allocator fraction cap.
 
-- Full C8 inference: **25.10 s** observed wall time.
+- Full C8 validation inference: **25.10 s** observed wall time.
 - CPU analysis/calibration on the same PC: **5.80 s**.
 - Peak process RSS: approximately **1.16 GiB**.
 - PyTorch CUDA peak: **27.68 MiB allocated**, **44.00 MiB reserved**; CUDA context and other processes are not included in these allocator numbers.

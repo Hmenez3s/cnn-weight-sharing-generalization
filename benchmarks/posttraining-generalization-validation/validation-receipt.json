@@ -1,0 +1,71 @@
+{
+  "protected_input_files_verified_unchanged": 27,
+  "protected_input_sha256": {
+    "train_pickle": "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b",
+    "validation_images": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+    "validation_baseline": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade",
+    "c_reference": "48e6ac1cd8e52f24b1091f8573363bf7a1084c96b6d5196156c1c1c1101e13e8",
+    "h_reference": "06f9ab7c59a1234116c47d9307db6a85b987e123b40b27ff1f386866febfea27",
+    "c_validation_probabilities": "121c69d60fd95144758df4b9e84aa90aac7136af433f1d219a92de1f3bb07930",
+    "h_validation_probabilities": "045b83cf22559cdc422e3011e77dd264a44082924c601d1444c45bbaf072d879",
+    "C11_selected": "6b7f4bb38056ae07d32bd669ab560a0355ff63478e441ca380aca9ccecd91ced",
+    "H11_selected": "df20afe5d38a68d7c9f66f63832f2cf884490a81499fb8779345fff169353149",
+    "C11_last": "e25167e659f44679375e04915e7c00127a4bf14d6876de1d58f554ad07c175b1",
+    "H11_last": "57dce08ed51d156af6c46d014fe2282860ad325495ba1f8509b00703d473d5d4",
+    "C23_selected": "df1f0d73f9a5ddb06a6a9be971c20ea37626d1cf1f0e49bd8fc1a6642580e141",
+    "H23_selected": "b68edc6df777b3ae88300423c41a105b62e962c44930e06cbca22c1703dca6fc",
+    "C23_last": "73f7fd7e334101b9a74cf26951b38b46b2e393bb6432c347235a520ee51dfcdd",
+    "H23_last": "9d7d1d8d21320afea455b914588fd530d131c53f821e8c4bd0385e1d59f62e2b",
+    "C37_selected": "a6f355b86ced676eb7823d675018ee9b73c0b1963da4f586b0ec891a01df8415",
+    "H37_selected": "b077758ff8b0cca96052e21af1aa9937b4efcb297a4c5137c4d405c227797704",
+    "C37_last": "37c61db0da446695c41c2724f9c3120a6c16a0d4b8c9256487f9a9c1c5df86fb",
+    "H37_last": "27cf104af8a849a26dc7637426c61463868cdf3f951b66ca6da475a159c4bcf1",
+    "C53_selected": "26471ab8bf57a15384d8b16f13a35d00a26156eeff1342d9b2e792690c477142",
+    "H53_selected": "ab5427ae0dc4d1b7565c7b5699ad5991b7750997122fef667f2b35205f39061a",
+    "C53_last": "30362ad56f24f8e07b607038df175f0137c82f7ce782e24e135ca67ea1239dcc",
+    "H53_last": "ce19534b9f5090779f598d4dbac84c6ccb6cec896fb01ab500b4ff0f6bb63b05",
+    "C71_selected": "a97f162be3b2a6a3dcb8f2553781e23438f339fe0e09005ede91c0f216be2ef3",
+    "H71_selected": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59",
+    "C71_last": "c4048f731790ca9fbfdf7f12a1b4bb9a4e83e5a252dd2b1bf6d2045aa7f0c54b",
+    "H71_last": "5a0000b8e1f5d11cfbe1644ec3fec73ae9736ea74119e84ca05acd5ef5c875ae"
+  },
+  "source_sha256": {
+    "scripts/compare_posttraining_generalization.py": "9db86dd7f6a5963f3c4fac2894ed0792e203c447df6412141ec48e35ef8462fa",
+    "scripts/infer_h8_posttraining.py": "1226b424a99036f37127d6dc6a08d3865d22509872b497149292d7a6a1ba9260",
+    "src/recurrent_cnn/data.py": "7cf4a43db7d367bf41da6e4a63976818c022d7eae0efee796ac0bf8f097888d5",
+    "src/recurrent_cnn/engine.py": "6dccb5b9898bf584812ceb28a886566d14cbecb0ef545b78a9f57564c38dc164",
+    "tests/test_posttraining_generalization.py": "3308fe9644c3c88cc59041d25728539948162c9d48af56c9722c324432e4c8a4"
+  },
+  "official_test_opened": false,
+  "mac_numerical_execution": false,
+  "cuda_model_variants_completed": 40,
+  "cuda_views_completed": 220,
+  "all_training_hashes_match_original_selected_checkpoints": true,
+  "validation_scores_unchanged_from_previous_references": true,
+  "pooled_rows_have_no_fabricated_per_seed_replicates": true,
+  "gap_arithmetic_and_seed_aggregation_verified": true,
+  "tests": {
+    "passed": 6,
+    "workers": 3,
+    "wall_seconds": 5.7381835,
+    "pytest_reported_seconds": 4.87
+  },
+  "execution": {
+    "mode": "full",
+    "device": "NVIDIA GeForce RTX 5090",
+    "cpu_threads": 2,
+    "batch_size": 128,
+    "cuda_allocator_fraction_cap": 0.04,
+    "min_free_system_ram_bytes": 4201709568,
+    "min_free_device_memory_mib": 22555,
+    "observed_wall_seconds": 154.44651829999998,
+    "exit_code": 0,
+    "stdin_closed": true
+  },
+  "versions": {
+    "python": "3.13.13",
+    "torch": "2.9.1+cu128",
+    "numpy": "2.5.2"
+  },
+  "limitations": "Exploratory validation-only. Single-model training cohort is own seed 4500; ensemble training cohort is union18446, seen by at least one member. Their gap changes do not isolate memorization reduction. No additional training, selection or temperature fitting."
+}

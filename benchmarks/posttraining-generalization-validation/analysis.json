@@ -1,0 +1,310 @@
+{
+  "study": {
+    "families": [
+      "C8",
+      "H8"
+    ],
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "validation_only_exploratory": true,
+    "official_test_opened": false
+  },
+  "methods": {
+    "C": {
+      "baseline": {
+        "training_accuracy_percent": 38.22222222222222,
+        "validation_accuracy_percent": 21.256,
+        "gap_pp": 16.96622222222222,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 39.37777777777778,
+          "23": 38.51111111111111,
+          "37": 37.422222222222224,
+          "53": 36.22222222222222,
+          "71": 39.577777777777776
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 20.78,
+          "23": 20.919999999999998,
+          "37": 21.78,
+          "53": 21.34,
+          "71": 21.46
+        }
+      },
+      "temperature_scaling": {
+        "training_accuracy_percent": 38.22222222222222,
+        "validation_accuracy_percent": 21.256,
+        "gap_pp": 16.96622222222222,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 39.37777777777778,
+          "23": 38.51111111111111,
+          "37": 37.422222222222224,
+          "53": 36.22222222222222,
+          "71": 39.577777777777776
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 20.78,
+          "23": 20.919999999999998,
+          "37": 21.78,
+          "53": 21.34,
+          "71": 21.46
+        }
+      },
+      "weight_average": {
+        "training_accuracy_percent": 38.54666666666667,
+        "validation_accuracy_percent": 21.2,
+        "gap_pp": 17.346666666666668,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 39.666666666666664,
+          "23": 38.51111111111111,
+          "37": 37.46666666666666,
+          "53": 37.51111111111111,
+          "71": 39.577777777777776
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 20.599999999999998,
+          "23": 20.919999999999998,
+          "37": 21.72,
+          "53": 21.3,
+          "71": 21.46
+        }
+      },
+      "five_seed_ensemble": {
+        "training_accuracy_percent": 34.7663450070476,
+        "validation_accuracy_percent": 28.46,
+        "gap_pp": 6.306345007047597,
+        "training_scope": "five_seed_union",
+        "n_train": 18446,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      },
+      "tta": {
+        "training_accuracy_percent": 37.82666666666667,
+        "validation_accuracy_percent": 21.592,
+        "gap_pp": 16.23466666666667,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 38.0,
+          "23": 38.55555555555556,
+          "37": 36.86666666666667,
+          "53": 36.46666666666666,
+          "71": 39.24444444444444
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 21.16,
+          "23": 21.34,
+          "37": 21.8,
+          "53": 21.88,
+          "71": 21.78
+        }
+      },
+      "all_four_combined": {
+        "training_accuracy_percent": 34.603708121001844,
+        "validation_accuracy_percent": 29.160000000000004,
+        "gap_pp": 5.4437081210018405,
+        "training_scope": "five_seed_union",
+        "n_train": 18446,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      }
+    },
+    "H": {
+      "baseline": {
+        "training_accuracy_percent": 41.37777777777778,
+        "validation_accuracy_percent": 21.744,
+        "gap_pp": 19.63377777777778,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 38.48888888888889,
+          "23": 43.044444444444444,
+          "37": 39.91111111111111,
+          "53": 44.111111111111114,
+          "71": 41.333333333333336
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 21.6,
+          "23": 21.54,
+          "37": 22.16,
+          "53": 23.44,
+          "71": 19.98
+        }
+      },
+      "temperature_scaling": {
+        "training_accuracy_percent": 41.37777777777778,
+        "validation_accuracy_percent": 21.744,
+        "gap_pp": 19.63377777777778,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 38.48888888888889,
+          "23": 43.044444444444444,
+          "37": 39.91111111111111,
+          "53": 44.111111111111114,
+          "71": 41.333333333333336
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 21.6,
+          "23": 21.54,
+          "37": 22.16,
+          "53": 23.44,
+          "71": 19.98
+        }
+      },
+      "weight_average": {
+        "training_accuracy_percent": 42.382222222222225,
+        "validation_accuracy_percent": 21.72,
+        "gap_pp": 20.662222222222226,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 41.17777777777778,
+          "23": 43.333333333333336,
+          "37": 41.31111111111111,
+          "53": 44.266666666666666,
+          "71": 41.82222222222222
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 21.9,
+          "23": 21.5,
+          "37": 21.94,
+          "53": 23.380000000000003,
+          "71": 19.88
+        }
+      },
+      "five_seed_ensemble": {
+        "training_accuracy_percent": 36.15417976797138,
+        "validation_accuracy_percent": 29.32,
+        "gap_pp": 6.834179767971378,
+        "training_scope": "five_seed_union",
+        "n_train": 18446,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      },
+      "tta": {
+        "training_accuracy_percent": 40.91111111111111,
+        "validation_accuracy_percent": 21.651999999999997,
+        "gap_pp": 19.259111111111114,
+        "training_scope": "own_seed_0.1_subset",
+        "n_train": 4500,
+        "per_seed_training_accuracy_percent": {
+          "11": 38.31111111111111,
+          "23": 40.93333333333333,
+          "37": 40.08888888888889,
+          "53": 44.08888888888889,
+          "71": 41.13333333333333
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 21.78,
+          "23": 20.54,
+          "37": 22.1,
+          "53": 23.599999999999998,
+          "71": 20.24
+        }
+      },
+      "all_four_combined": {
+        "training_accuracy_percent": 36.01322780006505,
+        "validation_accuracy_percent": 29.880000000000003,
+        "gap_pp": 6.13322780006505,
+        "training_scope": "five_seed_union",
+        "n_train": 18446,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      }
+    }
+  },
+  "identity": {
+    "split_seed": 1729,
+    "fraction": 0.1,
+    "train_data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+    "train_count": 45000,
+    "validation_count": 5000,
+    "union_count": 18446,
+    "subset_counts": {
+      "11": 4500,
+      "23": 4500,
+      "37": 4500,
+      "53": 4500,
+      "71": 4500
+    },
+    "subset_hashes": {
+      "C11": "57611e72e94ed362feb3621a3e79ec0269b1e1e093cadcdf314f46f246966257",
+      "C23": "e51a3dc9d4f1005c1f57477e8d68c9c15a73c29d77afbb652f9f67e10b8c169c",
+      "C37": "505fe12243d4a4f14cbb046964f6f15bd47f02d7ec5b8c0b609d4765b7f15281",
+      "C53": "6a16558340586a15753c485c936fa1dee6662003ee784933285e32fe39ae225b",
+      "C71": "71fc99244cb0a5981d5cb513d2e7c2088dff20466a72f97fb9b809473d78afa9",
+      "H11": "57611e72e94ed362feb3621a3e79ec0269b1e1e093cadcdf314f46f246966257",
+      "H23": "e51a3dc9d4f1005c1f57477e8d68c9c15a73c29d77afbb652f9f67e10b8c169c",
+      "H37": "505fe12243d4a4f14cbb046964f6f15bd47f02d7ec5b8c0b609d4765b7f15281",
+      "H53": "6a16558340586a15753c485c936fa1dee6662003ee784933285e32fe39ae225b",
+      "H71": "71fc99244cb0a5981d5cb513d2e7c2088dff20466a72f97fb9b809473d78afa9"
+    },
+    "validation_indices_sha256": "78307efb6f569ee289d71909343f93b9986c9bba048c4e25d487b1e8021ee416",
+    "union_indices_sha256": "c3b9894c5b1aaf3fa62d6ff1eb4eea712ad6b7bd40d1f61d5ff5d98e9bd11092",
+    "validation_images_sha256": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+    "validation_baseline_sha256": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade"
+  },
+  "runtime": {
+    "device": "cuda",
+    "batch_size": 128,
+    "threads": 2,
+    "memory_fraction": 0.04,
+    "elapsed_seconds": 150.9693373000191,
+    "peak_memory_bytes": 1538228224,
+    "cuda_peak_allocated_bytes": 29172224
+  },
+  "checkpoint_sha256": {
+    "C-s11": {
+      "selected": "6b7f4bb38056ae07d32bd669ab560a0355ff63478e441ca380aca9ccecd91ced",
+      "last": "e25167e659f44679375e04915e7c00127a4bf14d6876de1d58f554ad07c175b1"
+    },
+    "C-s23": {
+      "selected": "df1f0d73f9a5ddb06a6a9be971c20ea37626d1cf1f0e49bd8fc1a6642580e141",
+      "last": "73f7fd7e334101b9a74cf26951b38b46b2e393bb6432c347235a520ee51dfcdd"
+    },
+    "C-s37": {
+      "selected": "a6f355b86ced676eb7823d675018ee9b73c0b1963da4f586b0ec891a01df8415",
+      "last": "37c61db0da446695c41c2724f9c3120a6c16a0d4b8c9256487f9a9c1c5df86fb"
+    },
+    "C-s53": {
+      "selected": "26471ab8bf57a15384d8b16f13a35d00a26156eeff1342d9b2e792690c477142",
+      "last": "30362ad56f24f8e07b607038df175f0137c82f7ce782e24e135ca67ea1239dcc"
+    },
+    "C-s71": {
+      "selected": "a97f162be3b2a6a3dcb8f2553781e23438f339fe0e09005ede91c0f216be2ef3",
+      "last": "c4048f731790ca9fbfdf7f12a1b4bb9a4e83e5a252dd2b1bf6d2045aa7f0c54b"
+    },
+    "H-s11": {
+      "selected": "df20afe5d38a68d7c9f66f63832f2cf884490a81499fb8779345fff169353149",
+      "last": "57dce08ed51d156af6c46d014fe2282860ad325495ba1f8509b00703d473d5d4"
+    },
+    "H-s23": {
+      "selected": "b68edc6df777b3ae88300423c41a105b62e962c44930e06cbca22c1703dca6fc",
+      "last": "9d7d1d8d21320afea455b914588fd530d131c53f821e8c4bd0385e1d59f62e2b"
+    },
+    "H-s37": {
+      "selected": "b077758ff8b0cca96052e21af1aa9937b4efcb297a4c5137c4d405c227797704",
+      "last": "27cf104af8a849a26dc7637426c61463868cdf3f951b66ca6da475a159c4bcf1"
+    },
+    "H-s53": {
+      "selected": "ab5427ae0dc4d1b7565c7b5699ad5991b7750997122fef667f2b35205f39061a",
+      "last": "ce19534b9f5090779f598d4dbac84c6ccb6cec896fb01ab500b4ff0f6bb63b05"
+    },
+    "H-s71": {
+      "selected": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59",
+      "last": "5a0000b8e1f5d11cfbe1644ec3fec73ae9736ea74119e84ca05acd5ef5c875ae"
+    }
+  },
+  "note": "Single-model training rows use each model's own 4,500-example subset; ensemble rows use the union seen by at least one member. Their gaps have different training cohorts/exposure and are not directly interpretable as pure memorization reduction. Accuracy only; exploratory validation-only; official test was never opened."
+}
