@@ -106,7 +106,7 @@ Model predictions on CIFAR-100 validation images. The examples were picked by a 
 
 In every pair we measured, the more accurate model was also the more overconfident: C8/H8 vs B8 on test, and END vs INNER on validation. Pick H8 for accuracy, C8 when parameters are scarce, and B8 when predicted probabilities must be trustworthy.
 
-**In short:** for small-data image classification at this scale, reusing one convolutional block is a better use of parameters than stacking distinct ones. The best layout we found keeps a shared middle and gives the first and last steps their own weights.
+**In short:** in the original eight-step comparison, reusing one convolutional block is a better use of parameters than stacking distinct ones. Its best layout keeps a shared middle and gives the first and last steps their own weights. The validation-only width/depth follow-ups below broaden that comparison without reopening the official test.
 
 ## Architecture
 
@@ -208,6 +208,25 @@ Two further arms use the same **10% training subsets, five seeds and 10,000 upda
 - **Eight recurrent updates are not required for the best mean accuracy here.** Spending the budget on width instead improved on C8, but this comparison jointly changes depth, width, parameter count and normalization grouping. These are exploratory, nominal intervals across multiple comparisons, not a new confirmatory result.
 
 The 10 runs finished in **13.3 minutes**, with five concurrent processes on the RTX 5090. [Full report, protocol and evidence](benchmarks/endpoint-width-20261017/README.md).
+
+### Width/depth follow-up: narrow C4 and wide B4
+
+The follow-up trains native **C4W32** and **B4W45** from scratch: five paired seeds each, 10,000 updates, the same 4,500-image training subsets and 5,000-image validation split. **C4W45 is reused from the archived study, not retrained.**
+
+![Width/depth controls: training curves and validation accuracy](assets/width-depth.svg)
+
+| Model | Parameters | Forward MACs / image | GroupNorm groups | Selected validation (%) | Final train–validation gap (pp) |
+|---|---:|---:|---:|---:|---:|
+| C4W32 — narrow, shared | 22,724 | 19,098,752 | 8 | 20.37 ± 0.48 | 11.90 |
+| C4W45 — wide, shared, archived | 42,445 | 37,640,340 | 1 | 22.42 ± 0.71 | 13.06 |
+| B4W45 — wide, distinct | 152,335 | 37,640,340 | 1 | 21.42 ± 1.51 | 13.64 |
+
+- **Reducing recurrent depth alone does not explain the wide C4 result.** C4W45 − C4W32 is **+2.05 pp [0.64, 3.47]**, positive in all five seeds. Narrow C4 − C8 is −0.88 pp [−1.89, +0.13]. The gain belongs to the native width/normalization package: width 45 changes GroupNorm from eight groups to one, so width alone is not isolated.
+- **Sharing remains competitive at fixed width, depth, normalization and MACs.** C4W45 is ahead of B4W45 in all five seeds, with fewer parameters. But B4W45 − C4W45 is **−1.00 pp [−2.25, +0.25]**: the interval includes zero, so superiority is not established.
+- **The shallow/wide configuration also helps the untied family.** B4W45 − B8 is **+2.62 pp [1.36, 3.89]**, positive in all five seeds. Its final gap is 13.64 pp versus B8's 22.99 pp. Depth, width and normalization change together here too.
+- **Parameter count alone does not order fitting.** At the same final update, B4W45 averages 34.87% clean training accuracy, versus C4W45's 35.37%, despite having more parameters. This cautions against turning the historical H8/C7B1 overfitting pattern into a general parameter-count rule.
+
+All intervals above are nominal paired 95% CIs over five seeds; validation only. [Frozen protocol, complete results, historical endpoint diagnostics and execution evidence](benchmarks/width-depth-20261017/README.md). The ten new runs completed on the RTX 5090 in 754.814 s with five workers; no official-test data was staged or accessed.
 
 ### Real speed on the RTX 5090
 
