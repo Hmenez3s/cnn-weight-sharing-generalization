@@ -158,10 +158,52 @@ K = 32 and validation-split intervals are descriptive diagnostics, not additiona
 
 Full analysis: [mechanism report](benchmarks/position-ablation-20261016/analysis/MECHANISM_ABLATION.md) · [study README and data](benchmarks/position-ablation-20261016/README.md) · [continuation provenance](benchmarks/position-ablation-20261016/provenance/README.md).
 
+## Post-training adjustments: C8 and H8
+
+Can the two best models be improved after training, without retraining them? We applied four standard adjustments to the frozen five-seed C8 and H8 checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
+
+- **Temperature scaling:** one positive scalar rescales the logits, fitted by five-fold cross-fitting so no image is scored with a temperature fitted on itself. It changes confidence, never the predicted class.
+- **Weight averaging:** the arithmetic midpoint of the selected checkpoint and the last checkpoint of the same run. This is not classical SWA or EMA, which would need intermediate snapshots.
+- **Five-seed ensemble:** average the predicted probabilities of the five seeds.
+- **Test-time augmentation (TTA):** average ten crop/flip views of each image.
+- **All four:** average each run's two checkpoints, apply TTA, ensemble the five seeds, then calibrate.
+
+| Adjustment | Passes per image | C8 accuracy | H8 accuracy | C8 ECE | H8 ECE |
+|---|---:|---:|---:|---:|---:|
+| None | 1 | 21.26% | 21.74% | 12.4% | 13.0% |
+| Temperature scaling | 1 | 21.26% | 21.74% | **2.8%** | 3.5% |
+| Weight average | 1 | 21.20% | 21.72% | 12.6% | 13.5% |
+| Five-seed ensemble | 5 | 28.46% | 29.32% | 4.8% | 5.2% |
+| TTA | 10 | 21.59% | 21.65% | 6.4% | 7.3% |
+| **All four** | 50 | 29.16% | **29.88%** | 4.1% | 4.2% |
+
+Single-model rows are means over five seeds; ensemble rows are one pooled predictor. Lower ECE is better.
+
+**Train/validation gap after each adjustment.** Training accuracy is clean accuracy on each run's own 4,500 training images. An ensemble has no single shared training set, so its training accuracy is measured on the 18,446 images seen by at least one member, none of which are validation images.
+
+| Adjustment | C8 train → val | C8 gap | H8 train → val | H8 gap |
+|---|---:|---:|---:|---:|
+| None / temperature scaling | 38.2% → 21.3% | 17.0 pp | 41.4% → 21.7% | 19.6 pp |
+| Weight average | 38.5% → 21.2% | 17.3 pp | 42.4% → 21.7% | 20.7 pp |
+| TTA | 37.8% → 21.6% | 16.2 pp | 40.9% → 21.7% | 19.3 pp |
+| Five-seed ensemble † | 34.8% → 28.5% | 6.3 pp | 36.2% → 29.3% | 6.8 pp |
+| All four † | 34.6% → 29.2% | 5.4 pp | 36.0% → 29.9% | 6.1 pp |
+
+† Union of the five training subsets. The drop from about 17–20 pp to about 6 pp partly reflects this different training set, so it is not by itself proof of less memorization.
+
+What this shows:
+
+- **The ranking does not change.** H8 is more accurate in every configuration; C8 has lower ECE and a smaller gap in every configuration, with 2.6× fewer parameters.
+- **Ensembling gives almost all of the accuracy gain** (+7.2 pp for C8, +7.6 pp for H8) for 5 passes. Adding the other three adjustments buys +0.6 to +0.7 pp more for 10× the passes.
+- **Temperature scaling is the cheap calibration fix:** ECE falls from about 13% to about 3% at no inference cost, with accuracy unchanged.
+- **The checkpoint midpoint does not help:** it fits training slightly better and validation slightly worse. TTA narrows the gap for both models but improves accuracy only for C8.
+
+Details, NLL/Brier scores and reproduction commands: [C8 vs H8 post-training report](docs/C8_POSTTRAINING.md) · [H8 post-training report](docs/H8_POSTTRAINING.md) · data in [`benchmarks/c8-posttraining-validation/`](benchmarks/c8-posttraining-validation/), [`benchmarks/h8-posttraining-validation/`](benchmarks/h8-posttraining-validation/) and [`benchmarks/posttraining-generalization-validation/`](benchmarks/posttraining-generalization-validation/).
+
 ## Caveats
 
 - **Scale.** One dataset (CIFAR-100 with 10% of the training data), width 32 and five seeds per model; absolute accuracy is around 20%. Larger data, wider models and other tasks were not tested.
-- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8 and END/INNER were designed after the first results; END/INNER were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
+- **Order of the studies.** C8 − B8 was chosen as the main comparison after a one-seed pilot. H8, END/INNER and the post-training adjustments were designed after the first results; END/INNER and post-training were scored on validation only. C inherited B's learning rate instead of being tuned on its own.
 - **Explanations.** The readings above combine the measured results with gradient and training-curve diagnostics; they are not separate interventions that isolate each cause. Run C-s53 was resumed from a checkpoint ([`docs/PROVENANCE.md`](docs/PROVENANCE.md)).
 
 ## Running the code
@@ -208,9 +250,14 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── minimal-generalization-20261015/   protocol, freeze, per-run metadata and metrics, analysis
 │   ├── hybrid-generalization-20261015/    exploratory H8 follow-up: protocol, evidence, analysis
 │   ├── position-ablation-20261016/        validation-only END/INNER position ablation and provenance
+│   ├── c8-posttraining-validation/        C8 post-training results and C8 vs H8 comparison
+│   ├── h8-posttraining-validation/        H8 post-training results
+│   ├── posttraining-generalization-validation/  train/validation gaps after post-training
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
+│   ├── C8_POSTTRAINING.md                 C8 vs H8 post-training and gap report
+│   ├── H8_POSTTRAINING.md                 H8 post-training report
 │   ├── HYBRID_GENERALIZATION.md           generated H8 report
 │   ├── MINIMAL_GENERALIZATION.md          fixed protocol and what was completed
 │   ├── PROVENANCE.md                      source hashes and packaging notes
