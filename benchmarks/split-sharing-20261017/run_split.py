@@ -1,4 +1,4 @@
-"""Train paired C4B4/B4C4 validation-only cohorts without opening CIFAR-100 test data."""
+"""Train validation-only split-sharing or native width/depth cohorts without test data."""
 from __future__ import annotations
 
 import argparse
@@ -18,7 +18,7 @@ if str(SRC) not in sys.path:
 HERE = Path(__file__).resolve().parent
 SEEDS = (11, 23, 37, 53, 71)
 ARMS = ("C4B4", "B4C4")
-ALL_ARMS = ("C4B4", "B4C4", "C7B1", "C4W45")
+ALL_ARMS = ("C4B4", "B4C4", "C7B1", "C4W45", "C4W32", "B4W45")
 SPLIT_SEED = 1729
 PARAMETERS = 96_964
 MACS = 37_973_120
@@ -97,7 +97,7 @@ def _prepared(args, seed: int, arm: str = "C4B4"):
     from split_model import ARM_METADATA
     model = ARM_METADATA[arm]
     config = TrainConfig.from_mapping(dict(
-        # Mapped B arms deliberately use B's family-independent seed; C4W45 is native C.
+        # Mapped B arms and native arms use their declared family for initialization seeds.
         family=model["family"], depth=model["depth"], width=model["width"], alpha=0.1, fraction=0.1, paired_seed=seed,
         data_hash=data_hash, split_hash=split_hash, subset_hash=subset_hash, role="research",
         synthetic=synthetic, total_updates=updates, batch_size=128, learning_rate=0.03,

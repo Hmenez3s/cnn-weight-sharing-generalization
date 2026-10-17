@@ -37,6 +37,8 @@ def test_maps_params_native_initialization_and_routing():
         "B4C4": (0, 1, 2, 3, 4, 4, 4, 4),
         "C7B1": (0, 0, 0, 0, 0, 0, 0, 1),
         "C4W45": None,
+        "C4W32": None,
+        "B4W45": None,
     }
     native = build_model(ModelSpec("B", 8), seed=817)
     for arm in ("C4B4", "B4C4"):
