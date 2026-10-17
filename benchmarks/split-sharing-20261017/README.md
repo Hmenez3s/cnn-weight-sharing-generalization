@@ -26,7 +26,7 @@ Analyze a complete five-seed cohort with:
 ## Results
 
 The five-seed cohort ran on one RTX 5090 with five concurrent worker processes
-(two threads each): 10 runs in 1,228 s, about 3× faster than sequential. The
+(two threads each): 10 runs in 1,228 s. A matched 400-update probe measured 2.2× the sequential throughput; against the original ≈ 375 s per sequential run the full cohort was ≈ 3× faster. The
 committed B8/C8/H8 control means reproduce the published values. Repeated
 sequential probes show last-digit floating-point differences of the same size
 as parallel versus sequential runs, so concurrency does not change results
