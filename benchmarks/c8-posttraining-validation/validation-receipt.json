@@ -1,0 +1,68 @@
+{
+  "protected_input_files_verified_unchanged": 14,
+  "protected_input_sha256": {
+    "C11_selected": "6b7f4bb38056ae07d32bd669ab560a0355ff63478e441ca380aca9ccecd91ced",
+    "C11_last_original": "e25167e659f44679375e04915e7c00127a4bf14d6876de1d58f554ad07c175b1",
+    "C23_selected": "df1f0d73f9a5ddb06a6a9be971c20ea37626d1cf1f0e49bd8fc1a6642580e141",
+    "C23_last_original": "73f7fd7e334101b9a74cf26951b38b46b2e393bb6432c347235a520ee51dfcdd",
+    "C37_selected": "a6f355b86ced676eb7823d675018ee9b73c0b1963da4f586b0ec891a01df8415",
+    "C37_last_original": "37c61db0da446695c41c2724f9c3120a6c16a0d4b8c9256487f9a9c1c5df86fb",
+    "C53_selected": "26471ab8bf57a15384d8b16f13a35d00a26156eeff1342d9b2e792690c477142",
+    "C53_last_original": "30362ad56f24f8e07b607038df175f0137c82f7ce782e24e135ca67ea1239dcc",
+    "C71_selected": "a97f162be3b2a6a3dcb8f2553781e23438f339fe0e09005ede91c0f216be2ef3",
+    "C71_last_original": "c4048f731790ca9fbfdf7f12a1b4bb9a4e83e5a252dd2b1bf6d2045aa7f0c54b",
+    "validation_predictions.npz": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade",
+    "validation_images.npy": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+    "summary.json": "148c1436d0adee7753c2cdddbdaad3101c4ca4e6f48fa875d5b6177dd1796150",
+    "h8_reference": "06f9ab7c59a1234116c47d9307db6a85b987e123b40b27ff1f386866febfea27"
+  },
+  "h8_reference_unchanged": true,
+  "staged_last_checkpoints_byte_identical_to_originals": true,
+  "official_test_opened": false,
+  "validation_examples": 5000,
+  "seeds": [
+    11,
+    23,
+    37,
+    53,
+    71
+  ],
+  "independent_c8_baseline_and_ensemble_accuracy_verified": true,
+  "comparison_delta_signs_verified": true,
+  "temperature_accuracy_invariant_and_fold_counts_verified": true,
+  "windows_focused_test_evidence": {
+    "producer_tests": {
+      "passed": 8,
+      "workers": 3,
+      "wall_seconds": 4.4227355
+    },
+    "consumer_first_run": {
+      "passed": 6,
+      "failed": 1,
+      "workers": 3,
+      "wall_seconds": 16.2172785,
+      "failure": "negative-control test fixture shared a mutable summary dictionary between C8 and H8; corrected with deepcopy without changing production code or assertions"
+    },
+    "consumer_reference_mismatch_regression": {
+      "passed": 1,
+      "workers": 1,
+      "wall_seconds": 1.5843654
+    },
+    "unique_tests_with_final_passing_evidence": 15,
+    "note": "Six previously passing consumer tests and all eight producer tests were unchanged by the fixture-only repair; their existing evidence was reused."
+  },
+  "source_sha256": {
+    "scripts/infer_h8_posttraining.py": "1226b424a99036f37127d6dc6a08d3865d22509872b497149292d7a6a1ba9260",
+    "scripts/compare_h8_posttraining.py": "ab5dc1a2f255923e7fb0ad76e354a1af65bf79129228cf66f0f53f741c228820",
+    "tests/test_h8_posttraining_inference.py": "6344af1d9eba0660e6e0b16b8e5544c0976ce7529d7d29b5ce412847c040c0ca",
+    "tests/test_h8_posttraining_analysis.py": "f7c3833045013dff6bdaa8c91952da460012598a23e6d3d57d7457bbd06d309f"
+  },
+  "implementation_commits": [
+    "dbe3e70",
+    "c930219"
+  ],
+  "inference_wall_seconds": 25.1044622,
+  "analysis_wall_seconds": 5.7965619,
+  "execution_host": "Windows PC with NVIDIA GeForce RTX 5090",
+  "mac_model_inference_tests_or_numerical_analysis": false
+}

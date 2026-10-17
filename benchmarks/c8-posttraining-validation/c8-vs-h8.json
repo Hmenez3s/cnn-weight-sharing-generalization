@@ -1,0 +1,180 @@
+{
+  "comparison": {
+    "families": [
+      "C8",
+      "H8"
+    ],
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "validation_only_exploratory": true,
+    "claims": "descriptive mean-per-seed comparisons except the explicitly labeled one pooled five-seed probability ensemble; no causal or significance claims"
+  },
+  "cost_interpretation": {
+    "parameters_per_model": {
+      "C8": 22724,
+      "H8": 59844
+    },
+    "macs_per_view_per_model": {
+      "C8": 37973120,
+      "H8": 37973120
+    },
+    "note": "Counted arithmetic costs only; ensemble parameter storage is five models, passes are not measured speed."
+  },
+  "methods": {
+    "baseline": {
+      "aggregation_C8": "mean of five per-seed metric rows",
+      "aggregation_H8": "mean of five per-seed metric rows",
+      "passes_per_image": 1,
+      "accuracy_percent": {
+        "C8": 21.256,
+        "H8": 21.744,
+        "C8_minus_H8_pp": -0.48799999999999955
+      },
+      "ece_percent": {
+        "C8": 12.369148340165616,
+        "H8": 12.987440498918295,
+        "C8_minus_H8_pp": -0.6182921587526788
+      },
+      "nll": {
+        "C8": 3.5285685702965752,
+        "H8": 3.535553298813519,
+        "C8_minus_H8": -0.006984728516943761
+      },
+      "brier": {
+        "C8": 0.9235411622485312,
+        "H8": 0.9241911869016798,
+        "C8_minus_H8": -0.0006500246531485621
+      }
+    },
+    "temperature_scaling": {
+      "aggregation_C8": "mean of five per-seed metric rows",
+      "aggregation_H8": "mean of five per-seed metric rows",
+      "passes_per_image": 1,
+      "accuracy_percent": {
+        "C8": 21.256,
+        "H8": 21.744,
+        "C8_minus_H8_pp": -0.48799999999999955
+      },
+      "ece_percent": {
+        "C8": 2.806261058222446,
+        "H8": 3.470428290218873,
+        "C8_minus_H8_pp": -0.6641672319964269
+      },
+      "nll": {
+        "C8": 3.2996459617213647,
+        "H8": 3.270231452403641,
+        "C8_minus_H8": 0.029414509317723603
+      },
+      "brier": {
+        "C8": 0.9007865364800727,
+        "H8": 0.8995150085092325,
+        "C8_minus_H8": 0.0012715279708401805
+      }
+    },
+    "weight_average": {
+      "aggregation_C8": "mean of five per-seed metric rows",
+      "aggregation_H8": "mean of five per-seed metric rows",
+      "passes_per_image": 1,
+      "accuracy_percent": {
+        "C8": 21.2,
+        "H8": 21.72,
+        "C8_minus_H8_pp": -0.5199999999999996
+      },
+      "ece_percent": {
+        "C8": 12.637716325044632,
+        "H8": 13.451851378217338,
+        "C8_minus_H8_pp": -0.8141350531727056
+      },
+      "nll": {
+        "C8": 3.5288957985230978,
+        "H8": 3.546312908916805,
+        "C8_minus_H8": -0.01741711039370708
+      },
+      "brier": {
+        "C8": 0.9235836819999699,
+        "H8": 0.9250743175412565,
+        "C8_minus_H8": -0.001490635541286589
+      }
+    },
+    "five_seed_ensemble": {
+      "aggregation_C8": "one predictor: arithmetic mean of five same-backend identity probability arrays",
+      "aggregation_H8": "one predictor: arithmetic mean of five same-backend identity probability arrays",
+      "passes_per_image": 5,
+      "accuracy_percent": {
+        "C8": 28.46,
+        "H8": 29.32,
+        "C8_minus_H8_pp": -0.8599999999999994
+      },
+      "ece_percent": {
+        "C8": 4.790877504964504,
+        "H8": 5.166491113631255,
+        "C8_minus_H8_pp": -0.3756136086667512
+      },
+      "nll": {
+        "C8": 2.9117129378371343,
+        "H8": 2.8472373126455315,
+        "C8_minus_H8": 0.06447562519160277
+      },
+      "brier": {
+        "C8": 0.8455336285069553,
+        "H8": 0.8388658228666358,
+        "C8_minus_H8": 0.006667805640319546
+      }
+    },
+    "tta": {
+      "aggregation_C8": "mean of five per-seed metric rows",
+      "aggregation_H8": "mean of five per-seed metric rows",
+      "passes_per_image": 10,
+      "accuracy_percent": {
+        "C8": 21.592,
+        "H8": 21.651999999999997,
+        "C8_minus_H8_pp": -0.05999999999999872
+      },
+      "ece_percent": {
+        "C8": 6.42159084263444,
+        "H8": 7.2743740344494565,
+        "C8_minus_H8_pp": -0.8527831918150168
+      },
+      "nll": {
+        "C8": 3.3826823699558717,
+        "H8": 3.3751410013306424,
+        "C8_minus_H8": 0.00754136862522925
+      },
+      "brier": {
+        "C8": 0.905082031279321,
+        "H8": 0.9042616859064572,
+        "C8_minus_H8": 0.0008203453728637955
+      }
+    },
+    "all_four_combined": {
+      "aggregation_C8": "mean of five average+TTA predictors, then cross-fitted scalar temperature",
+      "aggregation_H8": "mean of five average+TTA predictors, then cross-fitted scalar temperature",
+      "passes_per_image": 50,
+      "accuracy_percent": {
+        "C8": 29.160000000000004,
+        "H8": 29.880000000000003,
+        "C8_minus_H8_pp": -0.7199999999999989
+      },
+      "ece_percent": {
+        "C8": 4.080562625814721,
+        "H8": 4.193012469162598,
+        "C8_minus_H8_pp": -0.11244984334787667
+      },
+      "nll": {
+        "C8": 2.8895600948022557,
+        "H8": 2.8266737733489133,
+        "C8_minus_H8": 0.06288632145334239
+      },
+      "brier": {
+        "C8": 0.8431759150516951,
+        "H8": 0.8344841470505653,
+        "C8_minus_H8": 0.008691768001129807
+      }
+    }
+  }
+}
