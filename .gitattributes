@@ -4,5 +4,6 @@ benchmarks/hybrid-generalization-20261015/*.json -text whitespace=cr-at-eol
 benchmarks/hybrid-generalization-20261015/runs/** -text whitespace=cr-at-eol
 benchmarks/position-ablation-20261016/**/*.json -text whitespace=cr-at-eol
 benchmarks/position-ablation-20261016/runs/** -text whitespace=cr-at-eol
+benchmarks/conv-granularity-20261017/results/** -text whitespace=cr-at-eol
 *.gz binary
 *.zip binary

@@ -1,0 +1,255 @@
+{
+  "artifact_sha256": {
+    "analysis.json": "9668ea0c7a5bdb9c981cf24c72840d54c2422934135054e9621d75a7ad076ef2",
+    "analysis.md": "0776e39156a57a2d74ef4977d9544f5721efac5b61c70387616264483a6a90a4",
+    "cohort.json": "b5af8c0664d6121260e4630dd54bc8d1c8bfb6d75749b23522eb95ed65ca3fe3",
+    "report.md": "1bf81e84bc3f50cad12277d0b230358e78214fffe898529dc47c08e437237b4c",
+    "speed.json": "92c1b24446045e041c45af972b6a2cabf3817ef142eb4875666870eec8213549"
+  },
+  "cpu_threads_per_training_worker": 2,
+  "execution_host": "Windows RTX 5090 PC",
+  "export_wall_seconds": 2.1131981999787968,
+  "export_workers": 9,
+  "exports": [
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 0.3117969000013545,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "95b98081eda496ed787029cb107a8ca16102717aef75bc0c3a3e926f17c4abe0",
+      "raw_log_sha256": "4d42f7e384ac7ea8fa683fbed8c0ccb6972a59c6bd7a1190470f4b151f74d7a8",
+      "run_id": "A3W37G1-s11",
+      "run_metadata_sha256": "a8273a6f0db561666af4a41d326c09bb10d45e824f3e13e8ec39e79183aaec6f",
+      "selected_update": 9200
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.748943300015526,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "64464feddb57eec22f8230016ac8121036e2b6061cdc7ddfc53ab029a6a5b596",
+      "raw_log_sha256": "06650391794b77a60b7e738221a2ee0226e9443ccfebf4d35809ff20bb0b2368",
+      "run_id": "A3W37G1-s23",
+      "run_metadata_sha256": "43ae4a41110678178d212529f1f3bd80af1766a0ab89a0d49a3b23373a94de65",
+      "selected_update": 7000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.756979500001762,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "03b5b53239152f458cc4add7de6999aecfc23584b1a30a578f5ddc3ae65a9664",
+      "raw_log_sha256": "28871f3566208cead33e0d9fa61d9039c2ad88272ddafc4e5b4e149c9a1c8382",
+      "run_id": "A3W37G1-s37",
+      "run_metadata_sha256": "331d2ea46da20a829d684a2cd6460edf74d346ae470dcb5889a937996832e1be",
+      "selected_update": 7600
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.768223899998702,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "beab750692b6ca18f1a08dee67f34dda0fde7051a6d022e68c796ae9ce404b6b",
+      "raw_log_sha256": "661e4edbc5dd234c6b1747861e2be0973102bab5555a87bb9c35528aecd168fb",
+      "run_id": "A3W37G1-s53",
+      "run_metadata_sha256": "e985fe23d19ab78ade76c9b2b25729be590a7aade512ac21e04b937c0c98492d",
+      "selected_update": 9400
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7712055000010878,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "a7c509c7a52abce90a9c297eb6ca6a00748c6c3c532e688641b4587e371d6eae",
+      "raw_log_sha256": "18e03803d1eb69792471aec296413c3c692b3afa6f90c86b6902540cc29dbea3",
+      "run_id": "A3W37G1-s71",
+      "run_metadata_sha256": "7c943d20fd7297b39996747332f1ff39c6fa7900a17dfab6938b68cc51ba6700",
+      "selected_update": 8600
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7707599000132177,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "955f1531e3f83cc04e8c0d7d3fd2f228d8a12d7b1f3501a5a286fd05a12d7fef",
+      "raw_log_sha256": "27dd64a8730f49595522610f60c8733f04634208e0c9e33abccc8e5ce4bf575a",
+      "run_id": "AB2W32G1-s11",
+      "run_metadata_sha256": "6a22f1a64b36f352f99f6f05999634007c5b0e6623c4763ec8ffb6d6b02c1517",
+      "selected_update": 9200
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.781107399991015,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "810077da9b746bf02a99271b5d2ffe471f1d8a2947ff03796d984cae8ba8e925",
+      "raw_log_sha256": "26de22e6e802e93126920c761569845cdb688317d9c68d148eff58a4a04e8465",
+      "run_id": "AB2W32G1-s23",
+      "run_metadata_sha256": "dd6f7cbc6a10d7e423f7d0eea0b82f75f5189ec3c8faf60677017c5532124f17",
+      "selected_update": 7600
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7710987000027671,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "d9996d88593f5f6e2e3925dae4afbd5e77e9f05639f7fc873e10cf8ce1b9f5d4",
+      "raw_log_sha256": "7e9f8c4d6bc975f78c8f0742c7a27578c7aa821e19a3d178bc834770385cd283",
+      "run_id": "AB2W32G1-s37",
+      "run_metadata_sha256": "e1fce11bc1724afb32245677e9c46d771a71cbac4872393b287eb4805b996dd3",
+      "selected_update": 8800
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7706703000003472,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "9a598dafeb0b8a879794b3ad5580d59233e9f938c096cebca4de538bcc085ad9",
+      "raw_log_sha256": "6b15392f610a472f3e417757ec21c8b5af0667e8d07904e57fcbf3bc63af3726",
+      "run_id": "AB2W32G1-s53",
+      "run_metadata_sha256": "2aafa57502ea29a92f88bf5f7adf5fbac42683ed12f98dd3b52da78cc3b1f29d",
+      "selected_update": 9000
+    },
+    {
+      "evaluation_rows": 50,
+      "export_wall_seconds": 1.7766409000032581,
+      "log_rows": 10000,
+      "maximum_update": 10000,
+      "public_gzip_sha256": "67425228189819052cd5d31bf8eb2c8304da983ad783b5d69b6c0713921aa872",
+      "raw_log_sha256": "2c14c07114c7dcdfcabb95ffa4fcce33705d076e662f6b24b37def4d7f3f0a63",
+      "run_id": "AB2W32G1-s71",
+      "run_metadata_sha256": "8d24673e26128f17b19202d3d315c856ec113dc0f1dbbc5c8e2a6603b377ee1e",
+      "selected_update": 7800
+    }
+  ],
+  "gpu_memory_fraction_per_worker": 0.15,
+  "isolated_speed_comparison": {
+    "inference_batch1": {
+      "A3W37G1_wall_mean_ms": 0.4261958002462052,
+      "A3_speedup_vs_AB2_wall": 1.2579955025179537,
+      "AB2W32G1_wall_mean_ms": 0.5361523999017663
+    },
+    "inference_batch128": {
+      "A3W37G1_wall_mean_ms": 0.5123434006236494,
+      "A3_speedup_vs_AB2_wall": 0.8910718844503459,
+      "AB2W32G1_wall_mean_ms": 0.4565347994794138
+    },
+    "training_batch128": {
+      "A3W37G1_wall_mean_ms": 2.0239454000839032,
+      "A3_speedup_vs_AB2_wall": 0.9694590575385615,
+      "AB2W32G1_wall_mean_ms": 1.9621322000748478
+    }
+  },
+  "logical_cpu_count": 16,
+  "maximum_workers": 5,
+  "monitor_sample_seconds": 2,
+  "official_test_opened": false,
+  "phases": [
+    {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "test",
+      "wall_seconds": 26.867443599999998,
+      "workers": 4
+    },
+    {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "probe",
+      "wall_seconds": 20.838295799999997,
+      "workers": 5
+    },
+    {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "train",
+      "wall_seconds": 409.2952383,
+      "workers": 5
+    },
+    {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "speedprobe",
+      "wall_seconds": 3.5174939,
+      "workers": 1
+    },
+    {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "speed",
+      "wall_seconds": 8.0743255,
+      "workers": 1
+    }
+  ],
+  "resource_audit": {
+    "download_enabled": false,
+    "input_files": [
+      {
+        "bytes": 155249918,
+        "name": "train",
+        "sha256": "735e79b04f092ca3d2e6d07f368c0a7d70d48c48d28865950cc24454cf45129b"
+      },
+      {
+        "bytes": 1473,
+        "name": "meta",
+        "sha256": "a5d4786345c961390f865e93b434dbd5c6904ce880667e0cb888c97d449f28b9"
+      }
+    ],
+    "links_used": false,
+    "original_input_hashes_unchanged": true,
+    "owned_copy_hashes_unchanged": true,
+    "protected": "source data, prior studies and installed interpreter were not write targets",
+    "scientific_data_root_entries": [
+      "meta",
+      "train"
+    ],
+    "teardown": "none; evidence retained",
+    "write_boundary": "new run-owned outputs, checkpoints, caches and test temporary roots"
+  },
+  "run_count": 10,
+  "schema": "conv-granularity-execution-receipt-v1",
+  "short_execution_probe": {
+    "phase": {
+      "cpu_threads_per_worker": 2,
+      "exit_code": 0,
+      "phase": "probe",
+      "wall_seconds": 20.838295799999997,
+      "workers": 5
+    },
+    "runs": 10,
+    "scientific": false,
+    "updates_per_run": 200
+  },
+  "source_commit": "103371e2f6157d7637334e69d42370124005b123",
+  "source_sha256": {
+    "benchmarks/conv-granularity-20261017/benchmark_granularity.py": "62dfa30bcaf1014e4c5d35428ddd770b16cfc9140cb903a7085f9af434184d12",
+    "benchmarks/split-sharing-20261017/analyze_split.py": "9f2a76c3615e5d3236d90c10d9e3600baff0f920b4f9ba7d9f6f33c2d0328518",
+    "benchmarks/split-sharing-20261017/run_split.py": "6eab7b6bdc7cd5d2774efede053e9aaea388c3cfee7356960ff5f89f313cec01",
+    "benchmarks/split-sharing-20261017/split_model.py": "825cb3a39bd6e346a4335bb89519ff032facd65ed20047bf93af3a5a9055c6d0",
+    "src/recurrent_cnn/config.py": "82bbec838a5fe78d2a8f255ac5bea6fbf5062b3211f5c046b2204d5e6ca8995f",
+    "src/recurrent_cnn/costs.py": "f8fb550b2f65b5a6df61990b48ba0527badf5f6c0970df1da8cb1b2742513abb",
+    "src/recurrent_cnn/data.py": "7cf4a43db7d367bf41da6e4a63976818c022d7eae0efee796ac0bf8f097888d5",
+    "src/recurrent_cnn/engine.py": "6dccb5b9898bf584812ceb28a886566d14cbecb0ef545b78a9f57564c38dc164",
+    "src/recurrent_cnn/models.py": "1b440e45cb1f5f8e058bbfbd62d306d66bdd62c57046ae0258a2128da5882c9e"
+  },
+  "source_snapshot_note": "source commit and individual runtime file hashes identify the frozen producer; historical results and protocols were not modified",
+  "status": "complete",
+  "timing_scope": "training phase includes evaluation, checkpointing and concurrent contention; not an isolated speed benchmark",
+  "training_phase": {
+    "cpu_threads_per_worker": 2,
+    "exit_code": 0,
+    "phase": "train",
+    "wall_seconds": 409.2952383,
+    "workers": 5
+  },
+  "updates_per_run": 10000,
+  "validation": {
+    "actual_two_arm_analysis": "passed",
+    "mac_numeric_execution": false,
+    "producer_regression_tests": {
+      "passed": 73,
+      "wall_seconds": 26.867443599999998,
+      "workers": 4
+    }
+  }
+}
