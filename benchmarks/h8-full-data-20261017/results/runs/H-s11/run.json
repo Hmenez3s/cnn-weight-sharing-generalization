@@ -1,0 +1,88 @@
+{
+  "amp": false,
+  "config": {
+    "alpha": 0.1,
+    "amp": false,
+    "batch_size": 128,
+    "cosine_horizon": 10000,
+    "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+    "depth": 8,
+    "device": "cuda",
+    "family": "H",
+    "fraction": 1.0,
+    "learning_rate": 0.03,
+    "momentum": 0.9,
+    "num_classes": 100,
+    "paired_seed": 11,
+    "role": "research",
+    "selection_identity": "amended_v2",
+    "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+    "split_seed": 1729,
+    "subset_hash": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+    "synthetic": false,
+    "total_updates": 10000,
+    "validation_cadence": 200,
+    "weight_decay": 0.0005,
+    "width": 32
+  },
+  "config_hash": "aa174e74ec1d1287aa0a1515fa2d6c960ea99e06bbf70d0df5a0f5cd922e3c35",
+  "costs": {
+    "depth": 8,
+    "family": "H",
+    "input_shape": [
+      1,
+      3,
+      32,
+      32
+    ],
+    "mac_breakdown": {
+      "branch_conv_per_step": 4718592,
+      "executed_branch": 37748736,
+      "head": 3200,
+      "stem": 221184,
+      "total": 37973120
+    },
+    "omitted": [
+      "GroupNorm",
+      "ReLU",
+      "residual add/scale",
+      "pooling",
+      "memory traffic"
+    ],
+    "parameter_breakdown": {
+      "branch_per_unique_copy": 18560,
+      "head": 3300,
+      "stem": 864,
+      "unique_branch_copies": 3,
+      "unique_total": 59844
+    },
+    "width": 32
+  },
+  "data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+  "depth": 8,
+  "derived_seeds": {
+    "augmentation": 805575444,
+    "init": 3055007419,
+    "minibatch": 338339630,
+    "subset": 11
+  },
+  "device": "cuda",
+  "environment": {
+    "python": "3.13.13",
+    "torch": "2.9.1+cu128"
+  },
+  "family": "H",
+  "fraction": 1.0,
+  "macs": 37973120,
+  "paired_seed": 11,
+  "parameter_count": 59844,
+  "parameter_mismatch": {},
+  "role": "research",
+  "run_id": "H-s11",
+  "schema_version": 1,
+  "split_hash": "de00762053d17d6665b26831f0ee6cbdea056467d670b66bc5ab77d15bbbcaaa",
+  "status": "complete",
+  "subset_hash": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+  "synthetic": false,
+  "width": 32
+}

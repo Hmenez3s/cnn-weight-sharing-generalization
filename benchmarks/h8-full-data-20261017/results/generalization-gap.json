@@ -1,0 +1,183 @@
+{
+  "study": {
+    "families": [
+      "H8"
+    ],
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "validation_only_exploratory": true,
+    "official_test_opened": false,
+    "cohort_schema": "h8-full-data-cohort-v1",
+    "fraction": 1.0,
+    "train_examples_per_run": 45000
+  },
+  "methods": {
+    "H": {
+      "baseline": {
+        "training_accuracy_percent": 29.79511111111111,
+        "validation_accuracy_percent": 29.407999999999998,
+        "gap_pp": 0.38711111111111407,
+        "training_scope": "own_seed_1_subset",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": {
+          "11": 29.884444444444448,
+          "23": 29.022222222222222,
+          "37": 30.464444444444442,
+          "53": 29.975555555555555,
+          "71": 29.628888888888888
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 29.520000000000003,
+          "23": 28.360000000000003,
+          "37": 30.44,
+          "53": 29.68,
+          "71": 29.04
+        }
+      },
+      "temperature_scaling": {
+        "training_accuracy_percent": 29.79511111111111,
+        "validation_accuracy_percent": 29.407999999999998,
+        "gap_pp": 0.38711111111111407,
+        "training_scope": "own_seed_1_subset",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": {
+          "11": 29.884444444444448,
+          "23": 29.022222222222222,
+          "37": 30.464444444444442,
+          "53": 29.975555555555555,
+          "71": 29.628888888888888
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 29.520000000000003,
+          "23": 28.360000000000003,
+          "37": 30.44,
+          "53": 29.68,
+          "71": 29.04
+        }
+      },
+      "weight_average": {
+        "training_accuracy_percent": 29.80444444444445,
+        "validation_accuracy_percent": 29.336000000000002,
+        "gap_pp": 0.4684444444444473,
+        "training_scope": "own_seed_1_subset",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": {
+          "11": 29.884444444444448,
+          "23": 29.022222222222222,
+          "37": 30.511111111111113,
+          "53": 29.975555555555555,
+          "71": 29.628888888888888
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 29.520000000000003,
+          "23": 28.24,
+          "37": 30.48,
+          "53": 29.4,
+          "71": 29.04
+        }
+      },
+      "five_seed_ensemble": {
+        "training_accuracy_percent": 33.69111111111111,
+        "validation_accuracy_percent": 33.28,
+        "gap_pp": 0.4111111111111114,
+        "training_scope": "five_seed_union",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      },
+      "tta": {
+        "training_accuracy_percent": 30.111111111111107,
+        "validation_accuracy_percent": 29.52,
+        "gap_pp": 0.5911111111111076,
+        "training_scope": "own_seed_1_subset",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": {
+          "11": 30.06,
+          "23": 29.464444444444442,
+          "37": 30.75777777777778,
+          "53": 30.473333333333336,
+          "71": 29.799999999999997
+        },
+        "per_seed_validation_accuracy_percent": {
+          "11": 29.94,
+          "23": 28.7,
+          "37": 29.94,
+          "53": 29.48,
+          "71": 29.54
+        }
+      },
+      "all_four_combined": {
+        "training_accuracy_percent": 33.50666666666667,
+        "validation_accuracy_percent": 32.76,
+        "gap_pp": 0.7466666666666697,
+        "training_scope": "five_seed_union",
+        "n_train": 45000,
+        "per_seed_training_accuracy_percent": null,
+        "per_seed_validation_accuracy_percent": null
+      }
+    }
+  },
+  "identity": {
+    "split_seed": 1729,
+    "fraction": 1.0,
+    "train_data_hash": "7b74250d9114dc502703e69138e516dd8a6b9b4cafd29b54bf2906e759650168",
+    "train_count": 45000,
+    "validation_count": 5000,
+    "union_count": 45000,
+    "subset_counts": {
+      "11": 45000,
+      "23": 45000,
+      "37": 45000,
+      "53": 45000,
+      "71": 45000
+    },
+    "subset_hashes": {
+      "H11": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+      "H23": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+      "H37": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+      "H53": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3",
+      "H71": "92249d43dfe5e0a24827c2b2480b852a706e767377d03cba549d88d2c0cc42a3"
+    },
+    "validation_indices_sha256": "78307efb6f569ee289d71909343f93b9986c9bba048c4e25d487b1e8021ee416",
+    "union_indices_sha256": "ba7180b12340e32b101f6e77047f608e35bdbbc277c922c6dae9375cba6354ca",
+    "validation_images_sha256": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+    "validation_baseline_sha256": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade"
+  },
+  "runtime": {
+    "device": "cuda",
+    "batch_size": 128,
+    "threads": 2,
+    "memory_fraction": 0.04,
+    "elapsed_seconds": 78.85665100000915,
+    "peak_memory_bytes": 1825812480,
+    "cuda_peak_allocated_bytes": 32129536
+  },
+  "checkpoint_sha256": {
+    "H-s11": {
+      "selected": "f21695fc275fe5a8fa6a593fcea40ca24a4d63c418c2be134fb57c46164a712a",
+      "last": "e2aca22b4e508a5569bace4378346ac38d3a1e6ebafb7381f018500462632e11"
+    },
+    "H-s23": {
+      "selected": "3f312fe63378a1414c39d63636e8f8574a6a2d46c3b46d88f58de61858269d0e",
+      "last": "20c65a01b933231f031d4c1e053115ce84c86de2eeb7c040754a2967f7fb9961"
+    },
+    "H-s37": {
+      "selected": "9de8df839d5d3ce923af5b7aae4cea7e5aa8811d0f34d2a6d15577f3d5f7dcdd",
+      "last": "26e330a5a511428323fa254282430f33ab3fec22ce758f0ab873afba777883cf"
+    },
+    "H-s53": {
+      "selected": "7ce2ea42055e95c024bacf00b94183cea61756eaddb7ec0f0178ade1431058ef",
+      "last": "39c0f1d1b17f824e1a0b9a6d4fc289b75a055a68a661fd24f64ee17295187fbf"
+    },
+    "H-s71": {
+      "selected": "49e19945db8e72ea0df0e90353cf8173852be5397acc8bb922d62adb352e388c",
+      "last": "f2492f3c31248012bddd6a79e2ffb800f8ed3988eee3da93fa573fb5b121c5ea"
+    }
+  },
+  "note": "Single-model and ensemble rows share the same training cohort; the ensemble aggregates five predictors trained on the same examples. Accuracy only; exploratory validation-only; official test was never opened."
+}

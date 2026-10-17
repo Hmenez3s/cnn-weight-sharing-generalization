@@ -1,0 +1,1043 @@
+{
+  "study": {
+    "family": "H8",
+    "depth": 8,
+    "width": 32,
+    "alpha": 0.1,
+    "classes": 100,
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "validation_examples": 5000,
+    "validation_only_exploratory": true,
+    "known_selection_on_this_validation": true,
+    "fraction": 1.0,
+    "train_examples_per_run": 45000,
+    "cohort_schema": "h8-full-data-cohort-v1"
+  },
+  "methods": {
+    "baseline": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 29.520000000000003,
+          "nll": 2.7622080790484644,
+          "brier": 0.8345091572555364,
+          "ece_percent": 2.742558629289269
+        },
+        "23": {
+          "accuracy_percent": 28.360000000000003,
+          "nll": 2.804874545746622,
+          "brier": 0.8424461610307983,
+          "ece_percent": 2.4860577944666153
+        },
+        "37": {
+          "accuracy_percent": 30.44,
+          "nll": 2.7486212803195005,
+          "brier": 0.8278774088894812,
+          "ece_percent": 2.0989544627815477
+        },
+        "53": {
+          "accuracy_percent": 29.68,
+          "nll": 2.7630743779120626,
+          "brier": 0.8312050172212535,
+          "ece_percent": 2.5215496210008843
+        },
+        "71": {
+          "accuracy_percent": 29.04,
+          "nll": 2.776282063806074,
+          "brier": 0.8353319080909801,
+          "ece_percent": 2.1361545057594777
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 29.407999999999998,
+            "sd": 0.6906924062127797
+          },
+          "nll": {
+            "mean": 2.7710120693665443,
+            "sd": 0.01905940593660047
+          },
+          "brier": {
+            "mean": 0.8342739304976099,
+            "sd": 0.0048640254416346925
+          },
+          "ece_percent": {
+            "mean": 2.3970550026595587,
+            "sd": 0.24483715572516995
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.0,
+        "nll": 0.0,
+        "brier": 0.0,
+        "ece_percent": 0.0
+      }
+    },
+    "weight_average": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 29.520000000000003,
+          "nll": 2.7597552760636903,
+          "brier": 0.8341247233067733,
+          "ece_percent": 2.794452386051415
+        },
+        "23": {
+          "accuracy_percent": 28.24,
+          "nll": 2.801663807237179,
+          "brier": 0.8417281662259507,
+          "ece_percent": 2.1040265052020555
+        },
+        "37": {
+          "accuracy_percent": 30.48,
+          "nll": 2.7477685396364038,
+          "brier": 0.8275163637413203,
+          "ece_percent": 2.2228541218489415
+        },
+        "53": {
+          "accuracy_percent": 29.4,
+          "nll": 2.76208585801308,
+          "brier": 0.8310847736306544,
+          "ece_percent": 2.1640572055429237
+        },
+        "71": {
+          "accuracy_percent": 29.04,
+          "nll": 2.776282063806074,
+          "brier": 0.8353319080909801,
+          "ece_percent": 2.1361545057594777
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 29.336000000000002,
+            "sd": 0.7260192834904602
+          },
+          "nll": {
+            "mean": 2.7695111089512854,
+            "sd": 0.01845368138853446
+          },
+          "brier": {
+            "mean": 0.8339571869991358,
+            "sd": 0.004733730187414043
+          },
+          "ece_percent": {
+            "mean": 2.284308944880963,
+            "sd": 0.25804457077990695
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": -0.07199999999999562,
+        "nll": -0.001500960415258934,
+        "brier": -0.00031674349847410355,
+        "ece_percent": -0.1127460577785957
+      }
+    },
+    "tta": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 29.94,
+          "nll": 2.760768092060354,
+          "brier": 0.8383472603181373,
+          "ece_percent": 6.591261331364512
+        },
+        "23": {
+          "accuracy_percent": 28.7,
+          "nll": 2.8014098455251624,
+          "brier": 0.8446390914663167,
+          "ece_percent": 5.450308264270425
+        },
+        "37": {
+          "accuracy_percent": 29.94,
+          "nll": 2.750592157600819,
+          "brier": 0.8317344541977756,
+          "ece_percent": 4.884402100741864
+        },
+        "53": {
+          "accuracy_percent": 29.48,
+          "nll": 2.759546973766091,
+          "brier": 0.8351254276406397,
+          "ece_percent": 5.7703725755214705
+        },
+        "71": {
+          "accuracy_percent": 29.54,
+          "nll": 2.7722896623870876,
+          "brier": 0.8380034085393862,
+          "ece_percent": 5.660476739183068
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 29.52,
+            "sd": 0.45325489517489015
+          },
+          "nll": {
+            "mean": 2.768921346267903,
+            "sd": 0.017647445756465124
+          },
+          "brier": {
+            "mean": 0.8375699284324511,
+            "sd": 0.004261304014681719
+          },
+          "ece_percent": {
+            "mean": 5.671364202216267,
+            "sd": 0.552142554040014
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.11200000000000188,
+        "nll": -0.002090723098641334,
+        "brier": 0.003295997934841255,
+        "ece_percent": 3.2743091995567086
+      }
+    },
+    "all_four": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 29.98,
+          "nll": 2.7576278992844463,
+          "brier": 0.837784456666961,
+          "ece_percent": 6.622922699451447
+        },
+        "23": {
+          "accuracy_percent": 28.88,
+          "nll": 2.797456996071412,
+          "brier": 0.8438601694018242,
+          "ece_percent": 5.646466881036758
+        },
+        "37": {
+          "accuracy_percent": 30.18,
+          "nll": 2.7503368692111407,
+          "brier": 0.8314668631855077,
+          "ece_percent": 5.116009293273091
+        },
+        "53": {
+          "accuracy_percent": 29.56,
+          "nll": 2.757297644481614,
+          "brier": 0.8347238106169338,
+          "ece_percent": 5.788721561282872
+        },
+        "71": {
+          "accuracy_percent": 29.54,
+          "nll": 2.7722896623870876,
+          "brier": 0.8380034085393862,
+          "ece_percent": 5.660476739183068
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 29.627999999999997,
+            "sd": 0.447320913886217
+          },
+          "nll": {
+            "mean": 2.7670018142871404,
+            "sd": 0.016824036516362224
+          },
+          "brier": {
+            "mean": 0.8371677416821226,
+            "sd": 0.0041070690263701306
+          },
+          "ece_percent": {
+            "mean": 5.766919434845447,
+            "sd": 0.4863619638322833
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.21999999999999886,
+        "nll": -0.0040102550794038905,
+        "brier": 0.002893811184512707,
+        "ece_percent": 3.3698644321858886
+      }
+    },
+    "temperature_scaling": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 29.520000000000003,
+          "nll": 2.7623966927467367,
+          "brier": 0.8345546844333211,
+          "ece_percent": 2.8675357360063494
+        },
+        "23": {
+          "accuracy_percent": 28.360000000000003,
+          "nll": 2.8051127231548842,
+          "brier": 0.8424431840036676,
+          "ece_percent": 2.294490328689643
+        },
+        "37": {
+          "accuracy_percent": 30.44,
+          "nll": 2.7483769758401873,
+          "brier": 0.8282587866415412,
+          "ece_percent": 2.836659777259229
+        },
+        "53": {
+          "accuracy_percent": 29.68,
+          "nll": 2.7630754428455155,
+          "brier": 0.830981356431076,
+          "ece_percent": 2.19888848314039
+        },
+        "71": {
+          "accuracy_percent": 29.04,
+          "nll": 2.776330389207177,
+          "brier": 0.8354494788111526,
+          "ece_percent": 2.3020975896606433
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 29.407999999999998,
+            "sd": 0.6906924062127797
+          },
+          "nll": {
+            "mean": 2.7710584447589,
+            "sd": 0.019186925627190845
+          },
+          "brier": {
+            "mean": 0.8343374980641517,
+            "sd": 0.00480000489315082
+          },
+          "ece_percent": {
+            "mean": 2.4999343829512513,
+            "sd": 0.28999656409815977
+          }
+        }
+      },
+      "crossfit": {
+        "11": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 0.9947121984808539,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.005301831421681138,
+              "fit_nll": 2.749498528912496,
+              "unit_temperature_fit_nll": 2.7495236011062163,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.0006111226566081,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.0006109359972013103,
+              "fit_nll": 2.762138923973335,
+              "unit_temperature_fit_nll": 2.7621392573235517,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 0.998882136717077,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.0011184885581074417,
+              "fit_nll": 2.755756024646525,
+              "unit_temperature_fit_nll": 2.755757143438365,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.009342419764771,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.009299049275525172,
+              "fit_nll": 2.7790374861036726,
+              "unit_temperature_fit_nll": 2.779114857295729,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 0.9985384006052692,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.0014626685730600958,
+              "fit_nll": 2.7645036330503308,
+              "unit_temperature_fit_nll": 2.7645055379467403,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "23": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 0.9929440010056579,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.0070810102777479995,
+              "fit_nll": 2.7945103656805412,
+              "unit_temperature_fit_nll": 2.794554883028719,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.0008893390012277,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.0008889437736083306,
+              "fit_nll": 2.8064070996719694,
+              "unit_temperature_fit_nll": 2.8064078055527215,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 0.9924801323964155,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.0075482843577582325,
+              "fit_nll": 2.78676725043243,
+              "unit_temperature_fit_nll": 2.7868179329646083,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.006889199299106,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.006865577195145565,
+              "fit_nll": 2.8221182186633063,
+              "unit_temperature_fit_nll": 2.822160273095307,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.0010289501657856,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.0010284211594135718,
+              "fit_nll": 2.814430893692348,
+              "unit_temperature_fit_nll": 2.8144318355260123,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "37": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.0155849909686572,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.01546479225223696,
+              "fit_nll": 2.7341156908663713,
+              "unit_temperature_fit_nll": 2.7343324597258363,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.0271905285253555,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.02682743323869267,
+              "fit_nll": 2.7548778667141476,
+              "unit_temperature_fit_nll": 2.755534593055752,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.0187394355879718,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.018566015544169808,
+              "fit_nll": 2.740257528473917,
+              "unit_temperature_fit_nll": 2.7405707052534165,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.029231198895025,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.028812114699992404,
+              "fit_nll": 2.760255781327135,
+              "unit_temperature_fit_nll": 2.761012709637753,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.021331873863632,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.02110753422451955,
+              "fit_nll": 2.751252025562656,
+              "unit_temperature_fit_nll": 2.7516559366319933,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "53": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 0.9849654634732513,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.015148700888454977,
+              "fit_nll": 2.749628180650171,
+              "unit_temperature_fit_nll": 2.7498322024009103,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 0.9929250308874471,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.007100115382774397,
+              "fit_nll": 2.7631577622304087,
+              "unit_temperature_fit_nll": 2.763202832460444,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 0.9882583126921382,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.011811165313131542,
+              "fit_nll": 2.7570632777082613,
+              "unit_temperature_fit_nll": 2.7571875148951093,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 0.9940670137246987,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.00595065636396662,
+              "fit_nll": 2.774240689702578,
+              "unit_temperature_fit_nll": 2.7742723202964696,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 0.9905488760132457,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": -0.009496069272206744,
+              "fit_nll": 2.770797034625184,
+              "unit_temperature_fit_nll": 2.770877020998039,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "71": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.0009268318070244,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.0009264025636289861,
+              "fit_nll": 2.763186975793793,
+              "unit_temperature_fit_nll": 2.763187740427348,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.0097189671903202,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.00967204182775526,
+              "fit_nll": 2.7790855292483543,
+              "unit_temperature_fit_nll": 2.7791694628336887,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.0051699617824192,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.00515664341391853,
+              "fit_nll": 2.7695392948078825,
+              "unit_temperature_fit_nll": 2.7695630840168413,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.0090857486097677,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.009044721516521062,
+              "fit_nll": 2.7850051644550846,
+              "unit_temperature_fit_nll": 2.785078121305132,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.0091426800049588,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.009101138713305078,
+              "fit_nll": 2.7843380759851,
+              "unit_temperature_fit_nll": 2.7844119112984265,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.0,
+        "nll": 4.637539235563537e-05,
+        "brier": 6.356756654180007e-05,
+        "ece_percent": 0.10287938029169252
+      }
+    },
+    "five_seed_ensemble": {
+      "aggregation": "one predictor: arithmetic mean of five same-backend identity probability arrays",
+      "metrics": {
+        "accuracy_percent": 33.28,
+        "nll": 2.6195569962098437,
+        "brier": 0.8124983582405977,
+        "ece_percent": 8.537319523707323
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 3.8720000000000034,
+        "nll": -0.1514550731567006,
+        "brier": -0.02177557225701221,
+        "ece_percent": 6.140264521047764
+      }
+    },
+    "all_four_combined": {
+      "aggregation": "mean of five average+TTA predictors, then cross-fitted scalar temperature",
+      "metrics": {
+        "accuracy_percent": 32.76,
+        "nll": 2.5971101789939572,
+        "brier": 0.8046806369409586,
+        "ece_percent": 1.9617469370684637
+      },
+      "crossfit": {
+        "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+        "fold_seed": 314159,
+        "folds": [
+          {
+            "fold": 0,
+            "temperature": 0.7538131244502098,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.2826107872497178,
+            "fit_nll": 2.5817316202246867,
+            "unit_temperature_fit_nll": 2.647333040066962,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 1,
+            "temperature": 0.762488724305691,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.271167558405726,
+            "fit_nll": 2.5980897110097194,
+            "unit_temperature_fit_nll": 2.6589088625376096,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 2,
+            "temperature": 0.7606110027149695,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.27363321775646504,
+            "fit_nll": 2.591709467193187,
+            "unit_temperature_fit_nll": 2.6534932993509064,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 3,
+            "temperature": 0.7648457348831873,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.26808111923791955,
+            "fit_nll": 2.6095168442659813,
+            "unit_temperature_fit_nll": 2.668878479681388,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 4,
+            "temperature": 0.7607338511980594,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.27347171790580216,
+            "fit_nll": 2.6034295958024365,
+            "unit_temperature_fit_nll": 2.6649021384549743,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          }
+        ]
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 3.3520000000000003,
+        "nll": -0.17390189037258708,
+        "brier": -0.0295932935566513,
+        "ece_percent": -0.43530806559109503
+      }
+    },
+    "all_four_uncalibrated_ensemble": {
+      "aggregation": "one predictor: arithmetic mean of five average+TTA probability arrays",
+      "metrics": {
+        "accuracy_percent": 32.76,
+        "nll": 2.6587031638136245,
+        "brier": 0.8225095667179161,
+        "ece_percent": 10.768231396922957
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 3.3520000000000003,
+        "nll": -0.11230890555291984,
+        "brier": -0.01176436377969381,
+        "ece_percent": 8.371176394263397
+      }
+    }
+  },
+  "archival_baseline_provenance": {
+    "accuracy_percent_by_seed": {
+      "11": 29.520000000000003,
+      "23": 28.360000000000003,
+      "37": 30.459999999999997,
+      "53": 29.7,
+      "71": 29.020000000000003
+    },
+    "mean_accuracy_percent": 29.412,
+    "same_backend_identity_comparison": {
+      "11": {
+        "training_time_validation_accuracy_percent": 29.520000000000003,
+        "fresh_same_backend_identity_accuracy_percent": 29.520000000000003
+      },
+      "23": {
+        "training_time_validation_accuracy_percent": 28.360000000000003,
+        "fresh_same_backend_identity_accuracy_percent": 28.360000000000003
+      },
+      "37": {
+        "training_time_validation_accuracy_percent": 30.459999999999997,
+        "fresh_same_backend_identity_accuracy_percent": 30.44
+      },
+      "53": {
+        "training_time_validation_accuracy_percent": 29.7,
+        "fresh_same_backend_identity_accuracy_percent": 29.68
+      },
+      "71": {
+        "training_time_validation_accuracy_percent": 29.020000000000003,
+        "fresh_same_backend_identity_accuracy_percent": 29.04
+      }
+    },
+    "note": "Cohort training-time validation accuracies are provenance only; fresh same-backend identity probabilities are used for every post-training before/after comparison.",
+    "accuracy_source": "training-time validation accuracy"
+  },
+  "cost_interpretation": {
+    "parameters": 59844,
+    "macs_per_view": 37973120,
+    "weight_average": "one-model size; selected+last same-trajectory midpoint, not EMA or classical multi-snapshot SWA",
+    "five_seed_ensemble": "five models; sequential execution possible",
+    "tta": "10 passes",
+    "all_four_combination": "50 passes",
+    "note": "Arithmetic counted costs, not measured speedups; no deployment-latency inference."
+  },
+  "inference_metadata": {
+    "summary_file": "summary.json",
+    "summary": {
+      "family": "H",
+      "input_sha256": {
+        "images": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+        "baseline": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade"
+      },
+      "checkpoint_sha256": {
+        "H-s11_selected": "f21695fc275fe5a8fa6a593fcea40ca24a4d63c418c2be134fb57c46164a712a",
+        "H-s11_final": "e2aca22b4e508a5569bace4378346ac38d3a1e6ebafb7381f018500462632e11",
+        "H-s23_selected": "3f312fe63378a1414c39d63636e8f8574a6a2d46c3b46d88f58de61858269d0e",
+        "H-s23_final": "20c65a01b933231f031d4c1e053115ce84c86de2eeb7c040754a2967f7fb9961",
+        "H-s37_selected": "9de8df839d5d3ce923af5b7aae4cea7e5aa8811d0f34d2a6d15577f3d5f7dcdd",
+        "H-s37_final": "26e330a5a511428323fa254282430f33ab3fec22ce758f0ab873afba777883cf",
+        "H-s53_selected": "7ce2ea42055e95c024bacf00b94183cea61756eaddb7ec0f0178ade1431058ef",
+        "H-s53_final": "39c0f1d1b17f824e1a0b9a6d4fc289b75a055a68a661fd24f64ee17295187fbf",
+        "H-s71_selected": "49e19945db8e72ea0df0e90353cf8173852be5397acc8bb922d62adb352e388c",
+        "H-s71_final": "f2492f3c31248012bddd6a79e2ffb800f8ed3988eee3da93fa573fb5b121c5ea"
+      },
+      "seeds": [
+        11,
+        23,
+        37,
+        53,
+        71
+      ],
+      "image_count": 5000,
+      "full_validation": true,
+      "view_policy": {
+        "identity": "raw validation image",
+        "tta": "reflect pad 4; crops (0,0),(0,8),(8,0),(8,8),(4,4), each and horizontal flip; average probabilities"
+      },
+      "normalization": "NCHW float32 x/255 then (x-0.5)/0.5",
+      "device": "cuda",
+      "threads": 2,
+      "batch_size": 128,
+      "cuda_memory_fraction_cap": 0.04,
+      "cuda_memory_cap_scope": "per-process PyTorch allocator fraction; not a total-process/device-memory guarantee",
+      "forward_wall_seconds_scope": "model forward only; excludes normalization, transfers, and other end-to-end work",
+      "total_elapsed_wall_seconds": 10.837887300003786,
+      "peak_process_rss_bytes": 1244913664,
+      "models": {
+        "H-s11": {
+          "family": "H",
+          "selected_sha256": "f21695fc275fe5a8fa6a593fcea40ca24a4d63c418c2be134fb57c46164a712a",
+          "final_sha256": "e2aca22b4e508a5569bace4378346ac38d3a1e6ebafb7381f018500462632e11",
+          "selected_update": 9600,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "reference": "cohort training-time validation accuracy",
+              "recorded_top1_percent": 29.520000000000003,
+              "fresh_top1_percent": 29.520000000000003,
+              "delta_pp": 0.0,
+              "argmax_mismatch_count": null
+            },
+            "selected_validation_top1_percent": 29.520000000000003,
+            "identity_H11": {
+              "forward_wall_seconds": 0.22114460013108328,
+              "weights": "selected"
+            },
+            "tta_H11": {
+              "forward_wall_seconds": 0.5651272001559846,
+              "weights": "selected"
+            },
+            "average_H11": {
+              "forward_wall_seconds": 0.0526901000412181,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H11": {
+              "forward_wall_seconds": 0.5291861999430694,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s23": {
+          "family": "H",
+          "selected_sha256": "3f312fe63378a1414c39d63636e8f8574a6a2d46c3b46d88f58de61858269d0e",
+          "final_sha256": "20c65a01b933231f031d4c1e053115ce84c86de2eeb7c040754a2967f7fb9961",
+          "selected_update": 9200,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "reference": "cohort training-time validation accuracy",
+              "recorded_top1_percent": 28.360000000000003,
+              "fresh_top1_percent": 28.360000000000003,
+              "delta_pp": 0.0,
+              "argmax_mismatch_count": null
+            },
+            "selected_validation_top1_percent": 28.360000000000003,
+            "identity_H23": {
+              "forward_wall_seconds": 0.05466860014712438,
+              "weights": "selected"
+            },
+            "tta_H23": {
+              "forward_wall_seconds": 0.5344655000953935,
+              "weights": "selected"
+            },
+            "average_H23": {
+              "forward_wall_seconds": 0.04427209994173609,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H23": {
+              "forward_wall_seconds": 0.5640002000145614,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s37": {
+          "family": "H",
+          "selected_sha256": "9de8df839d5d3ce923af5b7aae4cea7e5aa8811d0f34d2a6d15577f3d5f7dcdd",
+          "final_sha256": "26e330a5a511428323fa254282430f33ab3fec22ce758f0ab873afba777883cf",
+          "selected_update": 9400,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "reference": "cohort training-time validation accuracy",
+              "recorded_top1_percent": 30.459999999999997,
+              "fresh_top1_percent": 30.44,
+              "delta_pp": -0.01999999999999602,
+              "argmax_mismatch_count": null
+            },
+            "selected_validation_top1_percent": 30.44,
+            "identity_H37": {
+              "forward_wall_seconds": 0.05088719978812151,
+              "weights": "selected"
+            },
+            "tta_H37": {
+              "forward_wall_seconds": 0.5346204995876178,
+              "weights": "selected"
+            },
+            "average_H37": {
+              "forward_wall_seconds": 0.059118400065926835,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H37": {
+              "forward_wall_seconds": 0.5135898996377364,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s53": {
+          "family": "H",
+          "selected_sha256": "7ce2ea42055e95c024bacf00b94183cea61756eaddb7ec0f0178ade1431058ef",
+          "final_sha256": "39c0f1d1b17f824e1a0b9a6d4fc289b75a055a68a661fd24f64ee17295187fbf",
+          "selected_update": 9400,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "reference": "cohort training-time validation accuracy",
+              "recorded_top1_percent": 29.7,
+              "fresh_top1_percent": 29.68,
+              "delta_pp": -0.019999999999999574,
+              "argmax_mismatch_count": null
+            },
+            "selected_validation_top1_percent": 29.68,
+            "identity_H53": {
+              "forward_wall_seconds": 0.061840100039262325,
+              "weights": "selected"
+            },
+            "tta_H53": {
+              "forward_wall_seconds": 0.5258331002260093,
+              "weights": "selected"
+            },
+            "average_H53": {
+              "forward_wall_seconds": 0.05219410010613501,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H53": {
+              "forward_wall_seconds": 0.6142480998823885,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s71": {
+          "family": "H",
+          "selected_sha256": "49e19945db8e72ea0df0e90353cf8173852be5397acc8bb922d62adb352e388c",
+          "final_sha256": "f2492f3c31248012bddd6a79e2ffb800f8ed3988eee3da93fa573fb5b121c5ea",
+          "selected_update": 10000,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "reference": "cohort training-time validation accuracy",
+              "recorded_top1_percent": 29.020000000000003,
+              "fresh_top1_percent": 29.04,
+              "delta_pp": 0.01999999999999602,
+              "argmax_mismatch_count": null
+            },
+            "selected_validation_top1_percent": 29.04,
+            "identity_H71": {
+              "forward_wall_seconds": 0.04964559988002293,
+              "weights": "selected"
+            },
+            "tta_H71": {
+              "forward_wall_seconds": 0.5344954004103784,
+              "weights": "selected"
+            },
+            "average_H71": {
+              "forward_wall_seconds": 0.07238699996378273,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H71": {
+              "forward_wall_seconds": 0.6057312001939863,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        }
+      },
+      "cohort": {
+        "schema": "h8-full-data-cohort-v1",
+        "sha256": "5da56d1c8806fa0154adc8277219b073edfcd95872f84613b0ddc8a136e9c2e6",
+        "fraction": 1.0
+      },
+      "cuda_peak_allocated_bytes": 29172224,
+      "cuda_peak_reserved_bytes": 46137344
+    }
+  }
+}
