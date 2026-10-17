@@ -1,0 +1,1061 @@
+{
+  "study": {
+    "family": "H8",
+    "depth": 8,
+    "width": 32,
+    "alpha": 0.1,
+    "classes": 100,
+    "seeds": [
+      11,
+      23,
+      37,
+      53,
+      71
+    ],
+    "validation_examples": 5000,
+    "validation_only_exploratory": true,
+    "known_selection_on_this_validation": true
+  },
+  "methods": {
+    "baseline": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 21.6,
+          "nll": 3.515751243239727,
+          "brier": 0.9184875146203212,
+          "ece_percent": 11.092524378374218
+        },
+        "23": {
+          "accuracy_percent": 21.54,
+          "nll": 3.569309165296188,
+          "brier": 0.9285691191578331,
+          "ece_percent": 13.500386953875424
+        },
+        "37": {
+          "accuracy_percent": 22.16,
+          "nll": 3.4512172178321676,
+          "brier": 0.9161393581136653,
+          "ece_percent": 12.45586484193802
+        },
+        "53": {
+          "accuracy_percent": 23.44,
+          "nll": 3.4863470268731698,
+          "brier": 0.9139948674162947,
+          "ece_percent": 12.655463042110204
+        },
+        "71": {
+          "accuracy_percent": 19.98,
+          "nll": 3.655141840826343,
+          "brier": 0.943765075200285,
+          "ece_percent": 15.23296327829361
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 21.744,
+            "sd": 1.115663031564639
+          },
+          "nll": {
+            "mean": 3.535553298813519,
+            "sd": 0.07122756637883537
+          },
+          "brier": {
+            "mean": 0.9241911869016798,
+            "sd": 0.01098755795742095
+          },
+          "ece_percent": {
+            "mean": 12.987440498918295,
+            "sd": 1.3630095695311255
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.0,
+        "nll": 0.0,
+        "brier": 0.0,
+        "ece_percent": 0.0
+      }
+    },
+    "weight_average": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 21.9,
+          "nll": 3.5285319919499294,
+          "brier": 0.9201305404578667,
+          "ece_percent": 11.796829585582017
+        },
+        "23": {
+          "accuracy_percent": 21.5,
+          "nll": 3.581900365679598,
+          "brier": 0.9299372613323634,
+          "ece_percent": 13.939888290688396
+        },
+        "37": {
+          "accuracy_percent": 21.94,
+          "nll": 3.4779810322409395,
+          "brier": 0.9177612038489086,
+          "ece_percent": 13.417035834491257
+        },
+        "53": {
+          "accuracy_percent": 23.380000000000003,
+          "nll": 3.485779011898177,
+          "brier": 0.9137789710953442,
+          "ece_percent": 12.691735561341048
+        },
+        "71": {
+          "accuracy_percent": 19.88,
+          "nll": 3.6573721428153805,
+          "brier": 0.9437636109717994,
+          "ece_percent": 15.41376761898398
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 21.72,
+            "sd": 1.1198571337451944
+          },
+          "nll": {
+            "mean": 3.546312908916805,
+            "sd": 0.06670888933189131
+          },
+          "brier": {
+            "mean": 0.9250743175412565,
+            "sd": 0.010755885145435863
+          },
+          "ece_percent": {
+            "mean": 13.451851378217338,
+            "sd": 1.216994714447559
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": -0.02400000000000091,
+        "nll": 0.010759610103285855,
+        "brier": 0.0008831306395766791,
+        "ece_percent": 0.46441087929904334
+      }
+    },
+    "tta": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 21.78,
+          "nll": 3.387107364580716,
+          "brier": 0.905811115927478,
+          "ece_percent": 5.88462592020631
+        },
+        "23": {
+          "accuracy_percent": 20.54,
+          "nll": 3.4275127437166026,
+          "brier": 0.9120290493977332,
+          "ece_percent": 8.643604142069817
+        },
+        "37": {
+          "accuracy_percent": 22.1,
+          "nll": 3.302455755901844,
+          "brier": 0.8966615669105479,
+          "ece_percent": 6.875460881814359
+        },
+        "53": {
+          "accuracy_percent": 23.599999999999998,
+          "nll": 3.2960109290585256,
+          "brier": 0.8896702898702137,
+          "ece_percent": 6.2495618064701555
+        },
+        "71": {
+          "accuracy_percent": 20.24,
+          "nll": 3.462618213395524,
+          "brier": 0.9171364074263132,
+          "ece_percent": 8.718617421686648
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 21.651999999999997,
+            "sd": 1.2035015579549533
+          },
+          "nll": {
+            "mean": 3.3751410013306424,
+            "sd": 0.06645745875588902
+          },
+          "brier": {
+            "mean": 0.9042616859064572,
+            "sd": 0.00999161418638626
+          },
+          "ece_percent": {
+            "mean": 7.2743740344494565,
+            "sd": 1.1917551490298648
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": -0.0920000000000023,
+        "nll": -0.16041229748287655,
+        "brier": -0.019929500995222615,
+        "ece_percent": -5.713066464468838
+      }
+    },
+    "all_four": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 22.18,
+          "nll": 3.3749206054416376,
+          "brier": 0.9045103694511893,
+          "ece_percent": 6.102560621947049
+        },
+        "23": {
+          "accuracy_percent": 21.02,
+          "nll": 3.42994066231866,
+          "brier": 0.9117765316500159,
+          "ece_percent": 8.373692028596999
+        },
+        "37": {
+          "accuracy_percent": 22.74,
+          "nll": 3.3086015819282775,
+          "brier": 0.8960552383992717,
+          "ece_percent": 6.603197499141097
+        },
+        "53": {
+          "accuracy_percent": 23.78,
+          "nll": 3.295723205875614,
+          "brier": 0.8895485678638914,
+          "ece_percent": 6.049650914371013
+        },
+        "71": {
+          "accuracy_percent": 20.3,
+          "nll": 3.4598856711896486,
+          "brier": 0.91657742668201,
+          "ece_percent": 8.674430809170008
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 22.003999999999998,
+            "sd": 1.232778974512463
+          },
+          "nll": {
+            "mean": 3.3738143453507674,
+            "sd": 0.06466929870836295
+          },
+          "brier": {
+            "mean": 0.9036936268092758,
+            "sd": 0.009903740590693317
+          },
+          "ece_percent": {
+            "mean": 7.160706374645232,
+            "sd": 1.133810273052277
+          }
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.259999999999998,
+        "nll": -0.16173895346275158,
+        "brier": -0.020497560092404,
+        "ece_percent": -5.826734124273062
+      }
+    },
+    "temperature_scaling": {
+      "aggregation": "mean of five per-seed metric rows",
+      "per_seed": {
+        "11": {
+          "accuracy_percent": 21.6,
+          "nll": 3.2873135569121614,
+          "brier": 0.9006129728497992,
+          "ece_percent": 3.890231549044766
+        },
+        "23": {
+          "accuracy_percent": 21.54,
+          "nll": 3.2886520050147463,
+          "brier": 0.9018831824196896,
+          "ece_percent": 3.545570053257979
+        },
+        "37": {
+          "accuracy_percent": 22.16,
+          "nll": 3.2239090759468936,
+          "brier": 0.8943072334961576,
+          "ece_percent": 2.9314008054466965
+        },
+        "53": {
+          "accuracy_percent": 23.44,
+          "nll": 3.209777979450077,
+          "brier": 0.8908291194348958,
+          "ece_percent": 4.270582288338516
+        },
+        "71": {
+          "accuracy_percent": 19.98,
+          "nll": 3.3415046446943264,
+          "brier": 0.9099425343456206,
+          "ece_percent": 2.7143567550064067
+        }
+      },
+      "mean": {
+        "aggregation": "unweighted mean of five individual predictors; not pooled predictions",
+        "metrics": {
+          "accuracy_percent": {
+            "mean": 21.744,
+            "sd": 1.115663031564639
+          },
+          "nll": {
+            "mean": 3.270231452403641,
+            "sd": 0.04798201318200698
+          },
+          "brier": {
+            "mean": 0.8995150085092325,
+            "sd": 0.006604735543991967
+          },
+          "ece_percent": {
+            "mean": 3.470428290218873,
+            "sd": 0.5804002544931677
+          }
+        }
+      },
+      "crossfit": {
+        "11": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.604625170577134,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4728901907263732,
+              "fit_nll": 3.268276341291604,
+              "unit_temperature_fit_nll": 3.486290751793731,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.627989337227413,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4873457179442886,
+              "fit_nll": 3.290178371038107,
+              "unit_temperature_fit_nll": 3.5223671012565063,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.6268266078780946,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.48663125087862996,
+              "fit_nll": 3.2844215518948263,
+              "unit_temperature_fit_nll": 3.5159602294617436,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.6452161811960813,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.49787179272333415,
+              "fit_nll": 3.3095982589061625,
+              "unit_temperature_fit_nll": 3.5516379213970586,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.6116558622223438,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4772621363195437,
+              "fit_nll": 3.281189285112735,
+              "unit_temperature_fit_nll": 3.5025002181619875,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "23": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.672340516519061,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5142241521321729,
+              "fit_nll": 3.2763628678789782,
+              "unit_temperature_fit_nll": 3.5500305247321293,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.689272540648405,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5242979869446088,
+              "fit_nll": 3.2925346458530513,
+              "unit_temperature_fit_nll": 3.5785130932312805,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.6927490187265064,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5263538456915321,
+              "fit_nll": 3.294343342308133,
+              "unit_temperature_fit_nll": 3.580878648190528,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.680493302156042,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.519087382549399,
+              "fit_nll": 3.2896851975924184,
+              "unit_temperature_fit_nll": 3.5686459035121434,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.6824190079119397,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5202326434356943,
+              "fit_nll": 3.289619256500023,
+              "unit_temperature_fit_nll": 3.5684776591650387,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "37": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.5995102734928057,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.469697503326981,
+              "fit_nll": 3.2145030968981048,
+              "unit_temperature_fit_nll": 3.4388390253093175,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.6119368427337284,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4774364638713241,
+              "fit_nll": 3.2310983464643903,
+              "unit_temperature_fit_nll": 3.463188927104654,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.6052766866872903,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4732961321838223,
+              "fit_nll": 3.2164280104032232,
+              "unit_temperature_fit_nll": 3.44386295350325,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.6071001898438562,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4744314307010965,
+              "fit_nll": 3.2302667463514902,
+              "unit_temperature_fit_nll": 3.458967395629115,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.6009182546535219,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.4705773737813083,
+              "fit_nll": 3.2269376857652596,
+              "unit_temperature_fit_nll": 3.4512277905645465,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "53": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.6518663488213496,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5019057691754756,
+              "fit_nll": 3.1798946848010434,
+              "unit_temperature_fit_nll": 3.4390868463320277,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.683453879021559,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.520847563355128,
+              "fit_nll": 3.2104613484144697,
+              "unit_temperature_fit_nll": 3.490980413682364,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.6941620982445138,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5271882812885683,
+              "fit_nll": 3.2197887943168353,
+              "unit_temperature_fit_nll": 3.5060958587154447,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.6889925625979318,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5241322343807588,
+              "fit_nll": 3.2184270260715557,
+              "unit_temperature_fit_nll": 3.503120606448508,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.6794308920907783,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5184549813169602,
+              "fit_nll": 3.2171853267390698,
+              "unit_temperature_fit_nll": 3.492451410391493,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        },
+        "71": {
+          "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+          "fold_seed": 314159,
+          "folds": [
+            {
+              "fold": 0,
+              "temperature": 1.7206568034221084,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5427060803891643,
+              "fit_nll": 3.3257131623980403,
+              "unit_temperature_fit_nll": 3.6310894872712915,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 1,
+              "temperature": 1.7457805849076606,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5572017822283242,
+              "fit_nll": 3.347621603346562,
+              "unit_temperature_fit_nll": 3.6698875609234576,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 2,
+              "temperature": 1.730733343612309,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5485452167320917,
+              "fit_nll": 3.3375325233304567,
+              "unit_temperature_fit_nll": 3.648461133265686,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 3,
+              "temperature": 1.7468647499176062,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5578226096761943,
+              "fit_nll": 3.350794066798546,
+              "unit_temperature_fit_nll": 3.6738384004848696,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            },
+            {
+              "fold": 4,
+              "temperature": 1.7290537137828779,
+              "fit_examples": 4000,
+              "evaluation_examples": 1000,
+              "log_temperature": 0.5475742726054614,
+              "fit_nll": 3.3445279681447064,
+              "unit_temperature_fit_nll": 3.6524326269866214,
+              "optimizer_success": true,
+              "used_unit_fallback": false
+            }
+          ]
+        }
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 0.0,
+        "nll": -0.2653218464098779,
+        "brier": -0.02467617839244729,
+        "ece_percent": -9.517012208699422
+      }
+    },
+    "five_seed_ensemble": {
+      "aggregation": "one predictor: arithmetic mean of five same-backend identity probability arrays",
+      "metrics": {
+        "accuracy_percent": 29.32,
+        "nll": 2.8472373126455315,
+        "brier": 0.8388658228666358,
+        "ece_percent": 5.166491113631255
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 7.5760000000000005,
+        "nll": -0.6883159861679875,
+        "brier": -0.08532536403504398,
+        "ece_percent": -7.820949385287039
+      }
+    },
+    "all_four_combined": {
+      "aggregation": "mean of five average+TTA predictors, then cross-fitted scalar temperature",
+      "metrics": {
+        "accuracy_percent": 29.880000000000003,
+        "nll": 2.8266737733489133,
+        "brier": 0.8344841470505653,
+        "ece_percent": 4.193012469162598
+      },
+      "crossfit": {
+        "fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds",
+        "fold_seed": 314159,
+        "folds": [
+          {
+            "fold": 0,
+            "temperature": 0.8520980771614597,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.16005364473866193,
+            "fit_nll": 2.798422594300789,
+            "unit_temperature_fit_nll": 2.8194218508910462,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 1,
+            "temperature": 0.8677893838538043,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.14180623909464637,
+            "fit_nll": 2.8300615643661504,
+            "unit_temperature_fit_nll": 2.8466165111316095,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 2,
+            "temperature": 0.867515350059193,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.14212207272494062,
+            "fit_nll": 2.8277695959849765,
+            "unit_temperature_fit_nll": 2.8443084684208544,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 3,
+            "temperature": 0.871752096113265,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.13725018894029115,
+            "fit_nll": 2.8373456990230976,
+            "unit_temperature_fit_nll": 2.8529077138669616,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          },
+          {
+            "fold": 4,
+            "temperature": 0.8669259672567581,
+            "fit_examples": 4000,
+            "evaluation_examples": 1000,
+            "log_temperature": -0.14280169540140297,
+            "fit_nll": 2.837052008845747,
+            "unit_temperature_fit_nll": 2.8537031154788575,
+            "optimizer_success": true,
+            "used_unit_fallback": false
+          }
+        ]
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 8.136000000000003,
+        "nll": -0.7088795254646056,
+        "brier": -0.0897070398511145,
+        "ece_percent": -8.794428029755696
+      }
+    },
+    "all_four_uncalibrated_ensemble": {
+      "aggregation": "one predictor: arithmetic mean of five average+TTA probability arrays",
+      "metrics": {
+        "accuracy_percent": 29.880000000000003,
+        "nll": 2.8433915314856035,
+        "brier": 0.8441607984754853,
+        "ece_percent": 8.711609898168374
+      },
+      "delta_vs_mean_baseline": {
+        "accuracy_percent": 8.136000000000003,
+        "nll": -0.6921617673279155,
+        "brier": -0.08003038842619448,
+        "ece_percent": -4.27583060074992
+      }
+    }
+  },
+  "archival_baseline_provenance": {
+    "accuracy_percent_by_seed": {
+      "11": 21.6,
+      "23": 21.54,
+      "37": 22.16,
+      "53": 23.46,
+      "71": 19.98
+    },
+    "mean_accuracy_percent": 21.747999999999998,
+    "same_backend_identity_comparison": {
+      "11": {
+        "archival_accuracy_percent": 21.6,
+        "same_backend_identity_accuracy_percent": 21.6,
+        "max_absolute_probability_difference": 0.0012610554695129395,
+        "argmax_flip_count": 7
+      },
+      "23": {
+        "archival_accuracy_percent": 21.54,
+        "same_backend_identity_accuracy_percent": 21.54,
+        "max_absolute_probability_difference": 0.0010423362255096436,
+        "argmax_flip_count": 2
+      },
+      "37": {
+        "archival_accuracy_percent": 22.16,
+        "same_backend_identity_accuracy_percent": 22.16,
+        "max_absolute_probability_difference": 0.001284375786781311,
+        "argmax_flip_count": 2
+      },
+      "53": {
+        "archival_accuracy_percent": 23.46,
+        "same_backend_identity_accuracy_percent": 23.44,
+        "max_absolute_probability_difference": 0.0016435980796813965,
+        "argmax_flip_count": 5
+      },
+      "71": {
+        "archival_accuracy_percent": 19.98,
+        "same_backend_identity_accuracy_percent": 19.98,
+        "max_absolute_probability_difference": 0.001368403434753418,
+        "argmax_flip_count": 4
+      }
+    },
+    "note": "Before/after rows use fresh same-backend identity probabilities; frozen archival accuracy remains separately checked and reported. Identity probability and argmax diagnostics are retained versus archival CUDA; historical archival results are unchanged."
+  },
+  "cost_interpretation": {
+    "parameters": 59844,
+    "macs_per_view": 37973120,
+    "weight_average": "one-model size; selected+last same-trajectory midpoint, not EMA or classical multi-snapshot SWA",
+    "five_seed_ensemble": "five models; sequential execution possible",
+    "tta": "10 passes",
+    "all_four_combination": "50 passes",
+    "note": "Arithmetic counted costs, not measured speedups; no deployment-latency inference."
+  },
+  "inference_metadata": {
+    "summary_file": "summary.json",
+    "summary": {
+      "input_sha256": {
+        "images": "7693f7161f5bec55dd7a337e49cca9255ddc7919ed10b05fa0dd915110fb2b34",
+        "baseline": "1b91585f8850f03a4717e29dfd8a367f5c1724110fcb08e02c16796bfb5c9ade"
+      },
+      "checkpoint_sha256": {
+        "H-s11_selected": "df20afe5d38a68d7c9f66f63832f2cf884490a81499fb8779345fff169353149",
+        "H-s11_final": "57dce08ed51d156af6c46d014fe2282860ad325495ba1f8509b00703d473d5d4",
+        "H-s23_selected": "b68edc6df777b3ae88300423c41a105b62e962c44930e06cbca22c1703dca6fc",
+        "H-s23_final": "9d7d1d8d21320afea455b914588fd530d131c53f821e8c4bd0385e1d59f62e2b",
+        "H-s37_selected": "b077758ff8b0cca96052e21af1aa9937b4efcb297a4c5137c4d405c227797704",
+        "H-s37_final": "27cf104af8a849a26dc7637426c61463868cdf3f951b66ca6da475a159c4bcf1",
+        "H-s53_selected": "ab5427ae0dc4d1b7565c7b5699ad5991b7750997122fef667f2b35205f39061a",
+        "H-s53_final": "ce19534b9f5090779f598d4dbac84c6ccb6cec896fb01ab500b4ff0f6bb63b05",
+        "H-s71_selected": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59",
+        "H-s71_final": "5a0000b8e1f5d11cfbe1644ec3fec73ae9736ea74119e84ca05acd5ef5c875ae"
+      },
+      "seeds": [
+        11,
+        23,
+        37,
+        53,
+        71
+      ],
+      "image_count": 5000,
+      "full_validation": true,
+      "view_policy": {
+        "identity": "raw validation image",
+        "tta": "reflect pad 4; crops (0,0),(0,8),(8,0),(8,8),(4,4), each and horizontal flip; average probabilities"
+      },
+      "normalization": "NCHW float32 x/255 then (x-0.5)/0.5",
+      "device": "cuda",
+      "threads": 2,
+      "batch_size": 128,
+      "cuda_memory_fraction_cap": 0.04,
+      "cuda_memory_cap_scope": "per-process PyTorch allocator fraction; not a total-process/device-memory guarantee",
+      "forward_wall_seconds_scope": "model forward only; excludes normalization, transfers, and other end-to-end work",
+      "total_elapsed_wall_seconds": 23.03710059999139,
+      "peak_process_rss_bytes": 1243385856,
+      "models": {
+        "H-s11": {
+          "selected_sha256": "df20afe5d38a68d7c9f66f63832f2cf884490a81499fb8779345fff169353149",
+          "final_sha256": "57dce08ed51d156af6c46d014fe2282860ad325495ba1f8509b00703d473d5d4",
+          "selected_update": 7600,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "archived_top1_percent": 21.6,
+              "fresh_top1_percent": 21.6,
+              "delta_pp": 0.0,
+              "max_abs_probability_difference": 0.0012610554695129395,
+              "argmax_mismatch_count": 7,
+              "baseline_backend_different": false
+            },
+            "selected_validation_top1_percent": 21.6,
+            "identity_H11": {
+              "forward_wall_seconds": 0.5092912998225074,
+              "weights": "selected"
+            },
+            "tta_H11": {
+              "forward_wall_seconds": 1.0082726002146956,
+              "weights": "selected"
+            },
+            "average_H11": {
+              "forward_wall_seconds": 0.10062570008449256,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H11": {
+              "forward_wall_seconds": 1.141469199967105,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s23": {
+          "selected_sha256": "b68edc6df777b3ae88300423c41a105b62e962c44930e06cbca22c1703dca6fc",
+          "final_sha256": "9d7d1d8d21320afea455b914588fd530d131c53f821e8c4bd0385e1d59f62e2b",
+          "selected_update": 8400,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "archived_top1_percent": 21.54,
+              "fresh_top1_percent": 21.54,
+              "delta_pp": 0.0,
+              "max_abs_probability_difference": 0.0010423362255096436,
+              "argmax_mismatch_count": 2,
+              "baseline_backend_different": false
+            },
+            "selected_validation_top1_percent": 21.54,
+            "identity_H23": {
+              "forward_wall_seconds": 0.15363429993158206,
+              "weights": "selected"
+            },
+            "tta_H23": {
+              "forward_wall_seconds": 1.1317289999278728,
+              "weights": "selected"
+            },
+            "average_H23": {
+              "forward_wall_seconds": 0.12779140009661205,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H23": {
+              "forward_wall_seconds": 1.124203099810984,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s37": {
+          "selected_sha256": "b077758ff8b0cca96052e21af1aa9937b4efcb297a4c5137c4d405c227797704",
+          "final_sha256": "27cf104af8a849a26dc7637426c61463868cdf3f951b66ca6da475a159c4bcf1",
+          "selected_update": 7800,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "archived_top1_percent": 22.16,
+              "fresh_top1_percent": 22.16,
+              "delta_pp": 0.0,
+              "max_abs_probability_difference": 0.001284375786781311,
+              "argmax_mismatch_count": 2,
+              "baseline_backend_different": false
+            },
+            "selected_validation_top1_percent": 22.16,
+            "identity_H37": {
+              "forward_wall_seconds": 0.10893009975552559,
+              "weights": "selected"
+            },
+            "tta_H37": {
+              "forward_wall_seconds": 1.1626588001090568,
+              "weights": "selected"
+            },
+            "average_H37": {
+              "forward_wall_seconds": 0.09321189988986589,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H37": {
+              "forward_wall_seconds": 1.134203999681631,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s53": {
+          "selected_sha256": "ab5427ae0dc4d1b7565c7b5699ad5991b7750997122fef667f2b35205f39061a",
+          "final_sha256": "ce19534b9f5090779f598d4dbac84c6ccb6cec896fb01ab500b4ff0f6bb63b05",
+          "selected_update": 9600,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "archived_top1_percent": 23.46,
+              "fresh_top1_percent": 23.44,
+              "delta_pp": -0.019999999999999574,
+              "max_abs_probability_difference": 0.0016435980796813965,
+              "argmax_mismatch_count": 5,
+              "baseline_backend_different": false
+            },
+            "selected_validation_top1_percent": 23.44,
+            "identity_H53": {
+              "forward_wall_seconds": 0.10464130013133399,
+              "weights": "selected"
+            },
+            "tta_H53": {
+              "forward_wall_seconds": 1.1335534995305352,
+              "weights": "selected"
+            },
+            "average_H53": {
+              "forward_wall_seconds": 0.10484360001282766,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H53": {
+              "forward_wall_seconds": 1.1407696004025638,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        },
+        "H-s71": {
+          "selected_sha256": "676d1d66a5e6b593dba3343650851528c89eb65dc528f4c10bcd7dc138661b59",
+          "final_sha256": "5a0000b8e1f5d11cfbe1644ec3fec73ae9736ea74119e84ca05acd5ef5c875ae",
+          "selected_update": 8800,
+          "final_update": 10000,
+          "model_spec": {
+            "family": "H",
+            "depth": 8,
+            "width": 32,
+            "alpha": 0.1,
+            "num_classes": 100
+          },
+          "models": {
+            "baseline_comparison": {
+              "archived_top1_percent": 19.98,
+              "fresh_top1_percent": 19.98,
+              "delta_pp": 0.0,
+              "max_abs_probability_difference": 0.001368403434753418,
+              "argmax_mismatch_count": 4,
+              "baseline_backend_different": false
+            },
+            "selected_validation_top1_percent": 19.98,
+            "identity_H71": {
+              "forward_wall_seconds": 0.10916229989379644,
+              "weights": "selected"
+            },
+            "tta_H71": {
+              "forward_wall_seconds": 1.1027944000379648,
+              "weights": "selected"
+            },
+            "average_H71": {
+              "forward_wall_seconds": 0.114778499933891,
+              "weights": "two-checkpoint arithmetic midpoint"
+            },
+            "average_tta_H71": {
+              "forward_wall_seconds": 1.120776800380554,
+              "weights": "two-checkpoint arithmetic midpoint"
+            }
+          }
+        }
+      },
+      "cuda_peak_allocated_bytes": 29172224,
+      "cuda_peak_reserved_bytes": 46137344,
+      "execution_environment": {
+        "device": "NVIDIA GeForce RTX 5090",
+        "shared_gpu_workload": true,
+        "cpu_threads": 2,
+        "batch_size": 128,
+        "cuda_allocator_fraction_cap": 0.04,
+        "min_free_system_ram_bytes": 4529127424,
+        "min_free_device_memory_mib": 22577,
+        "observed_wall_seconds": 26.9343211,
+        "exit_code": null,
+        "no_mac_experiment_execution_after_user_override": true
+      },
+      "runtime_versions": {
+        "python": "3.13.13",
+        "torch": "2.9.1+cu128",
+        "numpy": "2.5.2",
+        "scipy": "1.18.1"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "protected_input_files_verified_unchanged": 13,
+  "official_test_opened": false,
+  "real_validation_images": 5000,
+  "seeds": 5,
+  "independent_baseline_and_ensemble_accuracy_check": true,
+  "crossfit_fold_counts_verified": true,
+  "focused_windows_tests": {
+    "passed": 11,
+    "workers": 3,
+    "wall_seconds": 14.2381591
+  }
+}
