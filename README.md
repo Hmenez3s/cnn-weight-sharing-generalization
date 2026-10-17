@@ -31,7 +31,7 @@ Official CIFAR-100 test set, top-1 accuracy, five paired seeds, eight iterations
 - **Secondary contrast, E8 − B8: −2.71 pp** (95% CI [−3.63, −1.80]); 0 of 5 seeds are positive. E8 is a negative addition, not part of the main pair.
 - **Follow-up H8 is the most accurate model.** H8 − B8 is +2.90 pp (95% CI [2.04, 3.76], 5 of 5 seeds). H8 − C8 is +0.82 pp (95% CI [−0.27, 1.91], 4 of 5 seeds): ahead, but not yet clearly separated from C8.
 - **Running 32 iterations at test time hurts.** With no retraining, accuracy falls by 13.24 pp for C (C32 − C8, CI [−15.20, −11.29]) and by 7.60 pp for E (E32 − E8, CI [−8.70, −6.50]). These models were trained at eight iterations and do not extrapolate to more.
-- **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. No latency or wall-clock saving is claimed.
+- **Same counted MACs, fewer parameters.** B8, C8 and H8 execute 37,973,120 multiply-accumulates (MACs) under the repository's counting convention. C8 stores about 6.7× fewer parameters. A separate [RTX 5090 speed benchmark](benchmarks/rtx5090-speed-20261017/README.md) finds similar speeds for these eight-update models; fewer stored weights do not establish a latency saving.
 
 The table is a display copy computed from [`benchmarks/minimal-generalization-20261015/analysis/table.csv`](benchmarks/minimal-generalization-20261015/analysis/table.csv) and [`contrasts.csv`](benchmarks/minimal-generalization-20261015/analysis/contrasts.csv); the H8 row and contrasts come from [`benchmarks/hybrid-generalization-20261015/analysis/`](benchmarks/hybrid-generalization-20261015/analysis/). The generated result tables, [`docs/RESULTS.md`](docs/RESULTS.md) and [`assets/results-table.md`](assets/results-table.md), are produced by `scripts/make_figures.py` and take precedence over this page.
 
@@ -207,6 +207,24 @@ Two further arms use the same **10% training subsets, five seeds and 10,000 upda
 
 The 10 runs finished in **13.3 minutes**, with five concurrent processes on the RTX 5090. [Full report, protocol and evidence](benchmarks/endpoint-width-20261017/README.md).
 
+### Real speed on the RTX 5090
+
+**Similar MACs did not mean similar speed.** A separate, synthetic-input benchmark runs all seven architectures **one at a time**, rather than comparing their concurrent study durations. Each model/condition has 500 synchronized observations: five shuffled rounds, 30 warmups and 100 measured samples per round. Conditions use FP32 tensors (cuDNN TF32 allowed), PyTorch eager, two CPU threads and identical resident GPU inputs; AMP and compilation are off.
+
+| Model | Inference, batch 1 (ms) | Inference, batch 128 (images/s) | SGD, batch 128 (ms/step) | Training speed vs C8 |
+|---|---:|---:|---:|---:|
+| B8 | 1.645 | 104,278 | 5.195 | 1.00x |
+| C8 | 1.631 | 105,050 | 5.208 | 1.00x |
+| H8 | 1.682 | 106,085 | 5.201 | 1.00x |
+| C4B4 | 1.603 | 103,615 | 5.240 | 0.99x |
+| B4C4 | 1.641 | 103,260 | 5.171 | 1.01x |
+| C7B1 | 1.665 | 101,140 | 5.235 | 0.99x |
+| **C4, width 45** | **0.895** | **144,340** | **3.617** | **1.44x** |
+
+C4W45 reaches **1.82x C8's batch-1 inference speed, 1.37x its batch-128 inference throughput and 1.44x its batch-128 training throughput**, despite counting only 0.88% fewer MACs. The eight-update architectures cluster closely; their small differences should not be treated as a reliable ranking. Width, recurrence count and GroupNorm grouping change together, so the benchmark does not assign the speed difference to one operation.
+
+These are **synchronized resident-input step measurements**, not end-to-end data-loader or deployment throughput. SGD includes forward, loss, backward and optimizer work; input transfer, augmentation, evaluation and checkpoint I/O are excluded. CUDA-event timings, p95, round variability, raw observations, hardware/software policies and reproducibility instructions are in the [full speed report](benchmarks/rtx5090-speed-20261017/README.md). No dataset or trained checkpoint was staged; the official test set stayed closed.
+
 ## Post-training adjustments: C8 and H8
 
 Can the two best models be improved after training, without retraining them? We applied four standard adjustments to the frozen five-seed C8 and H8 checkpoints and scored them on the 5,000 validation images. **Validation only:** the official test set was not reopened, and these models were originally selected on this same validation set, so the results are exploratory.
@@ -333,6 +351,7 @@ Full replication is not a one-line command. The preserved training operator was 
 │   ├── h8-full-data-20261017/             H8 retrained on 100% of the training data, with post-training
 │   ├── split-sharing-20261017/            C4B4/B4C4 results and the shared ablation operator
 │   ├── endpoint-width-20261017/           C7B1 and wider four-step C4, validation only
+│   ├── rtx5090-speed-20261017/            isolated synthetic-input architecture speed and raw timings
 │   └── duration-calibration-20261015/     duration calibration script
 ├── configs/                    training and profiling presets
 ├── docs/
