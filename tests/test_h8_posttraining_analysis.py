@@ -1,3 +1,4 @@
+import copy
 import json
 from pathlib import Path
 
@@ -66,6 +67,7 @@ def test_equal_probability_ensemble_and_baseline_comparison_report(tmp_path):
     summary_path = tmp_path / "summary.json"
     summary_path.write_text(json.dumps({"timing_seconds": 1.25, "model_path": "/private/checkpoint.pt", "view_policy": "ten views"}))
     result = analysis.analyze(bp, ip, summary_path)
+    assert result["study"]["family"] == "H8"
     assert result["methods"]["five_seed_ensemble"]["aggregation"].startswith("one predictor")
     equal_mean = np.mean(np.stack([inference[f"identity_H{s}"].astype(np.float64) for s in analysis.SEEDS]), axis=0)
     assert result["methods"]["five_seed_ensemble"]["metrics"] == analysis.metrics(labels, equal_mean)
@@ -80,6 +82,46 @@ def test_equal_probability_ensemble_and_baseline_comparison_report(tmp_path):
     report = analysis.render_markdown(result)
     for text in ("Temperature scaling", "Two-checkpoint weight average", "Five-seed probability ensemble", "10-view TTA", "All four combined", "Δ pp", "Fresh same-backend identity probabilities are the baseline", "not measured speedups", "not recovered EMA"):
         assert text in report
+
+
+def test_c8_analysis_uses_frozen_c_baseline_and_parameter_count(tmp_path):
+    labels = _labels()
+    indices = np.arange(5000, 10000, dtype=np.int64)
+    baseline = {"labels": labels, "validation_indices": indices}
+    inference = {"labels": labels.copy(), "validation_indices": indices.copy()}
+    for seed, accuracy in zip(analysis.SEEDS, (20.78, 20.90, 21.76, 21.36, 21.46)):
+        baseline[f"C{seed}"] = _probs(labels, accuracy * 50)
+        for method in ("identity", "average", "tta", "average_tta"):
+            inference[f"{method}_C{seed}"] = _probs(labels, accuracy * 50)
+    bp, ip, sp = tmp_path / "c-base.npz", tmp_path / "c-inference.npz", tmp_path / "c-summary.json"
+    np.savez(bp, **baseline)
+    np.savez(ip, **inference)
+    sp.write_text("{}")
+    result = analysis.analyze(bp, ip, sp, family="C")
+    assert result["study"]["family"] == "C8"
+    assert result["archival_baseline_provenance"]["accuracy_percent_by_seed"]["11"] == 20.78
+    assert result["cost_interpretation"]["parameters"] == 22724
+    assert result["methods"]["baseline"]["mean"]["metrics"]["accuracy_percent"]["mean"] == pytest.approx(21.252)
+
+
+def test_c8_h8_comparison_delta_sign_and_incompatible_reference():
+    summary = {"input_sha256": {"images": "image-hash", "baseline": "baseline-hash"}, "normalization": "same", "view_policy": {"identity": "raw", "tta": "same"}, "device": "cuda", "batch_size": 128, "seeds": list(analysis.SEEDS), "image_count": 5000}
+
+    def result(family, accuracy):
+        methods = {}
+        for name in ("baseline", "temperature_scaling", "weight_average", "five_seed_ensemble", "tta", "all_four_combined"):
+            metrics = {"accuracy_percent": accuracy, "ece_percent": 5.0, "nll": 2.0, "brier": 0.8}
+            methods[name] = {"aggregation": "mean per seed", "metrics": metrics}
+        methods["temperature_scaling"]["crossfit"] = {"11": {"fold_seed": analysis.FOLD_SEED}}
+        return {"study": {"family": family, "depth": 8, "width": 32, "alpha": 0.1, "classes": 100, "seeds": list(analysis.SEEDS), "validation_examples": 5000}, "inference_metadata": {"summary": copy.deepcopy(summary)}, "methods": methods}
+
+    compared = analysis.compare_with_h8(result("C8", 22.0), result("H8", 24.0))
+    assert compared["methods"]["baseline"]["accuracy_percent"]["C8_minus_H8_pp"] == -2.0
+    assert compared["methods"]["five_seed_ensemble"]["passes_per_image"] == 5
+    incompatible = result("H8", 24.0)
+    incompatible["inference_metadata"]["summary"]["batch_size"] = 64
+    with pytest.raises(ValueError, match="inference summary.batch_size differs"):
+        analysis.compare_with_h8(result("C8", 22.0), incompatible)
 
 
 def test_invalid_probability_arrays_and_mismatched_split_are_rejected(tmp_path):

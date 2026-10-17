@@ -19,6 +19,11 @@ N_FOLDS = 5
 FOLD_SEED = 314159
 N_BINS = 15
 BASELINE_TOP1 = {11: 21.60, 23: 21.54, 37: 22.16, 53: 23.46, 71: 19.98}
+FAMILY_BASELINES = {
+    "H": BASELINE_TOP1,
+    "C": {11: 20.78, 23: 20.90, 37: 21.76, 53: 21.36, 71: 21.46},
+}
+FAMILY_PARAMETERS = {"H": 59844, "C": 22724}
 
 
 def validate_predictions(labels: np.ndarray, indices: np.ndarray, predictions: dict[str, np.ndarray], expected: int = N_EXAMPLES) -> None:
@@ -169,15 +174,17 @@ def _load_npz(path: Path, keys: tuple[str, ...]) -> dict[str, np.ndarray]:
         return {key: archive[key] for key in keys}
 
 
-def analyze(baseline_path: Path, inference_path: Path, summary_path: Path) -> dict[str, Any]:
-    baseline_keys = ("labels", "validation_indices", *(f"H{s}" for s in SEEDS))
-    inferred_keys = ("labels", "validation_indices", *(f"{method}_H{s}" for s in SEEDS for method in ("identity", "average", "tta", "average_tta")))
+def analyze(baseline_path: Path, inference_path: Path, summary_path: Path, family: str = "H") -> dict[str, Any]:
+    if family not in FAMILY_BASELINES:
+        raise ValueError("family must be H or C")
+    baseline_keys = ("labels", "validation_indices", *(f"{family}{s}" for s in SEEDS))
+    inferred_keys = ("labels", "validation_indices", *(f"{method}_{family}{s}" for s in SEEDS for method in ("identity", "average", "tta", "average_tta")))
     base = _load_npz(baseline_path, baseline_keys)
     inferred = _load_npz(inference_path, inferred_keys)
     for seed in SEEDS:
-        p = base[f"H{seed}"]
+        p = base[f"{family}{seed}"]
         if p.dtype != np.float32 or np.any(p <= 0):
-            raise ValueError(f"H{seed}: frozen baseline probabilities must be strictly positive float32")
+            raise ValueError(f"{family}{seed}: frozen baseline probabilities must be strictly positive float32")
     if not np.array_equal(base["labels"], inferred["labels"]) or not np.array_equal(base["validation_indices"], inferred["validation_indices"]):
         raise ValueError("baseline and inference labels/validation_indices do not match")
     predictions = {k: base[k] for k in baseline_keys[2:]}
@@ -186,11 +193,11 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path) -> di
     labels = base["labels"].astype(np.int64)
     identity_diagnostics = {}
     for seed in SEEDS:
-        key = f"H{seed}"
+        key = f"{family}{seed}"
         archival_accuracy = metrics(labels, base[key])["accuracy_percent"]
-        if not np.isclose(archival_accuracy, BASELINE_TOP1[seed], atol=1e-8, rtol=0):
-            raise ValueError(f"H{seed}: saved archival baseline does not reproduce its frozen accuracy")
-        archived, identity = base[key].astype(np.float64), inferred[f"identity_H{seed}"].astype(np.float64)
+        if not np.isclose(archival_accuracy, FAMILY_BASELINES[family][seed], atol=1e-8, rtol=0):
+            raise ValueError(f"{family}{seed}: saved archival baseline does not reproduce its frozen accuracy")
+        archived, identity = base[key].astype(np.float64), inferred[f"identity_{family}{seed}"].astype(np.float64)
         identity_diagnostics[str(seed)] = {
             "archival_accuracy_percent": archival_accuracy,
             "same_backend_identity_accuracy_percent": metrics(labels, identity)["accuracy_percent"],
@@ -199,10 +206,10 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path) -> di
         }
     records: dict[str, Any] = {}
     seed_specs = {
-        "baseline": lambda s: inferred[f"identity_H{s}"],
-        "weight_average": lambda s: inferred[f"average_H{s}"],
-        "tta": lambda s: inferred[f"tta_H{s}"],
-        "all_four": lambda s: inferred[f"average_tta_H{s}"],
+        "baseline": lambda s: inferred[f"identity_{family}{s}"],
+        "weight_average": lambda s: inferred[f"average_{family}{s}"],
+        "tta": lambda s: inferred[f"tta_{family}{s}"],
+        "all_four": lambda s: inferred[f"average_tta_{family}{s}"],
     }
     for name, predictor in seed_specs.items():
         individual = [metrics(labels, predictor(s)) for s in SEEDS]
@@ -210,13 +217,13 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path) -> di
     calibrated_baselines = []
     crossfit_records = {}
     for seed in SEEDS:
-        calibrated, folds = crossfit_temperature(labels, inferred[f"identity_H{seed}"])
+        calibrated, folds = crossfit_temperature(labels, inferred[f"identity_{family}{seed}"])
         calibrated_baselines.append(metrics(labels, calibrated))
         crossfit_records[str(seed)] = {"fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds", "fold_seed": FOLD_SEED, "folds": folds}
     records["temperature_scaling"] = {"aggregation": "mean of five per-seed metric rows", "per_seed": {str(s): m for s, m in zip(SEEDS, calibrated_baselines)}, "mean": _mean_record(calibrated_baselines), "crossfit": crossfit_records}
-    pooled = np.mean(np.stack([inferred[f"average_tta_H{s}"].astype(np.float64) for s in SEEDS]), axis=0)
+    pooled = np.mean(np.stack([inferred[f"average_tta_{family}{s}"].astype(np.float64) for s in SEEDS]), axis=0)
     pooled_calibrated, folds = crossfit_temperature(labels, pooled)
-    records["five_seed_ensemble"] = {"aggregation": "one predictor: arithmetic mean of five same-backend identity probability arrays", "metrics": metrics(labels, np.mean(np.stack([inferred[f"identity_H{s}"].astype(np.float64) for s in SEEDS]), axis=0))}
+    records["five_seed_ensemble"] = {"aggregation": "one predictor: arithmetic mean of five same-backend identity probability arrays", "metrics": metrics(labels, np.mean(np.stack([inferred[f"identity_{family}{s}"].astype(np.float64) for s in SEEDS]), axis=0))}
     records["all_four_combined"] = {"aggregation": "mean of five average+TTA predictors, then cross-fitted scalar temperature", "metrics": metrics(labels, pooled_calibrated), "crossfit": {"fold_policy": "fixed class-stratified 5-fold; each example calibrated with T fitted on other four folds", "fold_seed": FOLD_SEED, "folds": folds}}
     records["all_four_uncalibrated_ensemble"] = {"aggregation": "one predictor: arithmetic mean of five average+TTA probability arrays", "metrics": metrics(labels, pooled)}
     baseline_mean = records["baseline"]["mean"]["metrics"]
@@ -229,25 +236,26 @@ def analyze(baseline_path: Path, inference_path: Path, summary_path: Path) -> di
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"could not read inference summary JSON: {exc}") from exc
-    return {"study": {"family": "H8", "depth": 8, "width": 32, "alpha": 0.1, "classes": 100, "seeds": list(SEEDS), "validation_examples": N_EXAMPLES, "validation_only_exploratory": True, "known_selection_on_this_validation": True},
+    return {"study": {"family": f"{family}8", "depth": 8, "width": 32, "alpha": 0.1, "classes": 100, "seeds": list(SEEDS), "validation_examples": N_EXAMPLES, "validation_only_exploratory": True, "known_selection_on_this_validation": True},
             "methods": records,
-            "archival_baseline_provenance": {"accuracy_percent_by_seed": {str(seed): BASELINE_TOP1[seed] for seed in SEEDS}, "mean_accuracy_percent": float(np.mean(list(BASELINE_TOP1.values()))), "same_backend_identity_comparison": identity_diagnostics, "note": "Before/after rows use fresh same-backend identity probabilities; frozen archival accuracy remains separately checked and reported. Identity probability and argmax diagnostics are retained versus archival CUDA; historical archival results are unchanged."},
-            "cost_interpretation": {"parameters": 59844, "macs_per_view": 37973120, "weight_average": "one-model size; selected+last same-trajectory midpoint, not EMA or classical multi-snapshot SWA", "five_seed_ensemble": "five models; sequential execution possible", "tta": "10 passes", "all_four_combination": "50 passes", "note": "Arithmetic counted costs, not measured speedups; no deployment-latency inference."},
+            "archival_baseline_provenance": {"accuracy_percent_by_seed": {str(seed): FAMILY_BASELINES[family][seed] for seed in SEEDS}, "mean_accuracy_percent": float(np.mean(list(FAMILY_BASELINES[family].values()))), "same_backend_identity_comparison": identity_diagnostics, "note": "Before/after rows use fresh same-backend identity probabilities; frozen archival accuracy remains separately checked and reported. Identity probability and argmax diagnostics are retained versus archival CUDA; historical archival results are unchanged."},
+            "cost_interpretation": {"parameters": FAMILY_PARAMETERS[family], "macs_per_view": 37973120, "weight_average": "one-model size; selected+last same-trajectory midpoint, not EMA or classical multi-snapshot SWA", "five_seed_ensemble": "five models; sequential execution possible", "tta": "10 passes", "all_four_combination": "50 passes", "note": "Arithmetic counted costs, not measured speedups; no deployment-latency inference."},
             "inference_metadata": {"summary_file": summary_path.name, "summary": _safe_metadata(summary)}}
 
 
 def render_markdown(result: dict[str, Any]) -> str:
     methods = result["methods"]
+    family = result["study"]["family"]
     rows = [
-        ("Baseline (mean of five H8s)", methods["baseline"], "mean of five per-seed rows"),
-        ("Temperature scaling (cross-fit each H8)", methods["temperature_scaling"], "mean of five per-seed rows"),
+        (f"Baseline (mean of five {family})", methods["baseline"], "mean of five per-seed rows"),
+        (f"Temperature scaling (cross-fit each {family})", methods["temperature_scaling"], "mean of five per-seed rows"),
         ("Two-checkpoint weight average", methods["weight_average"], "mean of five per-seed rows"),
         ("Five-seed probability ensemble", methods["five_seed_ensemble"], "one pooled probability predictor"),
         ("10-view TTA", methods["tta"], "mean of five per-seed rows"),
         ("All four combined", methods["all_four_combined"], "mean probability of five average+TTA predictors; cross-fitted temperature"),
     ]
     base = methods["baseline"]["mean"]["metrics"]
-    lines = ["# H8 post-training probability analysis", "", "Validation-only exploratory analysis; these models were already selected using this validation set.", "", "| Method | Aggregation | Accuracy % (Δ pp) | NLL (Δ) | Brier (Δ) | ECE % (Δ pp) |", "|---|---|---:|---:|---:|---:|"]
+    lines = [f"# {family} post-training probability analysis", "", "Validation-only exploratory analysis; these models were already selected using this validation set.", "", "| Method | Aggregation | Accuracy % (Δ pp) | NLL (Δ) | Brier (Δ) | ECE % (Δ pp) |", "|---|---|---:|---:|---:|---:|"]
     for name, value, aggregation in rows:
         if "mean" in value and "metrics" in value["mean"]:
             current = {k: value["mean"]["metrics"][k]["mean"] for k in base}
@@ -257,7 +265,84 @@ def render_markdown(result: dict[str, Any]) -> str:
         lines.append(f"| {name} | {aggregation} | {current['accuracy_percent']:.3f} ({deltas['accuracy_percent']:+.3f}) | {current['nll']:.5f} ({deltas['nll']:+.5f}) | {current['brier']:.5f} ({deltas['brier']:+.5f}) | {current['ece_percent']:.3f} ({deltas['ece_percent']:+.3f}) |")
     provenance = result["archival_baseline_provenance"]
     identity_mean = methods["baseline"]["mean"]["metrics"]["accuracy_percent"]["mean"]
-    lines += ["", f"Fresh same-backend identity probabilities are the baseline for every before/after comparison. Their mean accuracy is {identity_mean:.3f}% versus the frozen archival CUDA mean {provenance['mean_accuracy_percent']:.3f}%; saved archival top-1 values are independently checked and retained as provenance. Identity probability and argmax diagnostics are recorded against archival CUDA; historical archival results are unchanged.", "", "Metrics: multiclass NLL, summed-class multiclass Brier, and 15 fixed equal-width confidence bins (including confidence 1.0). Temperature cross-fitting uses fixed class-stratified five folds (seed 314159), with each example scored using a temperature fitted on the other folds; fit-only NLL chooses between the bounded optimizer and T=1.", "", "H8 has 59,844 parameters and 37,973,120 MACs per view. Weight averaging retains one-model size; the five-seed ensemble can execute sequentially, TTA uses 10 passes, and the all-four combination uses 50 passes. These are arithmetic costs, not measured speedups. Weight averaging is the selected+last same-trajectory midpoint, not recovered EMA or classical multi-snapshot SWA. Inference timing/RSS metadata is separate and analysis wall time is not deployment latency.", ""]
+    lines += ["", f"Fresh same-backend identity probabilities are the baseline for every before/after comparison. Their mean accuracy is {identity_mean:.3f}% versus the frozen archival CUDA mean {provenance['mean_accuracy_percent']:.3f}%; saved archival top-1 values are independently checked and retained as provenance. Identity probability and argmax diagnostics are recorded against archival CUDA; historical archival results are unchanged.", "", "Metrics: multiclass NLL, summed-class multiclass Brier, and 15 fixed equal-width confidence bins (including confidence 1.0). Temperature cross-fitting uses fixed class-stratified five folds (seed 314159), with each example scored using a temperature fitted on the other folds; fit-only NLL chooses between the bounded optimizer and T=1.", "", f"{family} has {result['cost_interpretation']['parameters']:,} parameters and 37,973,120 MACs per view. Weight averaging retains one-model size; the five-seed ensemble can execute sequentially, TTA uses 10 passes, and the all-four combination uses 50 passes. These are arithmetic costs, not measured speedups. Weight averaging is the selected+last same-trajectory midpoint, not recovered EMA or classical multi-snapshot SWA. Inference timing/RSS metadata is separate and analysis wall time is not deployment latency.", ""]
+    return "\n".join(lines)
+
+
+def _summary_for_comparison(result: dict[str, Any], label: str) -> dict[str, Any]:
+    try:
+        return result["inference_metadata"]["summary"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError(f"{label} reference is missing inference_metadata.summary") from exc
+
+
+def compare_with_h8(c8: dict[str, Any], h8: dict[str, Any]) -> dict[str, Any]:
+    cstudy, hstudy = c8.get("study", {}), h8.get("study", {})
+    for field in ("depth", "width", "alpha", "classes", "seeds", "validation_examples"):
+        if cstudy.get(field) != hstudy.get(field):
+            raise ValueError(f"incompatible H8 reference: study.{field} differs")
+    if cstudy.get("family") != "C8" or hstudy.get("family") != "H8":
+        raise ValueError("incompatible reference family: expected C8 result and H8 reference")
+    c_summary = _summary_for_comparison(c8, "C8")
+    h_summary = _summary_for_comparison(h8, "H8")
+    for label, study, summary in (("C8", cstudy, c_summary), ("H8", hstudy, h_summary)):
+        if summary.get("seeds") != study.get("seeds"):
+            raise ValueError(f"incompatible {label} result: inference summary.seeds differs from study")
+        if summary.get("image_count") != study.get("validation_examples"):
+            raise ValueError(f"incompatible {label} result: inference summary.image_count differs from study")
+    for field in ("input_sha256", "normalization", "view_policy", "device", "batch_size"):
+        if field not in c_summary or field not in h_summary:
+            raise ValueError(f"incompatible H8 reference: inference summary is missing {field}")
+        if c_summary[field] != h_summary[field]:
+            raise ValueError(f"incompatible H8 reference: inference summary.{field} differs")
+    methods_c, methods_h = c8.get("methods", {}), h8.get("methods", {})
+    try:
+        c_seed = methods_c["temperature_scaling"]["crossfit"][str(SEEDS[0])]["fold_seed"]
+        h_seed = methods_h["temperature_scaling"]["crossfit"][str(SEEDS[0])]["fold_seed"]
+    except (KeyError, TypeError) as exc:
+        raise ValueError("incompatible H8 reference: recorded crossfit fold seed is missing") from exc
+    if c_seed != FOLD_SEED or h_seed != FOLD_SEED or c_seed != h_seed:
+        raise ValueError("incompatible H8 reference: crossfit fold seed differs")
+
+    specs = (
+        ("baseline", "baseline", 1),
+        ("temperature_scaling", "temperature_scaling", 1),
+        ("weight_average", "weight_average", 1),
+        ("five_seed_ensemble", "five_seed_ensemble", 5),
+        ("tta", "tta", 10),
+        ("all_four_combined", "all_four_combined", 50),
+    )
+    rows: dict[str, Any] = {}
+    for name, method_key, passes in specs:
+        def get_metrics(methods: dict[str, Any]) -> dict[str, float]:
+            entry = methods[method_key]
+            if "metrics" in entry and "accuracy_percent" in entry["metrics"]:
+                return entry["metrics"]
+            return {key: value["mean"] for key, value in entry["mean"]["metrics"].items()}
+
+        cm, hm = get_metrics(methods_c), get_metrics(methods_h)
+        rows[name] = {
+            "aggregation_C8": methods_c[method_key]["aggregation"],
+            "aggregation_H8": methods_h[method_key]["aggregation"],
+            "passes_per_image": passes,
+            "accuracy_percent": {"C8": cm["accuracy_percent"], "H8": hm["accuracy_percent"], "C8_minus_H8_pp": cm["accuracy_percent"] - hm["accuracy_percent"]},
+            "ece_percent": {"C8": cm["ece_percent"], "H8": hm["ece_percent"], "C8_minus_H8_pp": cm["ece_percent"] - hm["ece_percent"]},
+            "nll": {"C8": cm["nll"], "H8": hm["nll"], "C8_minus_H8": cm["nll"] - hm["nll"]},
+            "brier": {"C8": cm["brier"], "H8": hm["brier"], "C8_minus_H8": cm["brier"] - hm["brier"]},
+        }
+    return {
+        "comparison": {"families": ["C8", "H8"], "seeds": list(SEEDS), "validation_only_exploratory": True, "claims": "descriptive mean-per-seed comparisons except the explicitly labeled one pooled five-seed probability ensemble; no causal or significance claims"},
+        "cost_interpretation": {"parameters_per_model": {"C8": 22724, "H8": 59844}, "macs_per_view_per_model": {"C8": 37973120, "H8": 37973120}, "note": "Counted arithmetic costs only; ensemble parameter storage is five models, passes are not measured speed."},
+        "methods": rows,
+    }
+
+
+def render_comparison_markdown(result: dict[str, Any]) -> str:
+    lines = ["# C8 vs H8 post-training comparison", "", "Descriptive validation-only comparison; no causal or significance claims. Mean-per-seed methods compare the unweighted mean of five per-seed metric rows. The five-seed ensemble is one pooled probability predictor.", "", "| Method | Passes/image | Accuracy C8 % | H8 % | C8−H8 pp | ECE C8 % | H8 % | C8−H8 pp | NLL C8 / H8 | Brier C8 / H8 |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+    for name, row in result["methods"].items():
+        acc, ece = row["accuracy_percent"], row["ece_percent"]
+        lines.append(f"| {name.replace('_', ' ')} | {row['passes_per_image']} | {acc['C8']:.3f} | {acc['H8']:.3f} | {acc['C8_minus_H8_pp']:+.3f} | {ece['C8']:.3f} | {ece['H8']:.3f} | {ece['C8_minus_H8_pp']:+.3f} | {row['nll']['C8']:.5f} / {row['nll']['H8']:.5f} | {row['brier']['C8']:.5f} / {row['brier']['H8']:.5f} |")
+    lines += ["", "C8 has 22,724 parameters and H8 has 59,844; both have 37,973,120 MACs per view. Five-seed ensembles store/use five models; costs are arithmetic counts, not measured speed. This report makes no causal or statistical-significance claim.", ""]
     return "\n".join(lines)
 
 
@@ -267,11 +352,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--inference", type=Path, required=True, help="private post-training validation probabilities NPZ")
     parser.add_argument("--inference-summary", type=Path, required=True, help="private inference timing/hash/view-policy JSON")
     parser.add_argument("--output", type=Path, required=True, help="new output directory")
+    parser.add_argument("--family", choices=("H", "C"), default="H", help="study family; defaults to the historical H8 analysis")
+    parser.add_argument("--reference-h8", type=Path, help="completed H8 analysis JSON to compare against (C8 only)")
     args = parser.parse_args(argv)
-    result = analyze(args.baseline, args.inference, args.inference_summary)
+    if args.reference_h8 is not None and args.family != "C":
+        parser.error("--reference-h8 is only valid with --family C")
+    result = analyze(args.baseline, args.inference, args.inference_summary, family=args.family)
+    comparison = None
+    if args.reference_h8 is not None:
+        try:
+            reference = json.loads(args.reference_h8.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"could not read H8 reference JSON: {exc}") from exc
+        comparison = compare_with_h8(result, reference)
     args.output.mkdir(parents=True, exist_ok=False)
-    (args.output / "h8-posttraining-analysis.json").write_text(json.dumps(_json_safe(result), indent=2, allow_nan=False) + "\n", encoding="utf-8")
-    (args.output / "h8-posttraining-analysis.md").write_text(render_markdown(result), encoding="utf-8")
+    stem = f"{args.family.lower()}8-posttraining-analysis"
+    (args.output / f"{stem}.json").write_text(json.dumps(_json_safe(result), indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    (args.output / f"{stem}.md").write_text(render_markdown(result), encoding="utf-8")
+    if comparison is not None:
+        (args.output / "c8-vs-h8.json").write_text(json.dumps(_json_safe(comparison), indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        (args.output / "c8-vs-h8.md").write_text(render_comparison_markdown(comparison), encoding="utf-8")
     return 0
 
 
